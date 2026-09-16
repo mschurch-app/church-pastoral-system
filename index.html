@@ -1,16 +1,282 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ｍ＋大雅教會＆火樂教會 牧養管理平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
-  // 範例：秒讀火樂或 M+ 會友
-  async function fetchMembers(churchId) {
-    const { data, error } = await supabase
-      .from('members')
-      .select('*')
-      .eq('church_id', churchId)
-      .order('id', { ascending: true });
-    return data;
-  }
-</script>
+  <!-- 頂部導航 -->
+  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+        <i class="fa-solid fa-church text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-wide flex items-center gap-2">
+          <span id="headerChurchName">火樂教會 (SHiNE)</span>
+          <span id="roleBadge" class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">管理員</span>
+        </h1>
+        <p class="text-xs text-slate-400">智慧牧養與服事數據中心</p>
+      </div>
+    </div>
+    
+    <!-- 堂會切換按鈕 (主任牧師專用) -->
+    <div class="flex items-center gap-2">
+      <select id="churchSelector" onchange="switchChurch(this.value)" class="bg-slate-700 border border-slate-600 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="SHiNE">火樂教會 (SHiNE)</option>
+        <option value="M+">Ｍ＋大雅教會</option>
+      </select>
+      <button onclick="logout()" class="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 內容顯示區域 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 pb-24">
+    <!-- 登入檢核防護遮罩 -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+        <div class="text-center mb-6">
+          <div class="w-14 h-14 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white mb-3 shadow-lg shadow-indigo-500/30">
+            <i class="fa-solid fa-cross"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white">智慧牧養管理登入</h2>
+          <p class="text-xs text-slate-400 mt-1">請輸入教牧同工姓名與安全密碼</p>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">管理者姓名</label>
+            <input type="text" id="loginName" value="吳俊璋" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">安全驗證密碼</label>
+            <input type="password" id="loginPwd" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
+          </div>
+          <p id="loginError" class="text-xs text-rose-400 hidden"></p>
+          <button onclick="handleLogin()" id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">
+            安全登入
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 頁籤一：會友名冊 -->
+    <section id="tab-members" class="space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="relative w-full sm:w-72">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+          <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋姓名、電話、小組..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="text-xs text-slate-400">
+          目前會友共計：<span id="memberCount" class="text-indigo-400 font-bold">0</span> 人
+        </div>
+      </div>
+
+      <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800 border-b border-slate-700 text-slate-400 font-medium">
+              <tr>
+                <th class="p-3">姓名</th>
+                <th class="p-3">所屬小組</th>
+                <th class="p-3">信仰狀態</th>
+                <th class="p-3">電話號碼</th>
+                <th class="p-3">服事恩賜</th>
+                <th class="p-3">居住區</th>
+              </tr>
+            </thead>
+            <tbody id="memberTableBody" class="divide-y divide-slate-700/50">
+              <tr>
+                <td colspan="6" class="p-6 text-center text-slate-500">載入中...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 頁籤二：主日服事排程 -->
+    <section id="tab-services" class="space-y-4 hidden">
+      <div class="flex justify-between items-center">
+        <h2 class="text-base font-bold">主日崇拜服事表</h2>
+        <span class="text-xs text-slate-400">已自動同步至最新排程</span>
+      </div>
+      <div id="serviceList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 動態渲染服事卡片 -->
+      </div>
+    </section>
+
+    <!-- 頁籤三：牧養代禱紀錄 -->
+    <section id="tab-prayers" class="space-y-4 hidden">
+      <div class="flex justify-between items-center">
+        <h2 class="text-base font-bold">即時牧養關懷與代禱事項</h2>
+        <span class="text-xs text-slate-400">支援 LINE 即時通報</span>
+      </div>
+      <div id="prayerList" class="space-y-3">
+        <!-- 動態渲染代禱項目 -->
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部固定導航列 -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-slate-700 z-40 px-6 py-2 flex justify-around">
+    <button onclick="switchTab('members')" id="nav-members" class="flex flex-col items-center gap-1 text-indigo-400">
+      <i class="fa-solid fa-users text-sm"></i>
+      <span class="text-[10px]">會友名冊</span>
+    </button>
+    <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+      <i class="fa-solid fa-calendar-days text-sm"></i>
+      <span class="text-[10px]">主日服事</span>
+    </button>
+    <button onclick="switchTab('prayers')" id="nav-prayers" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+      <i class="fa-solid fa-hands-praying text-sm"></i>
+      <span class="text-[10px]">代禱關懷</span>
+    </button>
+  </nav>
+
+  <script>
+    // 1. 初始化 Supabase
+    const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentChurch = "SHiNE";
+    let allMembers = [];
+
+    // 登入邏輯
+    function handleLogin() {
+      const name = document.getElementById('loginName').value.trim();
+      const pwd = document.getElementById('loginPwd').value.trim();
+      const err = document.getElementById('loginError');
+
+      if ((name === "吳俊璋" || name === "松慕強" || name === "謝碧鳳") && pwd === "mschurch") {
+        document.getElementById('loginModal').classList.add('hidden');
+        loadAllData();
+      } else {
+        err.innerText = "驗證密碼錯誤，請重新確認！";
+        err.classList.remove('hidden');
+      }
+    }
+
+    // 載入資料
+    async function loadAllData() {
+      await loadMembers();
+      await loadServices();
+      await loadPrayers();
+    }
+
+    async function loadMembers() {
+      const { data, error } = await client.from('members').select('*').eq('church_id', currentChurch).order('id');
+      if (data) {
+        allMembers = data;
+        renderMembers(data);
+      }
+    }
+
+    function renderMembers(list) {
+      document.getElementById('memberCount').innerText = list.length;
+      const tbody = document.getElementById('memberTableBody');
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">查無名冊資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(m => `
+        <tr class="hover:bg-slate-700/30 transition">
+          <td class="p-3 font-medium text-white flex items-center gap-2">
+            <span>${m.name}</span>
+            <span class="text-[10px] text-slate-400">(${m.gender})</span>
+          </td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">${m.group_name || '未編組'}</span></td>
+          <td class="p-3 text-slate-300">${m.faith_status || '委身家人'}</td>
+          <td class="p-3 font-mono text-slate-300">${m.phone || '-'}</td>
+          <td class="p-3 text-indigo-300">${m.ministry || '-'}</td>
+          <td class="p-3 text-slate-400">${m.district || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterMembers() {
+      const q = document.getElementById('memberSearch').value.toLowerCase();
+      const filtered = allMembers.filter(m => 
+        (m.name && m.name.toLowerCase().includes(q)) ||
+        (m.phone && m.phone.includes(q)) ||
+        (m.group_name && m.group_name.toLowerCase().includes(q))
+      );
+      renderMembers(filtered);
+    }
+
+    async function loadServices() {
+      const { data } = await client.from('service_schedules').select('*').eq('church_id', currentChurch).order('service_date', { ascending: true });
+      const container = document.getElementById('serviceList');
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="p-6 text-slate-500 col-span-2 text-center">尚無排程資料</div>';
+        return;
+      }
+      container.innerHTML = data.map(s => `
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+            <span class="font-bold text-sm text-indigo-300">📅 ${s.service_date} ${s.event ? '('+s.event+')' : ''}</span>
+            <span class="text-xs text-slate-400">講道：${s.speaker || '未定'}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="text-slate-400">主領：<span class="text-slate-200">${s.worship_leader || '－'}</span></div>
+            <div class="text-slate-400">歌者：<span class="text-slate-200">${s.singers || '－'}</span></div>
+            <div class="text-slate-400">樂團：<span class="text-slate-200">琴(${s.keyboard}) 吉(${s.guitar}) 貝(${s.bass}) 鼓(${s.drums})</span></div>
+            <div class="text-slate-400">影音：<span class="text-slate-200">音控(${s.tech_sound}) 導播(${s.tech_video})</span></div>
+            <div class="text-slate-400 col-span-2">招待：<span class="text-slate-200">${s.ushers || '－'}</span></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadPrayers() {
+      const { data } = await client.from('prayer_requests').select('*').eq('church_id', currentChurch).order('created_at', { ascending: false });
+      const container = document.getElementById('prayerList');
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="p-6 text-slate-500 text-center">尚無代禱紀錄</div>';
+        return;
+      }
+      container.innerHTML = data.map(p => `
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 flex justify-between items-start">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm text-white">${p.member_name}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full ${p.urgency_level.includes('緊急') ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-slate-700 text-slate-300'}">${p.urgency_level}</span>
+              <span class="text-[10px] text-slate-400">${p.privacy_level}</span>
+            </div>
+            <p class="text-xs text-slate-300">${p.content}</p>
+            <p class="text-[10px] text-slate-500">回報同工：${p.reporter_name || '教牧同工'} · ${p.created_at ? p.created_at.slice(0, 16).replace('T', ' ') : ''}</p>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">${p.status}</span>
+        </div>
+      `).join('');
+    }
+
+    function switchChurch(val) {
+      currentChurch = val;
+      document.getElementById('headerChurchName').innerText = val === 'SHiNE' ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
+      loadAllData();
+    }
+
+    function switchTab(tabId) {
+      ['members', 'services', 'prayers'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`).classList.replace('text-indigo-400', 'text-slate-400');
+      });
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      document.getElementById(`nav-${tabId}`).classList.replace('text-slate-400', 'text-indigo-400');
+    }
+
+    function logout() {
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('loginPwd').value = '';
+    }
+  </script>
+</body>
+</html>
