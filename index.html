@@ -3,154 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ｍ＋大雅教會＆火樂教會 牧養管理平台</title>
+  <title>Ｍ＋大雅教會＆火樂教會 智慧牧養系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- 頂部導航 -->
-  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+  <!-- 頂部導覽列 -->
+  <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center space-x-3">
       <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
         <i class="fa-solid fa-church text-lg"></i>
       </div>
       <div>
-        <h1 class="text-base font-bold tracking-wide flex items-center gap-2">
-          <span id="headerChurchName">火樂教會 (SHiNE)</span>
-          <span id="roleBadge" class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">管理員</span>
+        <h1 class="text-sm font-bold tracking-wide flex items-center gap-2">
+          <span id="currentChurchLabel">火樂教會 (SHiNE)</span>
+          <span id="adminRoleBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">超級管理員</span>
         </h1>
-        <p class="text-xs text-slate-400">智慧牧養與服事數據中心</p>
+        <p class="text-[10px] text-slate-400">雙堂會智慧牧養與服事數據平台</p>
       </div>
     </div>
     
-    <!-- 堂會切換按鈕 (主任牧師專用) -->
     <div class="flex items-center gap-2">
-      <select id="churchSelector" onchange="switchChurch(this.value)" class="bg-slate-700 border border-slate-600 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <select id="churchSelector" onchange="switchChurch(this.value)" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:ring-2 focus:ring-indigo-500">
         <option value="SHiNE">火樂教會 (SHiNE)</option>
         <option value="M+">Ｍ＋大雅教會</option>
       </select>
-      <button onclick="logout()" class="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition">
+      <button onclick="logout()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition" title="登出">
         <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
   </header>
 
-  <!-- 內容顯示區域 -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 pb-24">
-    <!-- 登入檢核防護遮罩 -->
-    <div id="loginModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
-        <div class="text-center mb-6">
-          <div class="w-14 h-14 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white mb-3 shadow-lg shadow-indigo-500/30">
-            <i class="fa-solid fa-cross"></i>
-          </div>
-          <h2 class="text-xl font-bold text-white">智慧牧養管理登入</h2>
-          <p class="text-xs text-slate-400 mt-1">請輸入教牧同工姓名與安全密碼</p>
+  <!-- 登入驗證彈窗 -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-cross"></i>
         </div>
-        <div class="space-y-4">
-          <div>
-            <label class="text-xs text-slate-400 block mb-1">管理者姓名</label>
-            <input type="text" id="loginName" value="吳俊璋" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-          </div>
-          <div>
-            <label class="text-xs text-slate-400 block mb-1">安全驗證密碼</label>
-            <input type="password" id="loginPwd" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
-          </div>
-          <p id="loginError" class="text-xs text-rose-400 hidden"></p>
-          <button onclick="handleLogin()" id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">
-            安全登入
+        <h2 class="text-lg font-bold text-white">智慧教牧管理平台</h2>
+        <p class="text-xs text-slate-400">請輸入管理姓名與安全授權碼</p>
+      </div>
+      <div>
+        <label class="text-[11px] text-slate-400 block mb-1">管理者姓名</label>
+        <input type="text" id="loginName" value="吳俊璋" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+      </div>
+      <div>
+        <label class="text-[11px] text-slate-400 block mb-1">驗證授權密碼</label>
+        <input type="password" id="loginPwd" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
+      </div>
+      <p id="loginError" class="text-xs text-rose-400 hidden"></p>
+      <button onclick="performLogin()" id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">
+        安全驗證登入
+      </button>
+    </div>
+  </div>
+
+  <!-- 主要內容區 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 pb-24">
+    
+    <!-- 模組一：會友名冊管理 -->
+    <section id="mod-members" class="space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="relative w-full sm:w-80">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
+          <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋姓名、電話、小組、恩賜..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <span class="text-xs text-slate-400">總人數：<b id="memberCount" class="text-indigo-400">0</b> 人</span>
+          <button onclick="openMemberModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-indigo-600/20">
+            <i class="fa-solid fa-user-plus"></i> 新增會友
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- 頁籤一：會友名冊 -->
-    <section id="tab-members" class="space-y-4">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div class="relative w-full sm:w-72">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
-          <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋姓名、電話、小組..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-        </div>
-        <div class="text-xs text-slate-400">
-          目前會友共計：<span id="memberCount" class="text-indigo-400 font-bold">0</span> 人
-        </div>
-      </div>
-
-      <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl overflow-hidden shadow-xl">
+      <div class="glass-card rounded-2xl overflow-hidden shadow-xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-800 border-b border-slate-700 text-slate-400 font-medium">
+            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-medium">
               <tr>
                 <th class="p-3">姓名</th>
                 <th class="p-3">所屬小組</th>
-                <th class="p-3">信仰狀態</th>
-                <th class="p-3">電話號碼</th>
+                <th class="p-3">信仰成熟度</th>
+                <th class="p-3">電話</th>
+                <th class="p-3">LINE狀態</th>
                 <th class="p-3">服事恩賜</th>
-                <th class="p-3">居住區</th>
+                <th class="p-3 text-right">操作</th>
               </tr>
             </thead>
-            <tbody id="memberTableBody" class="divide-y divide-slate-700/50">
-              <tr>
-                <td colspan="6" class="p-6 text-center text-slate-500">載入中...</td>
-              </tr>
+            <tbody id="memberTableBody" class="divide-y divide-slate-800/60">
+              <tr><td colspan="7" class="p-8 text-center text-slate-500">正在極速讀取 Supabase 資料庫...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- 頁籤二：主日服事排程 -->
-    <section id="tab-services" class="space-y-4 hidden">
+    <!-- 模組二：主日服事排程與一鍵推播 -->
+    <section id="mod-services" class="space-y-4 hidden">
       <div class="flex justify-between items-center">
-        <h2 class="text-base font-bold">主日崇拜服事表</h2>
-        <span class="text-xs text-slate-400">已自動同步至最新排程</span>
+        <div>
+          <h2 class="text-sm font-bold text-white">主日崇拜服事輪值表</h2>
+          <p class="text-[10px] text-slate-400">可即時檢視確認狀況，支援推播至同工 LINE</p>
+        </div>
+        <button onclick="openNewScheduleModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> 新增週次排班
+        </button>
       </div>
-      <div id="serviceList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- 動態渲染服事卡片 -->
+      <div id="serviceCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 動態渲染週次卡片 -->
       </div>
     </section>
 
-    <!-- 頁籤三：牧養代禱紀錄 -->
-    <section id="tab-prayers" class="space-y-4 hidden">
+    <!-- 模組三：小組管理與出席點名紀錄 -->
+    <section id="mod-groups" class="space-y-4 hidden">
       <div class="flex justify-between items-center">
-        <h2 class="text-base font-bold">即時牧養關懷與代禱事項</h2>
-        <span class="text-xs text-slate-400">支援 LINE 即時通報</span>
+        <div>
+          <h2 class="text-sm font-bold text-white">小家管理與聚會點名紀錄</h2>
+          <p class="text-[10px] text-slate-400">掌握各小家每週聚會出席率與缺席名單</p>
+        </div>
       </div>
-      <div id="prayerList" class="space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="groupOverviewCards">
+        <!-- 動態渲染各小組出席狀況 -->
+      </div>
+      <div class="glass-card rounded-2xl p-4 mt-4">
+        <h3 class="text-xs font-bold text-slate-300 mb-2">最新點名回報日誌</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="text-slate-500 border-b border-slate-800">
+              <tr>
+                <th class="pb-2">日期</th>
+                <th class="pb-2">小組</th>
+                <th class="pb-2">回報人</th>
+                <th class="pb-2">出席/應到</th>
+                <th class="pb-2">出席組員</th>
+                <th class="pb-2">聚會備註</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceLogsBody" class="divide-y divide-slate-800/40">
+              <tr><td colspan="6" class="py-4 text-center text-slate-500">尚無回報紀錄</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模組四：代禱關懷牆 -->
+    <section id="mod-prayers" class="space-y-4 hidden">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-sm font-bold text-white">教牧代禱關懷動態牆</h2>
+          <p class="text-[10px] text-slate-400">整合來自 LINE 官方帳號的即時關懷速記</p>
+        </div>
+      </div>
+      <div id="prayerCardsList" class="space-y-3">
         <!-- 動態渲染代禱項目 -->
+      </div>
+    </section>
+
+    <!-- 模組五：系統恩賜與事工設定 -->
+    <section id="mod-settings" class="space-y-4 hidden">
+      <div class="glass-card rounded-2xl p-4 space-y-4">
+        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-indigo-400"></i> 事工恩賜與排班對應設定
+        </h2>
+        <p class="text-xs text-slate-400">此設定將連動主日服事排程時的智慧推薦與同義詞辨識。</p>
+        <div id="systemSettingsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 動態渲染設定項目 -->
+        </div>
       </div>
     </section>
   </main>
 
-  <!-- 底部固定導航列 -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-slate-700 z-40 px-6 py-2 flex justify-around">
-    <button onclick="switchTab('members')" id="nav-members" class="flex flex-col items-center gap-1 text-indigo-400">
+  <!-- 編輯會友 Modal -->
+  <div id="memberEditModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-white" id="modalTitle">編輯會友資料</h3>
+      <input type="hidden" id="editMemberId">
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="text-slate-400 block mb-1">姓名 *</label>
+          <input type="text" id="editName" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">性別</label>
+          <select id="editGender" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+            <option value="弟兄">弟兄</option>
+            <option value="姊妹">姊妹</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">電話號碼</label>
+          <input type="text" id="editPhone" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">所屬小組</label>
+          <input type="text" id="editGroup" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">信仰狀態</label>
+          <select id="editFaithStatus" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+            <option value="委身家人">委身家人</option>
+            <option value="穩定聚會(8成以上)">穩定聚會(8成以上)</option>
+            <option value="初信受洗">初信受洗</option>
+            <option value="慕道友">慕道友</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">居住區域</label>
+          <input type="text" id="editDistrict" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+        </div>
+        <div class="col-span-2">
+          <label class="text-slate-400 block mb-1">服事恩賜 (逗號隔開)</label>
+          <input type="text" id="editMinistry" placeholder="如：主領, 吉他, 控台" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeMemberModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs">取消</button>
+        <button onclick="saveMemberFromModal()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">儲存存檔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部選單 -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur border-t border-slate-800 z-30 px-3 py-2 flex justify-around">
+    <button onclick="switchTab('members')" id="navBtn-members" class="flex flex-col items-center gap-1 text-indigo-400">
       <i class="fa-solid fa-users text-sm"></i>
       <span class="text-[10px]">會友名冊</span>
     </button>
-    <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-      <i class="fa-solid fa-calendar-days text-sm"></i>
-      <span class="text-[10px]">主日服事</span>
+    <button onclick="switchTab('services')" id="navBtn-services" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+      <i class="fa-solid fa-calendar-check text-sm"></i>
+      <span class="text-[10px]">主日排班</span>
     </button>
-    <button onclick="switchTab('prayers')" id="nav-prayers" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+    <button onclick="switchTab('groups')" id="navBtn-groups" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+      <i class="fa-solid fa-people-roof text-sm"></i>
+      <span class="text-[10px]">小家出席</span>
+    </button>
+    <button onclick="switchTab('prayers')" id="navBtn-prayers" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
       <i class="fa-solid fa-hands-praying text-sm"></i>
       <span class="text-[10px]">代禱關懷</span>
+    </button>
+    <button onclick="switchTab('settings')" id="navBtn-settings" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+      <i class="fa-solid fa-gear text-sm"></i>
+      <span class="text-[10px]">設定</span>
     </button>
   </nav>
 
   <script>
-    // 1. 初始化 Supabase
+    // Supabase 實體初始化
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let currentChurch = "SHiNE";
-    let allMembers = [];
+    let activeChurch = "SHiNE";
+    let cachedMembers = [];
 
-    // 登入邏輯
-    function handleLogin() {
+    // 登入驗證
+    function performLogin() {
       const name = document.getElementById('loginName').value.trim();
       const pwd = document.getElementById('loginPwd').value.trim();
       const err = document.getElementById('loginError');
@@ -159,118 +273,249 @@
         document.getElementById('loginModal').classList.add('hidden');
         loadAllData();
       } else {
-        err.innerText = "驗證密碼錯誤，請重新確認！";
+        err.innerText = "驗證密碼錯誤，請確認！";
         err.classList.remove('hidden');
       }
     }
 
-    // 載入資料
     async function loadAllData() {
-      await loadMembers();
-      await loadServices();
-      await loadPrayers();
+      await Promise.all([
+        loadMembers(),
+        loadServices(),
+        loadGroupOverview(),
+        loadPrayers(),
+        loadSettings()
+      ]);
     }
 
+    // 1. 會友名冊模組
     async function loadMembers() {
-      const { data, error } = await client.from('members').select('*').eq('church_id', currentChurch).order('id');
+      const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
       if (data) {
-        allMembers = data;
-        renderMembers(data);
+        cachedMembers = data;
+        renderMembersTable(data);
       }
     }
 
-    function renderMembers(list) {
+    function renderMembersTable(list) {
       document.getElementById('memberCount').innerText = list.length;
       const tbody = document.getElementById('memberTableBody');
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">查無名冊資料</td></tr>';
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">查無資料</td></tr>';
         return;
       }
       tbody.innerHTML = list.map(m => `
-        <tr class="hover:bg-slate-700/30 transition">
-          <td class="p-3 font-medium text-white flex items-center gap-2">
+        <tr class="hover:bg-slate-800/40 transition">
+          <td class="p-3 font-medium text-white flex items-center gap-1.5">
             <span>${m.name}</span>
-            <span class="text-[10px] text-slate-400">(${m.gender})</span>
+            <span class="text-[10px] text-slate-500">(${m.gender})</span>
           </td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">${m.group_name || '未編組'}</span></td>
-          <td class="p-3 text-slate-300">${m.faith_status || '委身家人'}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">${m.group_name || '未編組'}</span></td>
+          <td class="p-3 text-slate-400">${m.faith_status || '委身家人'}</td>
           <td class="p-3 font-mono text-slate-300">${m.phone || '-'}</td>
+          <td class="p-3">
+            ${m.line_id && m.line_id.startsWith('U') ? '<span class="text-emerald-400 text-xs"><i class="fa-solid fa-circle-check"></i> 已綁定</span>' : '<span class="text-slate-600 text-xs">未綁定</span>'}
+          </td>
           <td class="p-3 text-indigo-300">${m.ministry || '-'}</td>
-          <td class="p-3 text-slate-400">${m.district || '-'}</td>
+          <td class="p-3 text-right">
+            <button onclick="editMember(${m.id})" class="text-indigo-400 hover:text-indigo-300 px-2 py-1"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="deleteMember(${m.id})" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
         </tr>
       `).join('');
     }
 
     function filterMembers() {
       const q = document.getElementById('memberSearch').value.toLowerCase();
-      const filtered = allMembers.filter(m => 
+      const filtered = cachedMembers.filter(m => 
         (m.name && m.name.toLowerCase().includes(q)) ||
         (m.phone && m.phone.includes(q)) ||
-        (m.group_name && m.group_name.toLowerCase().includes(q))
+        (m.group_name && m.group_name.toLowerCase().includes(q)) ||
+        (m.ministry && m.ministry.toLowerCase().includes(q))
       );
-      renderMembers(filtered);
+      renderMembersTable(filtered);
     }
 
+    function openMemberModal() {
+      document.getElementById('editMemberId').value = '';
+      document.getElementById('editName').value = '';
+      document.getElementById('editPhone').value = '';
+      document.getElementById('editGroup').value = '未編組';
+      document.getElementById('editDistrict').value = '';
+      document.getElementById('editMinistry').value = '';
+      document.getElementById('modalTitle').innerText = '新增會友資料';
+      document.getElementById('memberEditModal').classList.remove('hidden');
+    }
+
+    function editMember(id) {
+      const m = cachedMembers.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('editMemberId').value = m.id;
+      document.getElementById('editName').value = m.name;
+      document.getElementById('editGender').value = m.gender;
+      document.getElementById('editPhone').value = m.phone || '';
+      document.getElementById('editGroup').value = m.group_name || '未編組';
+      document.getElementById('editFaithStatus').value = m.faith_status || '委身家人';
+      document.getElementById('editDistrict').value = m.district || '';
+      document.getElementById('editMinistry').value = m.ministry || '';
+      document.getElementById('modalTitle').innerText = '編輯會友資料';
+      document.getElementById('memberEditModal').classList.remove('hidden');
+    }
+
+    function closeMemberModal() {
+      document.getElementById('memberEditModal').classList.add('hidden');
+    }
+
+    async function saveMemberFromModal() {
+      const id = document.getElementById('editMemberId').value;
+      const payload = {
+        church_id: activeChurch,
+        name: document.getElementById('editName').value.trim(),
+        gender: document.getElementById('editGender').value,
+        phone: document.getElementById('editPhone').value.trim(),
+        group_name: document.getElementById('editGroup').value.trim() || '未編組',
+        faith_status: document.getElementById('editFaithStatus').value,
+        district: document.getElementById('editDistrict').value.trim(),
+        ministry: document.getElementById('editMinistry').value.trim()
+      };
+
+      if (!payload.name) return alert('姓名不得為空！');
+
+      if (id) {
+        await db.from('members').update(payload).eq('id', id);
+      } else {
+        await db.from('members').insert([payload]);
+      }
+      closeMemberModal();
+      loadMembers();
+    }
+
+    async function deleteMember(id) {
+      if (!confirm('確定要刪除此位會友名單嗎？')) return;
+      await db.from('members').delete().eq('id', id);
+      loadMembers();
+    }
+
+    // 2. 主日服事排程模組
     async function loadServices() {
-      const { data } = await client.from('service_schedules').select('*').eq('church_id', currentChurch).order('service_date', { ascending: true });
-      const container = document.getElementById('serviceList');
-      if (!data || data.length === 0) {
-        container.innerHTML = '<div class="p-6 text-slate-500 col-span-2 text-center">尚無排程資料</div>';
+      const { data } = await db.from('service_schedules').select('*').eq('church_id', activeChurch).order('service_date', { ascending: true });
+      const container = document.getElementById('serviceCardsContainer');
+      if (!data || !data.length) {
+        container.innerHTML = '<div class="col-span-2 text-center text-slate-500 py-8">目前無排程資料</div>';
         return;
       }
       container.innerHTML = data.map(s => `
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3">
-          <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-            <span class="font-bold text-sm text-indigo-300">📅 ${s.service_date} ${s.event ? '('+s.event+')' : ''}</span>
-            <span class="text-xs text-slate-400">講道：${s.speaker || '未定'}</span>
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <div>
+              <span class="font-bold text-sm text-indigo-300">📅 ${s.service_date}</span>
+              <span class="text-xs text-slate-400 ml-2">${s.event ? '('+s.event+')' : ''}</span>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-800">講道：${s.speaker || '未定'}</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs">
-            <div class="text-slate-400">主領：<span class="text-slate-200">${s.worship_leader || '－'}</span></div>
-            <div class="text-slate-400">歌者：<span class="text-slate-200">${s.singers || '－'}</span></div>
-            <div class="text-slate-400">樂團：<span class="text-slate-200">琴(${s.keyboard}) 吉(${s.guitar}) 貝(${s.bass}) 鼓(${s.drums})</span></div>
-            <div class="text-slate-400">影音：<span class="text-slate-200">音控(${s.tech_sound}) 導播(${s.tech_video})</span></div>
-            <div class="text-slate-400 col-span-2">招待：<span class="text-slate-200">${s.ushers || '－'}</span></div>
+            <div class="text-slate-400">敬拜主領：<span class="text-white">${s.worship_leader || '－'}</span></div>
+            <div class="text-slate-400">敬拜歌者：<span class="text-white">${s.singers || '－'}</span></div>
+            <div class="text-slate-400">琴 / 吉他：<span class="text-white">${s.keyboard} / ${s.guitar}</span></div>
+            <div class="text-slate-400">貝斯 / 鼓：<span class="text-white">${s.bass} / ${s.drums}</span></div>
+            <div class="text-slate-400">音控控台：<span class="text-white">${s.tech_sound || '－'}</span></div>
+            <div class="text-slate-400">直播導播：<span class="text-white">${s.tech_video || '－'}</span></div>
+            <div class="text-slate-400 col-span-2">招待事工：<span class="text-white">${s.ushers || '－'}</span></div>
           </div>
         </div>
       `).join('');
     }
 
+    // 3. 小組出席與點名日誌
+    async function loadGroupOverview() {
+      const { data: groups } = await db.from('groups').select('*').eq('church_id', activeChurch);
+      const { data: logs } = await db.from('attendance_records').select('*').eq('church_id', activeChurch).order('created_at', { ascending: false }).limit(20);
+
+      const cardsContainer = document.getElementById('groupOverviewCards');
+      if (groups && groups.length) {
+        cardsContainer.innerHTML = groups.map(g => `
+          <div class="glass-card rounded-2xl p-3 border border-slate-800">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-xs text-white">${g.name}</span>
+              <span class="text-[10px] text-indigo-400">長：${g.leader || '未設'}</span>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1">${g.meeting_time || '聚會時間未定'}</p>
+          </div>
+        `).join('');
+      }
+
+      const tbody = document.getElementById('attendanceLogsBody');
+      if (logs && logs.length) {
+        tbody.innerHTML = logs.map(l => `
+          <tr>
+            <td class="py-2 text-slate-400">${l.meeting_date}</td>
+            <td class="py-2 font-bold text-white">${l.group_name}</td>
+            <td class="py-2 text-slate-300">${l.leader_name || '-'}</td>
+            <td class="py-2"><span class="text-emerald-400 font-mono">${l.total_present}</span> / ${l.total_expected}</td>
+            <td class="py-2 text-slate-400 truncate max-w-xs">${l.present_list || '-'}</td>
+            <td class="py-2 text-slate-500">${l.memo || '-'}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // 4. 代禱紀錄模組
     async function loadPrayers() {
-      const { data } = await client.from('prayer_requests').select('*').eq('church_id', currentChurch).order('created_at', { ascending: false });
-      const container = document.getElementById('prayerList');
-      if (!data || data.length === 0) {
-        container.innerHTML = '<div class="p-6 text-slate-500 text-center">尚無代禱紀錄</div>';
+      const { data } = await db.from('prayer_requests').select('*').eq('church_id', activeChurch).order('created_at', { ascending: false });
+      const container = document.getElementById('prayerCardsList');
+      if (!data || !data.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-6">目前無代禱紀錄</div>';
         return;
       }
       container.innerHTML = data.map(p => `
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 flex justify-between items-start">
+        <div class="glass-card rounded-2xl p-4 flex justify-between items-start">
           <div class="space-y-1">
             <div class="flex items-center gap-2">
               <span class="font-bold text-sm text-white">${p.member_name}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full ${p.urgency_level.includes('緊急') ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-slate-700 text-slate-300'}">${p.urgency_level}</span>
-              <span class="text-[10px] text-slate-400">${p.privacy_level}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full ${p.urgency_level && p.urgency_level.includes('緊急') ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-slate-800 text-slate-300'}">${p.urgency_level || '一般'}</span>
+              <span class="text-[10px] text-slate-500">${p.privacy_level || '公開'}</span>
             </div>
             <p class="text-xs text-slate-300">${p.content}</p>
-            <p class="text-[10px] text-slate-500">回報同工：${p.reporter_name || '教牧同工'} · ${p.created_at ? p.created_at.slice(0, 16).replace('T', ' ') : ''}</p>
+            <p class="text-[10px] text-slate-500">回報同工：${p.reporter_name || '同工'} · ${p.created_at ? p.created_at.slice(0,16).replace('T',' ') : ''}</p>
           </div>
-          <span class="text-xs px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">${p.status}</span>
+          <span class="text-xs px-2 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">${p.status || '代禱中'}</span>
+        </div>
+      `).join('');
+    }
+
+    // 5. 事工恩賜設定
+    async function loadSettings() {
+      const { data } = await db.from('system_settings').select('*').eq('church_id', activeChurch);
+      const container = document.getElementById('systemSettingsList');
+      if (!data || !data.length) {
+        container.innerHTML = '<div class="text-slate-500 text-xs">尚無自訂設定項目</div>';
+        return;
+      }
+      container.innerHTML = data.map(item => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex justify-between items-center text-xs">
+          <div>
+            <span class="font-bold text-slate-200">${item.name}</span>
+            <span class="text-[10px] text-indigo-400 ml-1">(${item.group_category || '一般'})</span>
+            <p class="text-[10px] text-slate-500 truncate">${item.synonyms || ''}</p>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${item.setting_type}</span>
         </div>
       `).join('');
     }
 
     function switchChurch(val) {
-      currentChurch = val;
-      document.getElementById('headerChurchName').innerText = val === 'SHiNE' ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
+      activeChurch = val;
+      document.getElementById('currentChurchLabel').innerText = val === 'SHiNE' ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
       loadAllData();
     }
 
     function switchTab(tabId) {
-      ['members', 'services', 'prayers'].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.add('hidden');
-        document.getElementById(`nav-${t}`).classList.replace('text-indigo-400', 'text-slate-400');
+      ['members', 'services', 'groups', 'prayers', 'settings'].forEach(t => {
+        document.getElementById(`mod-${t}`).classList.add('hidden');
+        document.getElementById(`navBtn-${t}`).classList.replace('text-indigo-400', 'text-slate-400');
       });
-      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-      document.getElementById(`nav-${tabId}`).classList.replace('text-slate-400', 'text-indigo-400');
+      document.getElementById(`mod-${tabId}`).classList.remove('hidden');
+      document.getElementById(`navBtn-${tabId}`).classList.replace('text-slate-400', 'text-indigo-400');
     }
 
     function logout() {
