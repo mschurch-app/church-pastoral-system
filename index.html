@@ -1,0 +1,16 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // 範例：秒讀火樂或 M+ 會友
+  async function fetchMembers(churchId) {
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('church_id', churchId)
+      .order('id', { ascending: true });
+    return data;
+  }
+</script>
