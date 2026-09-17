@@ -142,7 +142,6 @@
             .eq('name', name)
             .maybeSingle();
 
-          // 若名冊查有此人，且尚未綁定或 line_id 不同，自動寫入更新！
           if (matchMember && (!matchMember.line_id || matchMember.line_id !== currentLineUserId)) {
             await db.from('members')
               .update({ line_id: currentLineUserId })
@@ -154,7 +153,7 @@
         }
       }
 
-      // 送出代禱
+      // 送出代禱到資料庫
       const { error } = await db.from('prayer_requests').insert([{
         church_id: churchId,
         member_name: name,
@@ -169,6 +168,26 @@
         btn.disabled = false;
         btn.innerHTML = '點亮守望燭火，送出代禱';
         return alert('送出失敗：' + error.message);
+      }
+
+      // ========================================================
+      // 🔔 即時通知牧者 (使用 await 確保推播送出完成後才關閉視窗)
+      // ========================================================
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_pastor&church=${encodeURIComponent(churchId)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          },
+          body: JSON.stringify({
+            memberName: name,
+            content: content,
+            urgency: urgency
+          })
+        });
+      } catch (notifyErr) {
+        console.error("通知牧者失敗:", notifyErr);
       }
 
       alert('🕯️ 守望燭火已為您點亮！教牧同工將在晨禱中同心為您提名祈求。');
