@@ -41,7 +41,7 @@
 
     <div class="space-y-3 text-xs pt-1">
       <div>
-        <label class="font-bold text-stone-700 block mb-1">為誰代禱（您的姓名或稱呼）*</label>
+        <label class="font-bold text-stone-700 block mb-1">為誰代禱（您的真實姓名或稱呼）*</label>
         <input type="text" id="pName" placeholder="載入稱呼中..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400">
       </div>
 
@@ -75,7 +75,6 @@
     const churchId = rawChurch.trim();
     let currentLineUserId = '';
 
-    // 依堂會指派專屬 LIFF ID
     const LIFF_IDS = {
       'SHiNE': '2011645391-rBmBFx40',
       'M+': '2011645391-7JHlvDUE'
@@ -92,14 +91,19 @@
             const profile = await liff.getProfile();
             currentLineUserId = profile.userId;
 
-            // 嘗試比對名冊綁定姓名
+            // 1. 若此 LINE ID 已經綁定過會友，直接帶入真實姓名
             const { data: member } = await db.from('members')
               .select('name')
               .eq('church_id', churchId)
               .eq('line_id', currentLineUserId)
               .maybeSingle();
 
-            document.getElementById('pName').value = member ? member.name : profile.displayName;
+            if (member) {
+              document.getElementById('pName').value = member.name;
+            } else {
+              // 2. 尚未綁定時，先以 LINE 暱稱作為預設提示
+              document.getElementById('pName').value = profile.displayName || '';
+            }
           }
         }
       } catch (e) {
@@ -127,6 +131,30 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在為您點亮守望燭火...';
 
+      // ========================================================
+      // 🌟 智慧靜態綁定機制：拿填寫的姓名比對名冊並寫入 LINE ID
+      // ========================================================
+      if (currentLineUserId) {
+        try {
+          const { data: matchMember } = await db.from('members')
+            .select('id, name, line_id')
+            .eq('church_id', churchId)
+            .eq('name', name)
+            .maybeSingle();
+
+          // 若名冊查有此人，且尚未綁定或 line_id 不同，自動寫入更新！
+          if (matchMember && (!matchMember.line_id || matchMember.line_id !== currentLineUserId)) {
+            await db.from('members')
+              .update({ line_id: currentLineUserId })
+              .eq('id', matchMember.id);
+            console.log(`✅ 成功為 ${name} 自動關聯 LINE ID: ${currentLineUserId}`);
+          }
+        } catch (bindErr) {
+          console.error("背景自動綁定跳過:", bindErr);
+        }
+      }
+
+      // 送出代禱
       const { error } = await db.from('prayer_requests').insert([{
         church_id: churchId,
         member_name: name,
