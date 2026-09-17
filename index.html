@@ -264,7 +264,7 @@
     <section id="mod-prayers" class="space-y-6 hidden">
       <div>
         <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">即時牧養關懷代禱</h2>
-        <p class="text-xs text-stone-500 mt-1">來自 LINE 官方帳號的第一線守望需求，同工點擊「完成守望」即可發送回響通知</p>
+        <p class="text-xs text-stone-500 mt-1">來自 LINE 官方帳號的第一線守望需求，同工可直接撰寫禱告詞回覆並即時推播回會友手機</p>
       </div>
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
@@ -572,7 +572,7 @@
     </div>
   </div>
 
-  <!-- 【全新 Modal: 新增祝福圖卡 (直接本機上傳圖片)】 -->
+  <!-- 【Modal: 新增祝福圖卡 (直接本機上傳圖片)】 -->
   <div id="newGreetingCardModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
       <div class="flex justify-between items-center border-b border-stone-200 pb-3">
@@ -640,6 +640,43 @@
       <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
         <button onclick="closeAdminModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
         <button onclick="saveAdminUser()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 【Modal: 牧者專屬祝禱回覆】 -->
+  <div id="prayerReplyModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center border-b border-stone-200 pb-3">
+        <h3 class="text-base font-black text-stone-800 flex items-center gap-2">
+          <i class="fa-solid fa-hands-praying text-orange-600"></i>
+          <span id="replyTargetTitle">為會友撰寫守望祝禱</span>
+        </h3>
+        <button onclick="closePrayerReplyModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <input type="hidden" id="replyPrayerId">
+      <input type="hidden" id="replyLineUserId">
+      <input type="hidden" id="replyMemberName">
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 rounded-xl bg-orange-50/60 border border-orange-200/60">
+          <span class="text-[11px] font-bold text-orange-950 block">原代禱事項：</span>
+          <p id="replyOriginalContent" class="text-stone-700 mt-1 leading-relaxed"></p>
+        </div>
+
+        <div>
+          <label class="text-stone-600 font-bold block mb-1">親撰同理祝禱文 (將直接推播至會友個人 LINE) *</label>
+          <textarea id="replyPrayerText" rows="4" placeholder="親愛的好友，牧師為你禱告：願耶和華賜福給你，保護你，使你的心滿有平安與力量..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-stone-200">
+        <button onclick="closePrayerReplyModal()" class="py-2.5 px-4 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="sendPastorPrayerReply()" id="btnSendReply" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+          <span>送出守望回響</span>
+        </button>
       </div>
     </div>
   </div>
@@ -987,7 +1024,7 @@
               <button onclick="editServiceSchedule(${s.id})" class="text-xs px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition flex items-center gap-1">
                 <i class="fa-solid fa-pen text-[10px]"></i> 調整服事
               </button>
-              <button onclick="deleteServiceSchedule(${s.id}, '${s.service_date}')" class="text-xs px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+              <button onclick="deleteServiceSchedule(${s.id}, '${s.service_date}')" class="text-xs px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -1264,7 +1301,7 @@
       renderMembersCards(cachedMembers);
     }
 
-// 4. 代禱關懷 (完整連動 LINE 推播與狀態回報)
+    // 4. 代禱關懷 (完整連動 LINE 推播與牧者祝禱回覆)
     async function loadPrayers() {
       const { data } = await db
         .from('prayer_requests')
@@ -1281,6 +1318,7 @@
       c.innerHTML = data.map(p => {
         const isInterceded = p.status === '已守望';
         const hasLine = !!p.line_user_id;
+        const safeContent = (p.content || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
 
         return `
           <div class="lux-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
@@ -1293,18 +1331,19 @@
                 <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString()}</span>
               </div>
               <p class="text-stone-600 text-xs leading-relaxed">「${p.content}」</p>
+              ${p.pastor_reply_prayer ? `<p class="text-[11px] text-stone-500 bg-stone-50 p-2.5 rounded-xl border border-stone-100 leading-relaxed"><strong class="text-orange-900 font-bold">牧者祝禱回覆：</strong>${p.pastor_reply_prayer}</p>` : ''}
               ${p.interceded_by ? `<p class="text-[11px] text-stone-400 font-medium">守望紀錄：${p.interceded_by} 同工已於 ${new Date(p.interceded_at).toLocaleDateString()} 晨禱守望</p>` : ''}
             </div>
 
             <div class="flex items-center gap-2 flex-shrink-0">
               ${!isInterceded ? `
-                <button onclick="markPrayerInterceded(${p.id}, '${p.member_name}', '${p.line_user_id || ''}')" class="px-4 py-2 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm">
-                  <i class="fa-solid fa-check text-xs"></i> <span>完成守望 (發送回響)</span>
+                <button onclick="openPrayerReplyModal(${p.id}, '${p.member_name}', '${p.line_user_id || ''}', '${safeContent}')" class="px-4 py-2 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                  <i class="fa-solid fa-pen text-xs"></i> <span>寫祝禱回覆 (LINE推播)</span>
                 </button>
               ` : `
-                <span class="text-xs font-bold text-emerald-700 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80">
-                  <i class="fa-solid fa-check-double mr-1"></i>已守望完畢
-                </span>
+                <button onclick="openPrayerReplyModal(${p.id}, '${p.member_name}', '${p.line_user_id || ''}', '${safeContent}')" class="text-xs font-bold text-emerald-700 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-100 transition">
+                  <i class="fa-solid fa-check-double mr-1"></i>已守望 (再次祝禱)
+                </button>
               `}
               <button onclick="deletePrayer(${p.id})" class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
                 <i class="fa-solid fa-trash text-xs"></i>
@@ -1315,40 +1354,66 @@
       }).join('');
     }
 
-    // 完成守望：更新資料庫並觸發 LINE Push 推播給該會友
-    async function markPrayerInterceded(id, name, lineUserId) {
-      if (!confirm(`確定已為【${name}】完成守望？系統將同步紀錄並發送 LINE 守望回響！`)) return;
+    // 開啟牧者親撰祝禱彈窗
+    function openPrayerReplyModal(id, name, lineUserId, content) {
+      document.getElementById('replyPrayerId').value = id;
+      document.getElementById('replyLineUserId').value = lineUserId || '';
+      document.getElementById('replyMemberName').value = name;
+      document.getElementById('replyTargetTitle').innerText = `為 ${name} 撰寫守望祝禱`;
+      document.getElementById('replyOriginalContent').innerText = content;
+      document.getElementById('replyPrayerText').value = `親愛的 ${name}，我們已在晨禱中同心為你的需要向神切切守望祈求。願基督出人意外的平安親自護衛你的心懷意念，相信神正在為你開路，出也蒙福、入也蒙福！阿們！`;
+      document.getElementById('prayerReplyModal').classList.remove('hidden');
+    }
+
+    function closePrayerReplyModal() {
+      document.getElementById('prayerReplyModal').classList.add('hidden');
+    }
+
+    // 送出牧者親撰祝禱並推播回會友 LINE
+    async function sendPastorPrayerReply() {
+      const id = document.getElementById('replyPrayerId').value;
+      const name = document.getElementById('replyMemberName').value;
+      const lineUserId = document.getElementById('replyLineUserId').value;
+      const prayerText = document.getElementById('replyPrayerText').value.trim();
+
+      if (!prayerText) return alert('請填寫祝禱文喔！');
+
+      const btn = document.getElementById('btnSendReply');
+      btn.disabled = true;
+      btn.innerText = "正在傳送祝禱...";
 
       const workerName = currentUser ? currentUser.name : '教牧同工';
 
-      // 1. 更新資料庫狀態
+      // 1. 更新資料庫
       await db.from('prayer_requests').update({
         status: '已守望',
         interceded_by: workerName,
-        interceded_at: new Date().toISOString()
+        interceded_at: new Date().toISOString(),
+        pastor_reply_prayer: prayerText
       }).eq('id', id);
 
-      // 2. 若有 LINE ID，呼叫 Edge Function 推播
+      // 2. 透過 LINE Push 推播給會友
       if (lineUserId) {
         try {
           await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=push_interceded&church=${encodeURIComponent(activeChurch)}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${SUPABASE_KEY}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
             body: JSON.stringify({
               userId: lineUserId,
               memberName: name,
-              workerName: workerName
+              workerName: workerName,
+              prayerText: prayerText
             })
           });
         } catch (err) {
-          console.log("Push notice notice error:", err);
+          console.error("Push Error:", err);
         }
       }
 
-      alert(`✨ 已成功完成守望！${lineUserId ? '已同步透過 LINE 發送守望回響給會友！' : '已完成狀態更新！'}`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> <span>送出守望回響</span>';
+      closePrayerReplyModal();
+      alert(`✨ 守望祝禱已成功送達！${lineUserId ? `已同步推播至 ${name} 的個人 LINE！` : '已完成狀態更新！'}`);
       await loadPrayers();
     }
 
@@ -1687,7 +1752,6 @@
       btn.disabled = true;
       btn.innerText = "正在處理並上傳中...";
 
-      // 若有選擇本機照片，優先上傳至 Supabase Storage
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
         const fileExt = file.name.split('.').pop();
@@ -1715,7 +1779,6 @@
         return alert("請選擇圖片檔案或填入圖片網址！");
       }
 
-      // 寫入資料庫
       await db.from('share_greeting_cards').insert([{
         church_id: activeChurch,
         category: cat,
