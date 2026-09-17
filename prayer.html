@@ -70,6 +70,7 @@
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 解析當前堂會 (防呆容錯: 處理 M+ 與 SHiNE)
     const urlParams = new URLSearchParams(window.location.search);
     let rawChurch = (urlParams.get('church') || 'SHiNE').trim();
     if (rawChurch === 'M' || rawChurch === 'M ' || rawChurch.startsWith('M')) {
@@ -94,7 +95,7 @@
             const profile = await liff.getProfile();
             currentLineUserId = profile.userId;
 
-            // 1. 若此 LINE ID 已經綁定過會友，直接帶入真實姓名
+            // 嘗試比對名冊綁定姓名
             const { data: member } = await db.from('members')
               .select('name')
               .eq('church_id', churchId)
@@ -104,13 +105,12 @@
             if (member) {
               document.getElementById('pName').value = member.name;
             } else {
-              // 2. 尚未綁定時，先以 LINE 暱稱作為預設提示
               document.getElementById('pName').value = profile.displayName || '';
             }
           }
         }
       } catch (e) {
-        console.error("LIFF Init Error:", e);
+        console.error("LIFF 初始化:", e);
       }
 
       if (!document.getElementById('pName').value || document.getElementById('pName').value === '載入稱呼中...') {
@@ -132,9 +132,9 @@
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在為您點亮守望燭火...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在為您點亮守望燭火並通知牧者...';
 
-      // 1. 背景自動綁定機制：拿填寫的姓名比對名冊並寫入 LINE ID
+      // 1. 背景自動綁定機制：寫入 members.line_id
       if (currentLineUserId) {
         try {
           const { data: matchMember } = await db.from('members')
@@ -147,14 +147,14 @@
             await db.from('members')
               .update({ line_id: currentLineUserId })
               .eq('id', matchMember.id);
-            console.log(`✅ 成功為 ${name} 自動關聯 LINE ID: ${currentLineUserId}`);
+            console.log(`✅ 成功為 ${name} 自動關聯 LINE ID`);
           }
         } catch (bindErr) {
           console.error("背景自動綁定跳過:", bindErr);
         }
       }
 
-      // 2. 送出代禱到資料庫
+      // 2. 寫入代禱資料庫
       const { error } = await db.from('prayer_requests').insert([{
         church_id: churchId,
         member_name: name,
@@ -171,10 +171,10 @@
         return alert('送出失敗：' + error.message);
       }
 
-      // 3. 即時通知牧者本人 (完整 await 確保送達)
+      // 3. 即時發送 LINE 推播給牧者本人 (嚴格 await 等待完成)
       try {
         const notifyUrl = `${SUPABASE_URL}/functions/v1/line-bot?action=notify_pastor&church=${encodeURIComponent(churchId)}`;
-        const res = await fetch(notifyUrl, {
+        const notifyRes = await fetch(notifyUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -186,13 +186,14 @@
             urgency: urgency
           })
         });
-        const resData = await res.json();
-        console.log("牧者通知結果:", resData);
+        const notifyData = await notifyRes.json();
+        console.log("牧者通知發送結果:", notifyData);
       } catch (notifyErr) {
         console.error("通知牧者連線異常:", notifyErr);
       }
 
-      alert('🕯️ 守望燭火已為您點亮！牧者與教牧同工將同心為您切切守望。');
+      // 4. 成功提示並關閉視窗
+      alert('🕯️ 守望燭火已為您點亮！牧者與教牧團隊已即時收到通知，將同心切切為您守望。');
 
       if (window.liff && liff.isInClient()) {
         liff.closeWindow();
