@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>CHURCH OS · 智慧教牧行政治理平台</title>
   
+  <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
+  <!-- 頂級人文字體：Plus Jakarta Sans & Noto Sans TC -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -27,135 +29,225 @@
 
   <style>
     :root {
-      --brand-primary: #ea580c;
-      --brand-light: #fff7ed;
-      --brand-glow: rgba(234, 88, 12, 0.22);
+      --brand-accent: #f97316; /* 陽光赤陶橘 */
+      --brand-accent-hover: #ea580c;
+      --brand-subtle: #ffedd5;
+      --surface-bg: #FAF6F0;
+      --card-bg: rgba(255, 255, 255, 0.94);
+      --card-border: rgba(234, 218, 198, 0.75);
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { background-color: #FAF8F5; color: #1e293b; overflow-x: hidden; width: 100vw; }
-    .sun-glow { position: absolute; border-radius: 9999px; filter: blur(120px); opacity: 0.45; pointer-events: none; z-index: 0; }
-    .warm-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(241, 227, 211, 0.7); box-shadow: 0 10px 30px -10px rgba(180, 115, 60, 0.08); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
-    .warm-nav { background: rgba(253, 251, 247, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(235, 220, 203, 0.8); box-shadow: 0 4px 20px rgba(180, 115, 60, 0.04); }
-    .warm-modal { background: #FFFFFF; border: 1px solid rgba(241, 227, 211, 0.9); box-shadow: 0 25px 50px -12px rgba(120, 60, 20, 0.18); }
-    .chip-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; user-select: none; }
-    .chip-btn.selected { background-color: var(--brand-primary) !important; color: #ffffff !important; border-color: transparent !important; box-shadow: 0 4px 12px var(--brand-glow); }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(120% 80% at 50% -10%, #FFF2E2 0%, #FAF6F0 50%, #F5EEE6 100%);
+      color: #1c1917;
+      min-height: 100vh;
+      width: 100vw;
+      overflow-x: hidden;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    /* 奢華微晶玻璃面板 */
+    .lux-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 12px 32px -4px rgba(184, 134, 76, 0.08), 0 4px 12px -2px rgba(184, 134, 76, 0.04);
+      border-radius: 24px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .lux-card:hover {
+      box-shadow: 0 20px 40px -4px rgba(184, 134, 76, 0.12), 0 6px 16px -2px rgba(184, 134, 76, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .lux-header {
+      background: rgba(250, 246, 240, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(234, 218, 198, 0.8);
+    }
+
+    .lux-dock {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(234, 218, 198, 0.85);
+      box-shadow: 0 20px 40px -10px rgba(120, 75, 25, 0.14);
+    }
+
+    .lux-modal {
+      background: #FFFFFF;
+      border: 1px solid rgba(234, 218, 198, 0.9);
+      box-shadow: 0 30px 60px -12px rgba(100, 50, 10, 0.2);
+    }
+
+    /* 恩賜點選標籤 Chips */
+    .chip-item {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip-item.active {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+      color: #ffffff !important;
+      border-color: transparent !important;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* 質感按鈕漸層 */
+    .btn-warm {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #ffffff;
+      box-shadow: 0 6px 18px -2px rgba(234, 88, 12, 0.38);
+      transition: all 0.25s ease;
+    }
+    .btn-warm:hover {
+      box-shadow: 0 10px 24px -2px rgba(234, 88, 12, 0.48);
+      transform: translateY(-1px);
+    }
+    .btn-warm:active {
+      transform: scale(0.98);
+    }
+
     ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-thumb { background: rgba(210, 180, 150, 0.4); border-radius: 9999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(214, 186, 155, 0.45); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(214, 186, 155, 0.75); }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans pb-28 lg:pb-10 relative selection:bg-orange-200 selection:text-orange-900">
+<body class="flex flex-col font-sans pb-32 lg:pb-12 antialiased selection:bg-orange-200 selection:text-orange-950">
 
-  <div class="sun-glow w-96 h-96 bg-amber-200/60 top-0 -left-20"></div>
-  <div class="sun-glow w-[30rem] h-[30rem] bg-orange-200/50 bottom-10 right-0"></div>
-
-  <!-- 頂部導航列 -->
-  <header class="sticky top-0 z-40 warm-nav px-4 sm:px-8 py-3 transition-all">
+  <!-- 頂部奢華導覽列 -->
+  <header class="sticky top-0 z-40 lux-header px-4 sm:px-8 py-3.5 transition-all">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
-      <div class="flex items-center space-x-3 min-w-0">
-        <div id="churchLogoWrapper" class="w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center text-white shadow-md shadow-orange-500/20 overflow-hidden" style="background-color: var(--brand-primary)">
+      
+      <!-- 堂會名牌與 Logo -->
+      <div class="flex items-center space-x-3.5 min-w-0">
+        <div id="churchLogoWrapper" class="w-11 h-11 rounded-2xl flex-shrink-0 flex items-center justify-center text-white shadow-md shadow-orange-500/25 overflow-hidden transition-all duration-300" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
           <i id="churchLogoIcon" class="fa-solid fa-church text-base"></i>
           <img id="churchLogoImg" class="w-full h-full object-cover hidden" src="" alt="Logo">
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h1 id="currentChurchLabel" class="text-sm sm:text-base font-bold text-slate-800 tracking-tight truncate max-w-[150px] sm:max-w-none">載入中...</h1>
-            <span id="adminRoleBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100/80 text-orange-800 font-semibold border border-orange-200/60 whitespace-nowrap">認證中</span>
+            <h1 id="currentChurchLabel" class="text-base sm:text-lg font-black text-stone-800 tracking-tight truncate max-w-[160px] sm:max-w-none">
+              載入中...
+            </h1>
+            <span id="adminRoleBadge" class="text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-amber-100/70 text-amber-900 font-bold border border-amber-200/80 whitespace-nowrap">
+              同工認證
+            </span>
           </div>
-          <p id="currentUserLabel" class="text-[11px] text-amber-800/60 font-medium truncate">智慧教牧治理平台</p>
+          <p id="currentUserLabel" class="text-xs text-stone-500 font-medium truncate mt-0.5">智慧教牧治理平台</p>
         </div>
       </div>
 
+      <!-- 右側切換與登出 -->
       <div class="flex items-center gap-2.5 flex-shrink-0">
         <div id="superChurchSelectorWrapper" class="hidden">
           <div class="relative">
-            <select id="superChurchSelector" onchange="switchChurch(this.value)" class="appearance-none bg-white border border-amber-200 text-xs font-semibold rounded-xl pl-3 pr-7 py-2 text-slate-700 shadow-sm focus:outline-none cursor-pointer">
+            <select id="superChurchSelector" onchange="switchChurch(this.value)" class="appearance-none bg-white/90 border border-stone-200 text-xs font-bold rounded-xl pl-3.5 pr-8 py-2 text-stone-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 cursor-pointer">
               <option value="SHiNE">火樂 (SHiNE)</option>
               <option value="M+">Ｍ＋大雅</option>
             </select>
-            <i class="fa-solid fa-chevron-down absolute right-2.5 top-3 text-[10px] text-amber-700 pointer-events-none"></i>
+            <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-[10px] text-stone-400 pointer-events-none"></i>
           </div>
         </div>
-        <button onclick="logout()" class="w-9 h-9 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-amber-200/70 shadow-sm flex items-center justify-center transition" title="安全登出">
+
+        <button onclick="logout()" class="w-9 h-9 rounded-xl bg-white hover:bg-rose-50 text-stone-400 hover:text-rose-600 border border-stone-200/80 shadow-sm flex items-center justify-center transition" title="安全登出">
           <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
         </button>
       </div>
+
     </div>
   </header>
 
-  <!-- 登入認證彈窗 -->
-  <div id="loginModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="warm-modal p-6 sm:p-8 rounded-[30px] max-w-sm w-full space-y-6 shadow-2xl relative overflow-hidden">
-      <div class="text-center space-y-1.5">
-        <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30 mb-3" style="background-color: var(--brand-primary)">
-          <i class="fa-solid fa-heart"></i>
+  <!-- 登入認證彈窗（溫暖優雅白系） -->
+  <div id="loginModal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="lux-modal p-8 rounded-[32px] max-w-sm w-full space-y-6 shadow-2xl relative overflow-hidden">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center text-2xl text-white shadow-xl shadow-orange-500/30 mb-4" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
+          <i class="fa-solid fa-cross"></i>
         </div>
-        <h2 class="text-xl font-black text-slate-800 tracking-tight">歡迎回到教牧家園</h2>
-        <p class="text-xs text-amber-800/70">請選取管理者同工並輸入授權密碼</p>
+        <h2 class="text-2xl font-black text-stone-800 tracking-tight">歡迎回到同工之家</h2>
+        <p class="text-xs text-stone-500">請選取管理者同工並輸入授權密碼</p>
       </div>
 
       <div class="space-y-4 text-xs">
         <div>
-          <label class="text-slate-600 font-bold block mb-1.5">管理者同工</label>
-          <select id="loginNameSelect" class="w-full bg-orange-50/50 border border-amber-200/80 rounded-xl px-3.5 py-3 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400">
-            <option value="吳俊璋">吳俊璋 牧師</option>
-            <option value="謝碧鳳">謝碧鳳 師母</option>
-            <option value="松慕強">松慕強 牧師</option>
-            <option value="戴國馨">戴國馨 火樂行政</option>
-            <option value="文義豪">文義豪 火樂同工</option>
-            <option value="曾恩茹">曾恩茹 Ｍ＋同工</option>
-            <option value="邵鈺庭">邵鈺庭 Ｍ＋行政</option>
-            <option value="張捷">張捷 Ｍ＋總務</option>
-          </select>
+          <label class="text-stone-600 font-bold block mb-1.5">管理者同工</label>
+          <div class="relative">
+            <select id="loginNameSelect" class="w-full appearance-none bg-stone-50 border border-stone-200 rounded-2xl px-4 py-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 cursor-pointer">
+              <option value="吳俊璋">吳俊璋 牧師</option>
+              <option value="謝碧鳳">謝碧鳳 師母</option>
+              <option value="松慕強">松慕強 牧師</option>
+              <option value="戴國馨">戴國馨 火樂行政</option>
+              <option value="文義豪">文義豪 火樂同工</option>
+              <option value="曾恩茹">曾恩茹 Ｍ＋同工</option>
+              <option value="邵鈺庭">邵鈺庭 Ｍ＋行政</option>
+              <option value="張捷">張捷 Ｍ＋總務</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-xs text-stone-400 pointer-events-none"></i>
+          </div>
         </div>
 
         <div>
-          <label class="text-slate-600 font-bold block mb-1.5">授權密碼</label>
-          <input type="password" id="loginPwd" class="w-full bg-orange-50/50 border border-amber-200/80 rounded-xl px-3.5 py-3 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="••••••••">
+          <label class="text-stone-600 font-bold block mb-1.5">安全授權碼</label>
+          <input type="password" id="loginPwd" class="w-full bg-stone-50 border border-stone-200 rounded-2xl px-4 py-3 text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="••••••••">
         </div>
 
-        <p id="loginError" class="text-xs text-rose-600 font-semibold hidden flex items-center gap-1.5">
+        <p id="loginError" class="text-xs text-rose-600 font-bold hidden flex items-center gap-1.5 pt-1">
           <i class="fa-solid fa-circle-exclamation"></i> <span></span>
         </p>
 
-        <button onclick="handleAuthLogin()" class="w-full py-3.5 rounded-xl text-white font-bold text-xs tracking-wider uppercase transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2" style="background-color: var(--brand-primary)">
-          <span>確認登入系統</span>
+        <button onclick="handleAuthLogin()" class="w-full py-3.5 rounded-2xl btn-warm font-extrabold text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2">
+          <span>安全驗證登入</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 主要內容介面 -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-5 sm:py-7 relative z-10">
+  <!-- 主要內容區 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 relative z-10">
     
     <!-- 模組一：會友名冊 -->
-    <section id="mod-members" class="space-y-5 hidden">
+    <section id="mod-members" class="space-y-6 hidden">
+      <!-- 篩選列 -->
       <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-        <div class="flex items-center gap-2 flex-1">
+        <div class="flex items-center gap-2.5 flex-1">
           <div class="relative flex-1">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-amber-700/50 text-xs"></i>
-            <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋姓名、電話..." class="w-full bg-white border border-amber-200/80 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-stone-400 text-xs"></i>
+            <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋會友姓名、電話..." class="w-full bg-white/95 border border-stone-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-stone-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
           </div>
-          <select id="memberFilterGroupSelect" onchange="filterMembers()" class="bg-white border border-amber-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-700 shadow-sm focus:outline-none max-w-[140px]">
+          <select id="memberFilterGroupSelect" onchange="filterMembers()" class="bg-white/95 border border-stone-200/90 rounded-2xl px-3.5 py-2.5 text-xs text-stone-700 font-semibold shadow-sm focus:outline-none max-w-[150px] cursor-pointer">
             <option value="ALL">全部<span class="group-term-label">小家</span></option>
           </select>
         </div>
-        <button onclick="openMemberModal()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-md active:scale-95" style="background-color: var(--brand-primary)">
+
+        <button onclick="openMemberModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center justify-center gap-2 flex-shrink-0">
           <i class="fa-solid fa-user-plus text-xs"></i>
           <span>新增會友</span>
         </button>
       </div>
-      <div id="memberCardsStream" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+
+      <!-- 會友卡片流 (Mobile-first 防超框) -->
+      <div id="memberCardsStream" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
-    <!-- 模組二：主日事工服事（全面恢復建立、編輯、指派） -->
-    <section id="mod-services" class="space-y-5 hidden">
+    <!-- 模組二：主日事工服事（排程管理中樞） -->
+    <section id="mod-services" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">主日崇拜服事輪值</h2>
-          <p class="text-xs text-amber-900/60 mt-0.5">掌握各週敬拜樂團、影音燈控與接待服事安排</p>
+          <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">主日崇拜事工輪值</h2>
+          <p class="text-xs text-stone-500 mt-1">掌握講道、敬拜樂團、影音燈控與接待招待服事安排</p>
         </div>
-        <button onclick="openNewServiceModal()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-md active:scale-95 flex items-center gap-1.5" style="background-color: var(--brand-primary)">
+        <button onclick="openNewServiceModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center gap-2 flex-shrink-0">
           <i class="fa-solid fa-calendar-plus text-xs"></i>
           <span>新增主日服事週次</span>
         </button>
@@ -163,16 +255,16 @@
       <div id="serviceCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
-    <!-- 模組三：小家 / 小組 管理 -->
-    <section id="mod-groups" class="space-y-5 hidden">
+    <!-- 模組三：小家 / 小組 行政中樞 -->
+    <section id="mod-groups" class="space-y-6 hidden">
       <div class="flex justify-between items-center gap-3">
         <div>
-          <h2 class="text-base sm:text-lg font-black text-slate-800 tracking-tight flex items-center gap-1.5">
+          <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight flex items-center gap-2">
             <span class="group-term-label">小家</span>行政與調配中樞
           </h2>
-          <p class="text-xs text-amber-900/60 mt-0.5">架構建立、<span class="group-leader-term-label">小家長</span>指派與組員調動</p>
+          <p class="text-xs text-stone-500 mt-1">建立<span class="group-term-label">小家</span>、指派<span class="group-leader-term-label">小家長</span>與組員調動</p>
         </div>
-        <button onclick="openGroupEditModal()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-md active:scale-95 flex items-center gap-1.5" style="background-color: var(--brand-primary)">
+        <button onclick="openGroupEditModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center gap-2 flex-shrink-0">
           <i class="fa-solid fa-plus text-xs"></i>
           <span>新增<span class="group-term-label">小家</span></span>
         </button>
@@ -181,281 +273,293 @@
     </section>
 
     <!-- 模組四：牧養代禱關懷 -->
-    <section id="mod-prayers" class="space-y-5 hidden">
+    <section id="mod-prayers" class="space-y-6 hidden">
       <div>
-        <h2 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">即時牧養關懷代禱</h2>
-        <p class="text-xs text-amber-900/60 mt-0.5">來自 LINE 官方帳號的即時同工通報與守望</p>
+        <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">即時牧養關懷代禱</h2>
+        <p class="text-xs text-stone-500 mt-1">來自 LINE 官方帳號的第一線守望通報需求</p>
       </div>
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組五：超級管理員控制台 -->
+    <!-- 模組五：【超級管理員控制台】堂會品牌與管理員授權 -->
     <section id="mod-superadmin" class="space-y-6 hidden">
-      <div class="warm-card rounded-3xl p-5 sm:p-7 space-y-4">
-        <div class="border-b border-amber-100 pb-3 flex items-center justify-between">
-          <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
-            <i class="fa-solid fa-palette" style="color: var(--brand-primary)"></i>
+      
+      <!-- 品牌自訂 -->
+      <div class="lux-card p-6 sm:p-8 space-y-5">
+        <div class="border-b border-stone-200/80 pb-3.5 flex items-center justify-between">
+          <h2 class="text-base sm:text-lg font-black text-stone-800 flex items-center gap-2.5">
+            <i class="fa-solid fa-palette text-orange-600"></i>
             <span>堂會專屬代表色系與 Logo 自訂</span>
           </h2>
-          <span class="text-[10px] font-bold text-orange-800 bg-orange-100 px-2.5 py-0.5 rounded-full">Branding</span>
+          <span class="text-[10px] font-bold text-orange-800 bg-orange-100 px-3 py-1 rounded-full">Branding</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
-            <label class="text-slate-600 font-bold block mb-1.5">目標堂會</label>
-            <select id="configChurchTarget" onchange="loadChurchConfigInputs()" class="w-full bg-white border border-amber-200/80 rounded-xl p-2.5 text-slate-800 font-semibold focus:outline-none">
+            <label class="text-stone-600 font-bold block mb-1.5">目標堂會</label>
+            <select id="configChurchTarget" onchange="loadChurchConfigInputs()" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none">
               <option value="SHiNE">火樂教會 (SHiNE)</option>
               <option value="M+">Ｍ＋大雅教會</option>
             </select>
           </div>
           <div>
-            <label class="text-slate-600 font-bold block mb-1.5">主代表色</label>
+            <label class="text-stone-600 font-bold block mb-1.5">主代表色</label>
             <div class="flex gap-2">
-              <input type="color" id="configColorPicker" onchange="document.getElementById('configColorText').value=this.value" class="w-10 h-10 bg-transparent border-0 cursor-pointer rounded-xl">
-              <input type="text" id="configColorText" class="w-full bg-white border border-amber-200/80 rounded-xl p-2.5 text-slate-800 font-mono uppercase focus:outline-none">
+              <input type="color" id="configColorPicker" onchange="document.getElementById('configColorText').value=this.value" class="w-11 h-11 bg-transparent border-0 cursor-pointer rounded-xl">
+              <input type="text" id="configColorText" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-mono uppercase focus:outline-none">
             </div>
           </div>
           <div>
-            <label class="text-slate-600 font-bold block mb-1.5">Logo 圖片網址 (URL)</label>
-            <input type="text" id="configLogoUrl" placeholder="https://..." class="w-full bg-white border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none">
+            <label class="text-stone-600 font-bold block mb-1.5">Logo 圖片網址 (URL)</label>
+            <input type="text" id="configLogoUrl" placeholder="https://..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none">
           </div>
         </div>
-        <div class="flex justify-end pt-1">
-          <button onclick="saveChurchBranding()" class="py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-md active:scale-95" style="background-color: var(--brand-primary)">儲存視覺風格</button>
+        <div class="flex justify-end pt-2">
+          <button onclick="saveChurchBranding()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">儲存視覺風格</button>
         </div>
       </div>
 
-      <div class="warm-card rounded-3xl p-5 sm:p-7 space-y-4">
-        <div class="flex justify-between items-center border-b border-amber-100 pb-3">
-          <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
-            <i class="fa-solid fa-user-shield" style="color: var(--brand-primary)"></i>
-            <span>管理員名冊與細部權限授權</span>
+      <!-- 管理員名單與權限指派 -->
+      <div class="lux-card p-6 sm:p-8 space-y-5">
+        <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
+          <h2 class="text-base sm:text-lg font-black text-stone-800 flex items-center gap-2.5">
+            <i class="fa-solid fa-user-shield text-orange-600"></i>
+            <span>管理員名冊與模組權限授權中心</span>
           </h2>
-          <button onclick="openAdminModal()" class="py-2 px-3.5 rounded-xl text-xs font-bold text-white shadow-md active:scale-95" style="background-color: var(--brand-primary)">
-            <i class="fa-solid fa-plus mr-1"></i> 指派管理員
+          <button onclick="openAdminModal()" class="py-2.5 px-4 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>指派新管理員</span>
           </button>
         </div>
-        <div id="adminUsersCardsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        <div id="adminUsersCardsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
       </div>
+
     </section>
+
   </main>
 
-  <!-- 底部微浮導航列 -->
-  <nav class="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 max-w-md w-full warm-nav rounded-2xl z-30 px-3 py-2 flex justify-around shadow-xl border border-amber-200/70">
-    <button onclick="switchTab('members')" id="nav-members" class="flex flex-col items-center gap-1 transition-all" style="color: var(--brand-primary)">
+  <!-- 底部微浮現代晶透導覽列 (Floating Crystal Dock) -->
+  <nav class="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 max-w-md w-full lux-dock rounded-3xl z-30 px-4 py-2.5 flex justify-around">
+    <button onclick="switchTab('members')" id="nav-members" class="flex flex-col items-center gap-1 transition-all text-orange-600">
       <i class="fa-solid fa-users text-sm"></i>
-      <span class="text-[10px] font-bold">會友名冊</span>
+      <span class="text-[10px] font-extrabold">會友</span>
     </button>
-    <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+    <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-stone-400 hover:text-stone-700 transition-all">
       <i class="fa-solid fa-hand-holding-heart text-sm"></i>
-      <span class="text-[10px] font-bold">主日服事</span>
+      <span class="text-[10px] font-extrabold">服事</span>
     </button>
-    <button onclick="switchTab('groups')" id="nav-groups" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+    <button onclick="switchTab('groups')" id="nav-groups" class="flex flex-col items-center gap-1 text-stone-400 hover:text-stone-700 transition-all">
       <i class="fa-solid fa-people-roof text-sm"></i>
-      <span class="text-[10px] font-bold group-term-label">小家</span>
+      <span class="text-[10px] font-extrabold group-term-label">小家</span>
     </button>
-    <button onclick="switchTab('prayers')" id="nav-prayers" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+    <button onclick="switchTab('prayers')" id="nav-prayers" class="flex flex-col items-center gap-1 text-stone-400 hover:text-stone-700 transition-all">
       <i class="fa-solid fa-hands-praying text-sm"></i>
-      <span class="text-[10px] font-bold">代禱關懷</span>
+      <span class="text-[10px] font-extrabold">代禱</span>
     </button>
-    <button onclick="switchTab('superadmin')" id="nav-superadmin" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 hidden">
+    <button onclick="switchTab('superadmin')" id="nav-superadmin" class="flex flex-col items-center gap-1 text-stone-400 hover:text-stone-700 transition-all hidden">
       <i class="fa-solid fa-screwdriver-wrench text-sm"></i>
-      <span class="text-[10px] font-bold">超級權限</span>
+      <span class="text-[10px] font-extrabold">權限</span>
     </button>
   </nav>
 
   <!-- ======================== 彈窗 MODALS ======================== -->
 
-  <!-- 【Modal: 主日服事 建立與編輯】（全面恢復指派同工） -->
-  <div id="serviceEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="warm-modal w-full sm:max-w-xl rounded-t-[32px] sm:rounded-3xl p-6 space-y-4 max-h-[88vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-amber-100 pb-3">
-        <h3 class="text-base font-black text-slate-800 flex items-center gap-2" id="serviceModalTitle">
-          <i class="fa-solid fa-hand-holding-heart" style="color: var(--brand-primary)"></i>
+  <!-- 【Modal: 主日服事 建立與編輯】 -->
+  <div id="serviceEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-xl rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-5 max-h-[88vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
+        <h3 class="text-lg font-black text-stone-800 flex items-center gap-2" id="serviceModalTitle">
+          <i class="fa-solid fa-hand-holding-heart text-orange-600"></i>
           <span>編輯主日服事安排</span>
         </h3>
-        <button onclick="closeServiceModal()" class="w-8 h-8 rounded-full bg-amber-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeServiceModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <input type="hidden" id="editServiceId">
       
-      <div class="space-y-3 text-xs">
+      <div class="space-y-4 text-xs">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-slate-600 font-bold block mb-1">主日日期 *</label>
-            <input type="text" id="svcDate" placeholder="例如：2027/04/11" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 font-bold focus:outline-none">
+            <label class="text-stone-600 font-bold block mb-1.5">主日日期 *</label>
+            <input type="text" id="svcDate" placeholder="例如：2027/04/11" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
           </div>
           <div>
-            <label class="text-slate-600 font-bold block mb-1">特別活動 / 節日</label>
-            <input type="text" id="svcEvent" placeholder="如：復活節、母親節" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none">
+            <label class="text-stone-600 font-bold block mb-1.5">特別活動 / 節日</label>
+            <input type="text" id="svcEvent" placeholder="如：復活節、浸禮主日" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
           </div>
         </div>
 
         <div>
-          <label class="text-slate-600 font-bold block mb-1">主日講員</label>
-          <input type="text" id="svcSpeaker" placeholder="如：吳俊璋牧師" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 font-bold focus:outline-none">
+          <label class="text-stone-600 font-bold block mb-1.5">主日講員</label>
+          <input type="text" id="svcSpeaker" placeholder="如：吳俊璋牧師" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
         </div>
 
-        <div class="p-3 rounded-2xl bg-amber-50/50 border border-amber-100 space-y-2.5">
-          <span class="text-xs font-black text-amber-900 block"><i class="fa-solid fa-music mr-1 text-orange-600"></i> 敬拜樂團同工</span>
-          <div class="grid grid-cols-2 gap-2.5">
+        <!-- 樂團 -->
+        <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-3">
+          <span class="text-xs font-black text-amber-900 block flex items-center gap-1.5">
+            <i class="fa-solid fa-music text-orange-600"></i> 敬拜樂團同工配置
+          </span>
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">敬拜主領</label>
-              <select id="svcLeader" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">敬拜主領</label>
+              <select id="svcLeader" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">敬拜歌者</label>
-              <input type="text" id="svcSingers" placeholder="歌者名單" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none">
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">敬拜歌者</label>
+              <input type="text" id="svcSingers" placeholder="歌者名單" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
             </div>
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">司琴鍵盤</label>
-              <select id="svcKeyboard" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">司琴鍵盤</label>
+              <select id="svcKeyboard" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">吉他手</label>
-              <select id="svcGuitar" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">吉他手</label>
+              <select id="svcGuitar" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">貝斯手</label>
-              <select id="svcBass" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">貝斯手</label>
+              <select id="svcBass" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">爵士鼓手</label>
-              <select id="svcDrums" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">爵士鼓手</label>
+              <select id="svcDrums" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
           </div>
         </div>
 
-        <div class="p-3 rounded-2xl bg-orange-50/40 border border-orange-100 space-y-2.5">
-          <span class="text-xs font-black text-orange-900 block"><i class="fa-solid fa-headset mr-1 text-orange-600"></i> 影音技術與招待</span>
-          <div class="grid grid-cols-2 gap-2.5">
+        <!-- 影音招待 -->
+        <div class="p-4 rounded-2xl bg-orange-50/50 border border-orange-200/60 space-y-3">
+          <span class="text-xs font-black text-orange-950 block flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-orange-600"></i> 影音技術與主日接待
+          </span>
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">音控控台</label>
-              <select id="svcSound" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">音控控台</label>
+              <select id="svcSound" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
             <div>
-              <label class="text-slate-500 text-[11px] block mb-0.5">直播/導播</label>
-              <select id="svcVideo" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none"></select>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">直播／導播</label>
+              <select id="svcVideo" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
             </div>
             <div class="col-span-2">
-              <label class="text-slate-500 text-[11px] block mb-0.5">主日招待同工</label>
-              <input type="text" id="svcUshers" placeholder="招待人員名單" class="w-full bg-white border border-amber-200/80 rounded-xl p-2 text-slate-800 focus:outline-none">
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">主日招待同工</label>
+              <input type="text" id="svcUshers" placeholder="招待人員名單" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
             </div>
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-3 border-t border-amber-100">
-        <button onclick="closeServiceModal()" class="py-2.5 px-4 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">取消</button>
-        <button onclick="saveServiceData()" class="py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-md active:scale-95" style="background-color: var(--brand-primary)">確認儲存服事表</button>
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
+        <button onclick="closeServiceModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="saveServiceData()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存服事表</button>
       </div>
     </div>
   </div>
 
-  <!-- 其他 Modal：會友編輯 -->
-  <div id="memberEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="warm-modal w-full sm:max-w-lg rounded-t-[32px] sm:rounded-3xl p-6 space-y-4 max-h-[85vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-amber-100 pb-3">
-        <h3 class="text-base font-black text-slate-800 flex items-center gap-2" id="memberModalTitle">
-          <i class="fa-solid fa-user-pen" style="color: var(--brand-primary)"></i>
+  <!-- 【Modal: 會友名冊編輯】 -->
+  <div id="memberEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-lg rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-5 max-h-[88vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
+        <h3 class="text-lg font-black text-stone-800 flex items-center gap-2" id="memberModalTitle">
+          <i class="fa-solid fa-user-pen text-orange-600"></i>
           <span>編輯會友名冊</span>
         </h3>
-        <button onclick="closeMemberModal()" class="w-8 h-8 rounded-full bg-amber-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeMemberModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="editMemberId">
-      <div class="space-y-3.5 text-xs">
+      <div class="space-y-4 text-xs">
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-slate-600 font-bold block mb-1">會友姓名 *</label><input type="text" id="editName" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></div>
-          <div><label class="text-slate-600 font-bold block mb-1">性別</label><select id="editGender" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"><option value="弟兄">弟兄</option><option value="姊妹">姊妹</option></select></div>
+          <div><label class="text-stone-600 font-bold block mb-1">會友姓名 *</label><input type="text" id="editName" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></div>
+          <div><label class="text-stone-600 font-bold block mb-1">性別</label><select id="editGender" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"><option value="弟兄">弟兄</option><option value="姊妹">姊妹</option></select></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-slate-600 font-bold block mb-1">電話號碼</label><input type="tel" id="editPhone" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></div>
-          <div><label class="text-slate-600 font-bold block mb-1">所屬<span class="group-term-label">小家</span></label><select id="editGroupSelect" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></select></div>
+          <div><label class="text-stone-600 font-bold block mb-1">電話號碼</label><input type="tel" id="editPhone" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none"></div>
+          <div><label class="text-stone-600 font-bold block mb-1">所屬<span class="group-term-label">小家</span></label><select id="editGroupSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></select></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-slate-600 font-bold block mb-1">信仰成熟度</label><select id="editFaithStatus" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"><option value="委身家人">委身家人</option><option value="穩定聚會(8成以上)">穩定聚會(8成以上)</option><option value="初信受洗">初信受洗</option><option value="慕道友">慕道友</option><option value="關懷中">關懷中</option></select></div>
-          <div><label class="text-slate-600 font-bold block mb-1">居住區域</label><select id="editDistrict" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"><option value="大雅區">大雅區</option><option value="西屯區">西屯區</option><option value="北屯區">北屯區</option><option value="潭子區">潭子區</option><option value="神岡區">神岡區</option><option value="沙鹿區">沙鹿區</option><option value="其他地區">其他地區</option></select></div>
+          <div><label class="text-stone-600 font-bold block mb-1">信仰成熟度</label><select id="editFaithStatus" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"><option value="委身家人">委身家人</option><option value="穩定聚會(8成以上)">穩定聚會(8成以上)</option><option value="初信受洗">初信受洗</option><option value="慕道友">慕道友</option><option value="關懷中">關懷中</option></select></div>
+          <div><label class="text-stone-600 font-bold block mb-1">居住區域</label><select id="editDistrict" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"><option value="大雅區">大雅區</option><option value="西屯區">西屯區</option><option value="北屯區">北屯區</option><option value="潭子區">潭子區</option><option value="神岡區">神岡區</option><option value="沙鹿區">沙鹿區</option><option value="其他地區">其他地區</option></select></div>
         </div>
         <div>
-          <label class="text-slate-600 font-bold block mb-1.5">服事恩賜 (點選切換)：</label>
-          <div id="ministryChipsContainer" class="flex flex-wrap gap-1.5"></div>
+          <label class="text-stone-600 font-bold block mb-1.5">服事恩賜 (點擊標籤切換勾選，免打字)：</label>
+          <div id="ministryChipsContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
         </div>
       </div>
-      <div class="flex justify-end gap-2 pt-3 border-t border-amber-100">
-        <button onclick="closeMemberModal()" class="py-2.5 px-4 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">取消</button>
-        <button onclick="saveMemberFromModal()" class="py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-md" style="background-color: var(--brand-primary)">確認儲存</button>
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
+        <button onclick="closeMemberModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="saveMemberFromModal()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
       </div>
     </div>
   </div>
 
-  <!-- 小家建立與編輯 Modal -->
-  <div id="groupEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="warm-modal w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 space-y-4">
-      <div class="flex justify-between items-center border-b border-amber-100 pb-3">
-        <h3 class="text-base font-black text-slate-800 flex items-center gap-2" id="groupModalTitle"><i class="fa-solid fa-people-roof" style="color: var(--brand-primary)"></i><span>設定<span class="group-term-label">小家</span>架構</span></h3>
-        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-amber-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+  <!-- 【Modal: 小家建立與編輯】 -->
+  <div id="groupEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
+        <h3 class="text-lg font-black text-stone-800 flex items-center gap-2" id="groupModalTitle"><i class="fa-solid fa-people-roof text-orange-600"></i><span>設定<span class="group-term-label">小家</span>架構</span></h3>
+        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="editGroupId">
       <div class="space-y-3.5 text-xs">
-        <div><label class="text-slate-600 font-bold block mb-1"><span class="group-term-label">小家</span>名稱 *</label><input type="text" id="grpName" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></div>
-        <div><label class="text-slate-600 font-bold block mb-1">主要負責同工 (<span class="group-leader-term-label">小家長</span>) *</label><select id="grpLeaderSelect" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></select></div>
+        <div><label class="text-stone-600 font-bold block mb-1"><span class="group-term-label">小家</span>名稱 *</label><input type="text" id="grpName" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></div>
+        <div><label class="text-stone-600 font-bold block mb-1">主要負責同工 (<span class="group-leader-term-label">小家長</span>) *</label><select id="grpLeaderSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></select></div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-slate-600 font-bold block mb-1">聚會時間</label><select id="grpTimeSelect" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"><option value="每週五 19:30">每週五 19:30</option><option value="每週六 10:00">每週六 10:00</option><option value="每週日 12:30">每週日 12:30</option><option value="彈性時間">彈性時間</option></select></div>
-          <div><label class="text-slate-600 font-bold block mb-1">聚會地點</label><select id="grpLocationSelect" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"><option value="教會主堂">教會主堂</option><option value="教會副堂">教會副堂</option><option value="組員家庭">組員家庭</option><option value="線上聚會">線上聚會</option></select></div>
+          <div><label class="text-stone-600 font-bold block mb-1">聚會時間</label><select id="grpTimeSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"><option value="每週五 19:30">每週五 19:30</option><option value="每週六 10:00">每週六 10:00</option><option value="每週日 12:30">每週日 12:30</option><option value="彈性時間">彈性時間</option></select></div>
+          <div><label class="text-stone-600 font-bold block mb-1">聚會地點</label><select id="grpLocationSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"><option value="教會主堂">教會主堂</option><option value="教會副堂">教會副堂</option><option value="組員家庭">組員家庭</option><option value="線上聚會">線上聚會</option></select></div>
         </div>
       </div>
-      <div class="flex justify-end gap-2 pt-3 border-t border-amber-100">
-        <button onclick="closeGroupEditModal()" class="py-2.5 px-4 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">取消</button>
-        <button onclick="saveGroupData()" class="py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-md" style="background-color: var(--brand-primary)">確認儲存</button>
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
+        <button onclick="closeGroupEditModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="saveGroupData()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
       </div>
     </div>
   </div>
 
-  <!-- 小家組員抽屜 Modal -->
-  <div id="groupMembersManageModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="warm-modal w-full sm:max-w-lg rounded-t-[32px] sm:rounded-3xl p-6 space-y-4 max-h-[85vh] flex flex-col">
-      <div class="flex justify-between items-center border-b border-amber-100 pb-3">
+  <!-- 【Modal: 小家組員調動抽屜】 -->
+  <div id="groupMembersManageModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-lg rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4 max-h-[88vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
         <div>
-          <h3 class="text-base font-black text-slate-800 flex items-center gap-2"><span id="manageModalGroupTitle">-</span><span class="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-800"><span class="group-member-term-label">組員</span>名冊</span></h3>
-          <p class="text-[11px] text-slate-500">點選即可直接「升為長」或「調出組別」</p>
+          <h3 class="text-lg font-black text-stone-800 flex items-center gap-2"><span id="manageModalGroupTitle">-</span><span class="text-xs px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800"><span class="group-member-term-label">組員</span>名冊</span></h3>
+          <p class="text-xs text-stone-500 mt-0.5">點選即可直接「升為長」或「調出組別」</p>
         </div>
-        <button onclick="closeGroupMembersManageModal()" class="w-8 h-8 rounded-full bg-amber-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeGroupMembersManageModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="groupMemberListContainer"></div>
-      <div class="border-t border-amber-100 pt-3 space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 block">調入新成員 (下拉選取)：</label>
+      <div class="flex-1 overflow-y-auto space-y-2.5 pr-1" id="groupMemberListContainer"></div>
+      <div class="border-t border-stone-200/80 pt-3.5 space-y-2">
+        <label class="text-xs font-bold text-stone-700 block">調入新成員 (下拉選取)：</label>
         <div class="flex gap-2">
-          <select id="unassignedOrOtherMemberSelect" class="flex-1 bg-orange-50/40 border border-amber-200/80 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none"></select>
-          <button onclick="assignSelectedMemberToCurrentGroup()" class="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-md whitespace-nowrap" style="background-color: var(--brand-primary)">確認調入</button>
+          <select id="unassignedOrOtherMemberSelect" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-800 font-semibold focus:outline-none"></select>
+          <button onclick="assignSelectedMemberToCurrentGroup()" class="px-5 py-2.5 rounded-xl btn-warm text-xs font-bold whitespace-nowrap">確認調入</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 管理員指派 Modal -->
-  <div id="adminUserModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="warm-modal w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 space-y-4">
-      <div class="flex justify-between items-center border-b border-amber-100 pb-3">
-        <h3 class="text-base font-black text-slate-800 flex items-center gap-2" id="adminModalTitle"><i class="fa-solid fa-user-shield" style="color: var(--brand-primary)"></i><span>設定管理員權限</span></h3>
-        <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full bg-amber-50 text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+  <!-- 【Modal: 管理員指派與權限】 -->
+  <div id="adminUserModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
+        <h3 class="text-lg font-black text-stone-800 flex items-center gap-2" id="adminModalTitle"><i class="fa-solid fa-user-shield text-orange-600"></i><span>設定管理員權限</span></h3>
+        <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="adminEditId">
       <div class="space-y-3.5 text-xs">
-        <div><label class="text-slate-600 font-bold block mb-1">同工姓名 *</label><input type="text" id="admName" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></div>
-        <div><label class="text-slate-600 font-bold block mb-1">授權通行碼 <span id="pwdHint" class="text-slate-400">(留空不變)</span> *</label><input type="password" id="admPwd" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"></div>
-        <div><label class="text-slate-600 font-bold block mb-1">管轄堂會 *</label><select id="admChurch" class="w-full bg-orange-50/40 border border-amber-200/80 rounded-xl p-2.5 text-slate-800 focus:outline-none"><option value="SHiNE">火樂教會 (SHiNE)</option><option value="M+">Ｍ＋大雅教會</option></select></div>
+        <div><label class="text-stone-600 font-bold block mb-1">同工姓名 *</label><input type="text" id="admName" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></div>
+        <div><label class="text-stone-600 font-bold block mb-1">授權通行碼 <span id="pwdHint" class="text-stone-400">(留空不變)</span> *</label><input type="password" id="admPwd" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none"></div>
+        <div><label class="text-stone-600 font-bold block mb-1">管轄堂會 *</label><select id="admChurch" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none"><option value="SHiNE">火樂教會 (SHiNE)</option><option value="M+">Ｍ＋大雅教會</option></select></div>
         <div>
-          <label class="text-slate-600 font-bold block mb-2">授權功能模組勾選：</label>
-          <div class="grid grid-cols-2 gap-2 text-slate-700">
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-orange-50/40 border border-amber-200/60 cursor-pointer"><input type="checkbox" id="permMembers" class="rounded accent-orange-600"> <span>會友名冊</span></label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-orange-50/40 border border-amber-200/60 cursor-pointer"><input type="checkbox" id="permSchedules" class="rounded accent-orange-600"> <span>主日服事</span></label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-orange-50/40 border border-amber-200/60 cursor-pointer"><input type="checkbox" id="permAttendance" class="rounded accent-orange-600"> <span><span class="group-term-label">小家</span>管理</span></label>
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-orange-50/40 border border-amber-200/60 cursor-pointer"><input type="checkbox" id="permPrayers" class="rounded accent-orange-600"> <span>關懷代禱</span></label>
+          <label class="text-stone-600 font-bold block mb-2">授權功能模組勾選：</label>
+          <div class="grid grid-cols-2 gap-2 text-stone-700">
+            <label class="flex items-center gap-2 p-3 rounded-xl bg-stone-50 border border-stone-200/80 cursor-pointer"><input type="checkbox" id="permMembers" class="rounded accent-orange-600 w-4 h-4"> <span class="font-bold">會友名冊</span></label>
+            <label class="flex items-center gap-2 p-3 rounded-xl bg-stone-50 border border-stone-200/80 cursor-pointer"><input type="checkbox" id="permSchedules" class="rounded accent-orange-600 w-4 h-4"> <span class="font-bold">主日服事</span></label>
+            <label class="flex items-center gap-2 p-3 rounded-xl bg-stone-50 border border-stone-200/80 cursor-pointer"><input type="checkbox" id="permAttendance" class="rounded accent-orange-600 w-4 h-4"> <span class="font-bold"><span class="group-term-label">小家</span>管理</span></label>
+            <label class="flex items-center gap-2 p-3 rounded-xl bg-stone-50 border border-stone-200/80 cursor-pointer"><input type="checkbox" id="permPrayers" class="rounded accent-orange-600 w-4 h-4"> <span class="font-bold">關懷代禱</span></label>
           </div>
         </div>
       </div>
-      <div class="flex justify-end gap-2 pt-3 border-t border-amber-100">
-        <button onclick="closeAdminModal()" class="py-2.5 px-4 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">取消</button>
-        <button onclick="saveAdminUser()" class="py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-md" style="background-color: var(--brand-primary)">確認儲存</button>
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
+        <button onclick="closeAdminModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="saveAdminUser()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
       </div>
     </div>
   </div>
@@ -501,14 +605,14 @@
 
       const { data } = await db.from('admin_users').select('*').eq('name', name).eq('password', pwd).eq('is_active', true);
       if (!data || !data.length) {
-        err.querySelector('span').innerText = "驗證密碼錯誤，請確認！";
+        err.querySelector('span').innerText = "驗證密碼錯誤，請重新確認！";
         err.classList.remove('hidden');
         return;
       }
 
       currentUser = data[0];
       document.getElementById('loginModal').classList.add('hidden');
-      document.getElementById('currentUserLabel').innerText = `登入者：${currentUser.name}`;
+      document.getElementById('currentUserLabel').innerText = `目前同工：${currentUser.name}`;
 
       await loadChurchesConfig();
 
@@ -539,10 +643,6 @@
       const c = cachedChurches[churchId];
       if (!c) return;
       document.getElementById('currentChurchLabel').innerText = c.name;
-      const primary = c.primary_color || '#ea580c';
-      document.documentElement.style.setProperty('--brand-primary', primary);
-      document.documentElement.style.setProperty('--brand-glow', `${primary}38`);
-
       const logoImg = document.getElementById('churchLogoImg');
       const logoIcon = document.getElementById('churchLogoIcon');
       if (c.logo_url) {
@@ -577,7 +677,7 @@
       else if (currentUser.can_manage_schedules) switchTab('services');
     }
 
-    // 1. 會友名冊
+    // 1. 會友名冊 (奢華流暢卡片流)
     async function loadMembers() {
       const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
       cachedMembers = data || [];
@@ -588,46 +688,46 @@
     function renderMembersCards(list) {
       const container = document.getElementById('memberCardsStream');
       if (!list.length) {
-        container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 text-xs">查無名冊資料</div>`;
+        container.innerHTML = `<div class="col-span-full py-16 text-center text-stone-400 text-xs">查無名冊資料</div>`;
         return;
       }
       container.innerHTML = list.map(m => {
         const hasLine = m.line_id && m.line_id.startsWith('U');
         const ministries = m.ministry ? m.ministry.split(',').map(s => s.trim()).filter(Boolean) : [];
         return `
-          <div class="warm-card rounded-2xl p-4 space-y-3 flex flex-col justify-between">
-            <div class="space-y-2.5">
+          <div class="lux-card p-5 space-y-4 flex flex-col justify-between">
+            <div class="space-y-3">
               <div class="flex justify-between items-start">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-10 h-10 rounded-2xl ${m.gender === '姊妹' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-700'} flex items-center justify-center font-bold text-sm shadow-sm">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl ${m.gender === '姊妹' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-extrabold text-sm shadow-sm">
                     ${m.name.slice(0, 1)}
                   </div>
                   <div>
                     <div class="flex items-center gap-1.5">
-                      <span class="font-black text-slate-800 text-sm">${m.name}</span>
-                      <span class="text-[10px] text-slate-400">(${m.gender})</span>
+                      <span class="font-black text-stone-800 text-base">${m.name}</span>
+                      <span class="text-[11px] text-stone-400">(${m.gender})</span>
                       ${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定 LINE"></i>' : ''}
                     </div>
-                    <p class="text-[11px] text-slate-500 font-mono">${m.phone || '未登記電話'}</p>
+                    <p class="text-xs text-stone-500 font-mono mt-0.5">${m.phone || '未登記電話'}</p>
                   </div>
                 </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-orange-50 border border-orange-200/60 text-orange-800">
+                <span class="text-[11px] font-bold px-3 py-1 rounded-xl bg-stone-100 text-stone-700 border border-stone-200/80">
                   ${m.group_name || '未編組'}
                 </span>
               </div>
-              <div class="flex flex-wrap gap-1.5 items-center">
-                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/50">${m.faith_status || '委身家人'}</span>
-                ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">${m.district}</span>` : ''}
-                ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100/70 text-orange-800 font-bold">${item}</span>`).join('')}
+              <div class="flex flex-wrap gap-1.5 items-center pt-1">
+                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人'}</span>
+                ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
+                ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
               </div>
             </div>
-            <div class="pt-2.5 border-t border-amber-100/60 flex items-center justify-between">
-              <span class="text-[10px] text-slate-400">${m.register_date || '會友名冊'}</span>
+            <div class="pt-3 border-t border-stone-200/80 flex items-center justify-between">
+              <span class="text-[11px] text-stone-400 font-medium">${m.register_date || '會友記錄'}</span>
               <div class="flex gap-2">
-                <button onclick="editMember(${m.id})" class="text-xs px-2.5 py-1 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
+                <button onclick="editMember(${m.id})" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
                   <i class="fa-solid fa-pen mr-1"></i>編輯
                 </button>
-                <button onclick="deleteMember(${m.id})" class="text-xs px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+                <button onclick="deleteMember(${m.id})" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
@@ -660,7 +760,7 @@
       container.innerHTML = MINISTRY_OPTIONS.map(opt => {
         const isSel = selectedMinistries.has(opt);
         return `
-          <div onclick="toggleMinistryChip('${opt}')" class="chip-btn px-3 py-1 rounded-xl text-[11px] font-bold border ${isSel ? 'selected' : 'bg-orange-50/50 border-amber-200/60 text-slate-600'}">
+          <div onclick="toggleMinistryChip('${opt}')" class="chip-item px-3 py-1.5 rounded-xl text-xs font-bold border ${isSel ? 'active' : 'bg-stone-50 border-stone-200 text-stone-600'}">
             ${opt}
           </div>
         `;
@@ -732,7 +832,7 @@
       await loadMembers();
     }
 
-    // 2. 主日服事排程模組（完整恢復編輯、建立、指派同工）
+    // 2. 主日服事排程模組
     async function loadServices() {
       const { data } = await db.from('service_schedules').select('*').eq('church_id', activeChurch).order('service_date', { ascending: true });
       cachedServices = data || [];
@@ -742,46 +842,46 @@
     function renderServicesCards() {
       const c = document.getElementById('serviceCardsContainer');
       if (!cachedServices.length) {
-        c.innerHTML = '<div class="col-span-2 text-center text-slate-400 py-12 text-xs">目前無排定之服事資料，請點擊上方按鈕新增！</div>';
+        c.innerHTML = '<div class="col-span-2 text-center text-stone-400 py-16 text-xs">目前無排定之服事資料，請點擊上方按鈕新增！</div>';
         return;
       }
 
       c.innerHTML = cachedServices.map(s => `
-        <div class="warm-card rounded-3xl p-5 space-y-3.5 flex flex-col justify-between">
+        <div class="lux-card p-6 space-y-4 flex flex-col justify-between">
           <div>
-            <div class="flex justify-between items-start border-b border-amber-100 pb-3">
+            <div class="flex justify-between items-start border-b border-stone-200/80 pb-3.5">
               <div>
-                <span class="font-black text-sm sm:text-base text-slate-800 flex items-center gap-2">
+                <span class="font-black text-base sm:text-lg text-stone-800 flex items-center gap-2">
                   <i class="fa-regular fa-calendar text-orange-600"></i>
                   <span>${s.service_date}</span>
                 </span>
-                ${s.event ? `<span class="text-xs text-orange-700 font-bold mt-0.5 block">${s.event}</span>` : ''}
+                ${s.event ? `<span class="text-xs text-orange-800 font-extrabold mt-1 block">${s.event}</span>` : ''}
               </div>
-              <span class="text-[11px] px-2.5 py-1 rounded-full bg-orange-50 text-orange-800 font-bold border border-orange-200/60">
+              <span class="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-900 font-extrabold border border-orange-200/80">
                 講道：${s.speaker || '未定'}
               </span>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-xs pt-3 text-slate-600">
-              <div>敬拜主領：<span class="font-bold text-slate-800">${s.worship_leader || '－'}</span></div>
-              <div>敬拜歌者：<span class="font-bold text-slate-800">${s.singers || '－'}</span></div>
-              <div>司琴鍵盤：<span class="font-bold text-slate-800">${s.keyboard || '－'}</span></div>
-              <div>木／電吉他：<span class="font-bold text-slate-800">${s.guitar || '－'}</span></div>
-              <div>貝斯手：<span class="font-bold text-slate-800">${s.bass || '－'}</span></div>
-              <div>爵士鼓手：<span class="font-bold text-slate-800">${s.drums || '－'}</span></div>
-              <div>音控控台：<span class="font-bold text-slate-800">${s.tech_sound || '－'}</span></div>
-              <div>直播導播：<span class="font-bold text-slate-800">${s.tech_video || '－'}</span></div>
-              <div class="col-span-2">招待事工：<span class="font-bold text-slate-800">${s.ushers || '－'}</span></div>
+            <div class="grid grid-cols-2 gap-2.5 text-xs pt-3.5 text-stone-600">
+              <div>敬拜主領：<span class="font-black text-stone-800">${s.worship_leader || '－'}</span></div>
+              <div>敬拜歌者：<span class="font-black text-stone-800">${s.singers || '－'}</span></div>
+              <div>司琴鍵盤：<span class="font-black text-stone-800">${s.keyboard || '－'}</span></div>
+              <div>木／電吉他：<span class="font-black text-stone-800">${s.guitar || '－'}</span></div>
+              <div>貝斯手：<span class="font-black text-stone-800">${s.bass || '－'}</span></div>
+              <div>爵士鼓手：<span class="font-black text-stone-800">${s.drums || '－'}</span></div>
+              <div>音控控台：<span class="font-black text-stone-800">${s.tech_sound || '－'}</span></div>
+              <div>直播導播：<span class="font-black text-stone-800">${s.tech_video || '－'}</span></div>
+              <div class="col-span-2 pt-1 border-t border-stone-100">招待事工：<span class="font-black text-stone-800">${s.ushers || '－'}</span></div>
             </div>
           </div>
 
-          <div class="pt-3 border-t border-amber-100 flex items-center justify-between">
-            <span class="text-[10px] text-slate-400">火樂／M+ 服事中心</span>
+          <div class="pt-3.5 border-t border-stone-200/80 flex items-center justify-between">
+            <span class="text-xs text-stone-400 font-medium">主日崇拜服事表</span>
             <div class="flex gap-2">
-              <button onclick="editServiceSchedule(${s.id})" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition flex items-center gap-1">
+              <button onclick="editServiceSchedule(${s.id})" class="text-xs px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition flex items-center gap-1">
                 <i class="fa-solid fa-pen text-[10px]"></i> 調整服事
               </button>
-              <button onclick="deleteServiceSchedule(${s.id}, '${s.service_date}')" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+              <button onclick="deleteServiceSchedule(${s.id}, '${s.service_date}')" class="text-xs px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -792,15 +892,14 @@
 
     function populateMinistryMemberDropdown(selectId, targetKeyword, currentValue) {
       const select = document.getElementById(selectId);
-      // 自動推薦具備該恩賜的同工，排在最前面
       const recommended = cachedMembers.filter(m => m.ministry && m.ministry.includes(targetKeyword));
       const others = cachedMembers.filter(m => !m.ministry || !m.ministry.includes(targetKeyword));
 
       let html = `<option value="－">－ (無)</option>`;
       if (recommended.length) {
-        html += `<optgroup label="🌟 推薦恩賜同工">` + recommended.map(m => `<option value="${m.name}" ${m.name===currentValue?'selected':''}>${m.name} (${m.group_name})</option>`).join('') + `</optgroup>`;
+        html += `<optgroup label="🌟 推薦具恩賜同工">` + recommended.map(m => `<option value="${m.name}" ${m.name===currentValue?'selected':''}>${m.name} (${m.group_name})</option>`).join('') + `</optgroup>`;
       }
-      html += `<optgroup label="全部同工">` + others.map(m => `<option value="${m.name}" ${m.name===currentValue?'selected':''}>${m.name}</option>`).join('') + `</optgroup>`;
+      html += `<optgroup label="全部名單">` + others.map(m => `<option value="${m.name}" ${m.name===currentValue?'selected':''}>${m.name}</option>`).join('') + `</optgroup>`;
       select.innerHTML = html;
     }
 
@@ -878,12 +977,12 @@
     }
 
     async function deleteServiceSchedule(id, dateStr) {
-      if (!confirm(`確定要刪除【${dateStr}】的服事週次？`)) return;
+      if (!confirm(`確定刪除【${dateStr}】的服事安排？`)) return;
       await db.from('service_schedules').delete().eq('id', id);
       await loadServices();
     }
 
-    // 3. 小家 / 小組 完整模組
+    // 3. 小家 / 小組 模組
     async function loadGroups() {
       const { data } = await db.from('groups').select('*').eq('church_id', activeChurch).order('id');
       cachedGroups = data || [];
@@ -894,33 +993,33 @@
       const container = document.getElementById('groupCardsGrid');
       const terms = getChurchTerms(activeChurch);
       if (!cachedGroups.length) {
-        container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 text-xs">目前尚無建立任何${terms.group}</div>`;
+        container.innerHTML = `<div class="col-span-full py-16 text-center text-stone-400 text-xs">目前尚無建立任何${terms.group}</div>`;
         return;
       }
       container.innerHTML = cachedGroups.map(g => {
         const members = cachedMembers.filter(m => m.group_name === g.name);
         return `
-          <div class="warm-card rounded-3xl p-5 space-y-3.5 flex flex-col justify-between">
-            <div class="space-y-2">
+          <div class="lux-card p-6 space-y-4 flex flex-col justify-between">
+            <div class="space-y-3">
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 class="font-black text-slate-800 text-base tracking-tight">${g.name}</h3>
-                  <p class="text-xs text-orange-700 font-bold mt-0.5">${terms.leader}：${g.leader || '未設定'}</p>
+                  <h3 class="font-black text-stone-800 text-lg tracking-tight">${g.name}</h3>
+                  <p class="text-xs text-orange-800 font-extrabold mt-1">${terms.leader}：${g.leader || '未設定'}</p>
                 </div>
-                <span class="text-xs px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-mono font-bold border border-emerald-200">${members.length} 人</span>
+                <span class="text-xs px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/80">${members.length} 人</span>
               </div>
-              <div class="space-y-1 text-xs text-slate-500 pt-1">
-                <p><i class="fa-regular fa-clock w-4 text-amber-600"></i> ${g.meeting_time || '時間彈性'}</p>
-                <p><i class="fa-solid fa-location-dot w-4 text-amber-600"></i> ${g.location || '地點自訂'}</p>
+              <div class="space-y-1 text-xs text-stone-500 pt-1">
+                <p><i class="fa-regular fa-clock w-4 text-orange-600"></i> ${g.meeting_time || '時間彈性'}</p>
+                <p><i class="fa-solid fa-location-dot w-4 text-orange-600"></i> ${g.location || '地點自訂'}</p>
               </div>
             </div>
-            <div class="pt-3 border-t border-amber-100 flex items-center justify-between gap-2">
+            <div class="pt-3.5 border-t border-stone-200/80 flex items-center justify-between gap-2">
               <button onclick="openGroupMembersManageModal(${g.id})" class="flex-1 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-xs font-bold text-orange-800 transition flex items-center justify-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-users-gear text-orange-600 text-xs"></i>
                 <span>成員名單 (${members.length})</span>
               </button>
-              <button onclick="editGroup(${g.id})" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
-              <button onclick="deleteGroup(${g.id}, '${g.name}')" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
+              <button onclick="editGroup(${g.id})" class="w-8 h-8 rounded-xl bg-stone-100 text-stone-600 hover:text-stone-900 flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="deleteGroup(${g.id}, '${g.name}')" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
             </div>
           </div>
         `;
@@ -1009,26 +1108,26 @@
       const terms = getChurchTerms(activeChurch);
       const members = cachedMembers.filter(m => m.group_name === activeManagingGroup.name);
       if (!members.length) {
-        container.innerHTML = `<div class="py-8 text-center text-slate-400 text-xs">此${terms.group}暫無組員</div>`;
+        container.innerHTML = `<div class="py-12 text-center text-stone-400 text-xs">此${terms.group}暫無組員</div>`;
         return;
       }
       container.innerHTML = members.map(m => {
         const isLeader = activeManagingGroup.leader && activeManagingGroup.leader.includes(m.name);
         return `
-          <div class="p-3 rounded-2xl bg-orange-50/40 border border-amber-200/60 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl ${isLeader ? 'bg-amber-500 text-white' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-bold">
+          <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl ${isLeader ? 'bg-amber-500 text-white' : 'bg-orange-100 text-orange-900'} flex items-center justify-center font-black">
                 ${m.name.slice(0, 1)}
               </div>
               <div>
-                <span class="font-black text-slate-800">${m.name}</span>
-                ${isLeader ? `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">${terms.leader}</span>` : ''}
-                <p class="text-[10px] text-slate-500 font-mono">${m.phone || '無電話'}</p>
+                <span class="font-black text-stone-800">${m.name}</span>
+                ${isLeader ? `<span class="ml-1 text-[10px] px-2 py-0.5 rounded-lg bg-amber-100 text-amber-900 font-extrabold">${terms.leader}</span>` : ''}
+                <p class="text-[11px] text-stone-500 font-mono mt-0.5">${m.phone || '無電話'}</p>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              ${!isLeader ? `<button onclick="setAsGroupLeader('${m.name}')" class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 text-[10px] font-bold">設為${terms.leader}</button>` : ''}
-              <button onclick="removeMemberFromGroup(${m.id})" class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 text-[10px] font-bold">移出</button>
+              ${!isLeader ? `<button onclick="setAsGroupLeader('${m.name}')" class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 text-xs font-bold">設為${terms.leader}</button>` : ''}
+              <button onclick="removeMemberFromGroup(${m.id})" class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 text-xs font-bold">移出</button>
             </div>
           </div>
         `;
@@ -1078,13 +1177,13 @@
       const { data } = await db.from('prayer_requests').select('*').eq('church_id', activeChurch).order('created_at', { ascending: false });
       const c = document.getElementById('prayerCardsList');
       c.innerHTML = (data || []).map(p => `
-        <div class="warm-card rounded-2xl p-4 flex justify-between items-start text-xs">
-          <div class="space-y-1">
+        <div class="lux-card p-5 flex justify-between items-start text-xs">
+          <div class="space-y-1.5">
             <div class="flex items-center gap-2">
-              <span class="font-black text-sm text-slate-800">${p.member_name}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-lg ${p.urgency_level && p.urgency_level.includes('緊急') ? 'bg-rose-100 text-rose-700 font-bold' : 'bg-orange-50 text-orange-800'}">${p.urgency_level || '一般'}</span>
+              <span class="font-black text-base text-stone-800">${p.member_name}</span>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-full ${p.urgency_level && p.urgency_level.includes('緊急') ? 'bg-rose-100 text-rose-700 font-extrabold' : 'bg-orange-100 text-orange-800 font-bold'}">${p.urgency_level || '一般'}</span>
             </div>
-            <p class="text-slate-600 text-xs">${p.content}</p>
+            <p class="text-stone-600 text-xs leading-relaxed">${p.content}</p>
           </div>
         </div>
       `).join('');
@@ -1114,21 +1213,21 @@
       cachedAdmins = data || [];
       const container = document.getElementById('adminUsersCardsList');
       container.innerHTML = cachedAdmins.map(u => `
-        <div class="p-3.5 rounded-2xl bg-orange-50/40 border border-amber-200/60 flex items-center justify-between text-xs">
+        <div class="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center justify-between text-xs">
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-black text-slate-800">${u.name}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-lg font-bold ${u.assigned_church === 'SHiNE' ? 'bg-rose-100 text-rose-700' : u.assigned_church === 'M+' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">
+              <span class="font-black text-stone-800 text-sm">${u.name}</span>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold ${u.assigned_church === 'SHiNE' ? 'bg-rose-100 text-rose-800' : u.assigned_church === 'M+' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}">
                 ${u.assigned_church ? (u.assigned_church === 'SHiNE' ? '火樂' : 'M+') : '超級全堂'}
               </span>
             </div>
-            <p class="text-[10px] text-slate-500 mt-1">權限：${[u.can_manage_members && '名冊', u.can_manage_schedules && '服事', u.can_manage_attendance && '小家', u.can_manage_prayers && '代禱'].filter(Boolean).join('、') || '無'}</p>
+            <p class="text-xs text-stone-500 mt-1">權限：${[u.can_manage_members && '名冊', u.can_manage_schedules && '服事', u.can_manage_attendance && '小家', u.can_manage_prayers && '代禱'].filter(Boolean).join('、') || '無'}</p>
           </div>
           <div class="flex gap-1.5">
             ${u.role !== 'SUPER_ADMIN' ? `
-              <button onclick="editAdminUser(${u.id})" class="px-2.5 py-1 rounded-xl bg-white text-slate-600 shadow-sm"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="deleteAdminUser(${u.id}, '${u.name}')" class="px-2.5 py-1 rounded-xl bg-rose-50 text-rose-600 shadow-sm"><i class="fa-solid fa-trash"></i></button>
-            ` : '<span class="text-[10px] text-slate-400 font-mono">最高</span>'}
+              <button onclick="editAdminUser(${u.id})" class="px-3 py-1.5 rounded-xl bg-white text-stone-700 shadow-sm font-bold"><i class="fa-solid fa-pen mr-1"></i>編輯</button>
+              <button onclick="deleteAdminUser(${u.id}, '${u.name}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 shadow-sm font-bold"><i class="fa-solid fa-trash"></i></button>
+            ` : '<span class="text-xs text-stone-400 font-bold">最高權限</span>'}
           </div>
         </div>
       `).join('');
@@ -1208,12 +1307,18 @@
         const el = document.getElementById(`mod-${t}`);
         const nav = document.getElementById(`nav-${t}`);
         if (el) el.classList.add('hidden');
-        if (nav) nav.style.color = '#94a3b8';
+        if (nav) {
+          nav.classList.remove('text-orange-600');
+          nav.classList.add('text-stone-400');
+        }
       });
       const targetEl = document.getElementById(`mod-${tabId}`);
       const targetNav = document.getElementById(`nav-${tabId}`);
       if (targetEl) targetEl.classList.remove('hidden');
-      if (targetNav) targetNav.style.color = 'var(--brand-primary)';
+      if (targetNav) {
+        targetNav.classList.remove('text-stone-400');
+        targetNav.classList.add('text-orange-600');
+      }
     }
 
     function logout() {
