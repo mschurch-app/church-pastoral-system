@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>遇見你真好 · 歡迎回家</title>
+  
+  <!-- Tailwind CSS & Supabase & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: radial-gradient(120% 80% at 50% -10%, #FFF4E8 0%, #FAF6F0 50%, #F5EEE6 100%);
+      color: #1c1917;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .card-glass {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(234, 218, 198, 0.85);
+      box-shadow: 0 16px 36px -6px rgba(184, 134, 76, 0.09);
+      border-radius: 28px;
+    }
+
+    /* 點選膠囊標籤 */
+    .pill-btn {
+      padding: 8px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #E7DED3;
+      background: #FFFFFF;
+      color: #57534E;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill-btn:active {
+      transform: scale(0.96);
+    }
+    .pill-btn.active {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #FFFFFF;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 24px -3px rgba(234, 88, 12, 0.42);
+      transition: all 0.25s ease;
+    }
+    .btn-submit:hover {
+      box-shadow: 0 12px 28px -2px rgba(234, 88, 12, 0.52);
+      transform: translateY(-1px);
+    }
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-8 flex justify-center items-center">
+
+  <!-- 表單主容器 -->
+  <div class="w-full max-w-md my-4">
+    
+    <!-- 1. 迎賓表單本體 -->
+    <div id="formSection" class="card-glass p-6 sm:p-8 space-y-6">
+      
+      <!-- 頂部問候區 -->
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
+          <i class="fa-solid fa-heart"></i>
+        </div>
+        <h1 class="text-2xl font-black text-stone-800 tracking-tight pt-1">遇見你真好 · 歡迎回家</h1>
+        <p class="text-xs text-stone-500 leading-relaxed max-w-xs mx-auto">
+          很高興今天有你在我們當中！希望這裡能成為你放鬆心情、充飽電的溫暖角落 🌿
+        </p>
+      </div>
+
+      <!-- 快速填寫內容 (大多為指尖點選) -->
+      <div class="space-y-5 text-xs">
+        
+        <!-- 姓名與性別 -->
+        <div class="space-y-2">
+          <label class="font-black text-stone-700 block text-xs">1. 怎麼稱呼你？ *</label>
+          <input type="text" id="guestName" placeholder="你的名字或平時大家叫你的暱稱" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
+          
+          <div class="flex gap-2 pt-1">
+            <div onclick="selectSinglePill('gender', '弟兄', this)" class="pill-btn flex-1 justify-center active">弟兄 / 帥哥</div>
+            <div onclick="selectSinglePill('gender', '姊妹', this)" class="pill-btn flex-1 justify-center">姊妹 / 美女</div>
+          </div>
+        </div>
+
+        <!-- 聯絡手機 -->
+        <div class="space-y-1.5">
+          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 (方便後續向你問候) *</label>
+          <input type="tel" id="guestPhone" placeholder="0912-345-678" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
+        </div>
+
+        <!-- 年齡區間 -->
+        <div class="space-y-2">
+          <label class="font-black text-stone-700 block text-xs">3. 你的年齡區間</label>
+          <div class="flex flex-wrap gap-2" id="groupAge">
+            <div onclick="selectSinglePill('age', '學生學青', this)" class="pill-btn">🎓 學生學青</div>
+            <div onclick="selectSinglePill('age', '20-30青年', this)" class="pill-btn active">💼 20-30 歲青年</div>
+            <div onclick="selectSinglePill('age', '30-45青壯', this)" class="pill-btn">🏡 30-45 歲青壯</div>
+            <div onclick="selectSinglePill('age', '45熟齡', this)" class="pill-btn">🌟 45 歲以上熟齡</div>
+          </div>
+        </div>
+
+        <!-- 生活區域 -->
+        <div class="space-y-2">
+          <label class="font-black text-stone-700 block text-xs">4. 你平時生活在哪一區？</label>
+          <div class="flex flex-wrap gap-2" id="groupDistrict">
+            <div onclick="selectSinglePill('district', '大雅區', this)" class="pill-btn active">📍 大雅區</div>
+            <div onclick="selectSinglePill('district', '西屯區', this)" class="pill-btn">📍 西屯區</div>
+            <div onclick="selectSinglePill('district', '北屯區', this)" class="pill-btn">📍 北屯區</div>
+            <div onclick="selectSinglePill('district', '潭子區', this)" class="pill-btn">📍 潭子區</div>
+            <div onclick="selectSinglePill('district', '神岡區', this)" class="pill-btn">📍 神岡區</div>
+            <div onclick="selectSinglePill('district', '沙鹿區', this)" class="pill-btn">📍 沙鹿區</div>
+            <div onclick="selectSinglePill('district', '其他地區', this)" class="pill-btn">📍 其他地區</div>
+          </div>
+        </div>
+
+        <!-- 認識管道 -->
+        <div class="space-y-2">
+          <label class="font-black text-stone-700 block text-xs">5. 今天是怎麼認識我們的？</label>
+          <div class="flex flex-wrap gap-2" id="groupKnow">
+            <div onclick="selectKnowFrom('朋友家人邀請', this)" class="pill-btn active">🙋 朋友家人邀請</div>
+            <div onclick="selectKnowFrom('社群網路看見', this)" class="pill-btn">📱 IG / FB 社群</div>
+            <div onclick="selectKnowFrom('散步路過好奇', this)" class="pill-btn">🚶 散步路過</div>
+            <div onclick="selectKnowFrom('參加社區趣味活動', this)" class="pill-btn">🎪 社區趣味活動</div>
+          </div>
+          <div id="inviterWrapper" class="pt-1.5">
+            <input type="text" id="inviterName" placeholder="是哪位朋友邀請你來的呢？" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400">
+          </div>
+        </div>
+
+        <!-- 今天想感受的 (多選) -->
+        <div class="space-y-2">
+          <label class="font-black text-stone-700 block text-xs">6. 今天來到這裡，最想感受的是什麼？(可多選)</label>
+          <div class="flex flex-wrap gap-2" id="groupFeelings">
+            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn active">🌿 讓心靈放鬆充電</div>
+            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn active">🎶 聽聽溫暖的音樂</div>
+            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">🤝 認識聊得來的朋友</div>
+            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">💡 探索未來的方向</div>
+            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">📖 想多了解聖經</div>
+          </div>
+        </div>
+
+        <!-- 平常的生活興趣與愛好 (多選) -->
+        <div class="space-y-2">
+          <label class="font-black text-stone-700 block text-xs">7. 平常的生活興趣與休閒？(可多選)</label>
+          <div class="flex flex-wrap gap-2" id="groupInterests">
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">☕ 咖啡品嚐與手作</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn active">🎸 音樂欣賞與彈唱</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">💼 職場交流與成長</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🏕️ 戶外踏青與露營</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">👶 親子育兒與教養</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🍳 美食探店與料理</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🏸 羽球健走等運動</div>
+            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">📖 靜心閱讀與寫作</div>
+          </div>
+        </div>
+
+        <!-- 微笑印記拍照留念 -->
+        <div class="space-y-2 pt-2 border-t border-stone-200/80">
+          <label class="font-black text-stone-700 block text-xs">8. 留下今天的微笑印記 📸 (選填)</label>
+          <div class="relative w-full h-36 rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50/70 hover:bg-stone-100 flex flex-col items-center justify-center gap-2 cursor-pointer overflow-hidden transition" onclick="triggerCamera()">
+            <img id="photoPreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="印記照片">
+            <div id="photoPrompt" class="text-center space-y-1">
+              <i class="fa-solid fa-camera text-2xl text-orange-500"></i>
+              <p class="text-xs font-bold text-stone-700">點此拍張自拍或與朋友的合照</p>
+              <p class="text-[10px] text-stone-400">記錄今天美好的相遇</p>
+            </div>
+          </div>
+          <!-- 隱藏原生相機 input -->
+          <input type="file" id="cameraInput" accept="image/*" capture="user" class="hidden" onchange="handlePhotoSelected(event)">
+        </div>
+
+      </div>
+
+      <!-- 送出按鈕 -->
+      <div class="pt-3">
+        <button onclick="submitWelcomeCard()" id="btnSubmit" class="w-full py-4 rounded-2xl btn-submit text-sm font-black tracking-wide flex items-center justify-center gap-2 shadow-lg">
+          <span>✨ 很高興認識你 · 留下今日印記</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 2. 送出成功後呈現的感謝卡 (純粹真誠無兌換券) -->
+    <div id="successSection" class="card-glass p-8 space-y-6 text-center hidden">
+      <div class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
+        <i class="fa-solid fa-seedling"></i>
+      </div>
+      
+      <div class="space-y-2">
+        <h2 class="text-2xl font-black text-stone-800 tracking-tight">謝謝你今天來到我們當中！🌿</h2>
+        <p class="text-xs text-stone-600 leading-relaxed pt-1">
+          親愛的 <span id="successName" class="font-black text-orange-600 text-sm"></span>，<br>
+          生命中的每一次相遇都是珍貴的祝福。<br>
+          願今天成為你這週最充實、放鬆的充電時光！
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/70 text-xs text-stone-700 leading-relaxed">
+        「願你出也蒙福，入也蒙福；心中的一切憂慮，都在這裡化為滿滿的平安與力量。」
+      </div>
+
+      <div class="pt-2">
+        <button onclick="window.close()" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-extrabold transition">
+          完成，關閉此頁
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 取得網址上的堂會參數 (預設為 M+，也可為 SHiNE)
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetChurch = urlParams.get('church') || 'M+';
+    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
+    else targetChurch = 'M+';
+
+    // 狀態暫存
+    let selectedGender = '弟兄';
+    let selectedAge = '20-30青年';
+    let selectedDistrict = '大雅區';
+    let selectedKnowFrom = '朋友家人邀請';
+    let selectedFeelings = new Set(['🌿 讓心靈放鬆充電', '🎶 聽聽溫暖的音樂']);
+    let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
+    let capturedPhotoFile = null;
+
+    // 單選膠囊切換
+    function selectSinglePill(type, value, element) {
+      const parent = element.parentElement;
+      parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      element.classList.add('active');
+
+      if (type === 'gender') selectedGender = value;
+      else if (type === 'age') selectedAge = value;
+      else if (type === 'district') selectedDistrict = value;
+    }
+
+    // 認識管道切換
+    function selectKnowFrom(value, element) {
+      const parent = element.parentElement;
+      parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      element.classList.add('active');
+      selectedKnowFrom = value;
+
+      const inviterBox = document.getElementById('inviterWrapper');
+      if (value === '朋友家人邀請') {
+        inviterBox.classList.remove('hidden');
+      } else {
+        inviterBox.classList.add('hidden');
+      }
+    }
+
+    // 多選膠囊切換
+    function toggleMultiPill(element, type) {
+      const text = element.innerText.trim();
+      const targetSet = (type === 'feelings') ? selectedFeelings : selectedInterests;
+      
+      if (targetSet.has(text)) {
+        targetSet.delete(text);
+        element.classList.remove('active');
+      } else {
+        targetSet.add(text);
+        element.classList.add('active');
+      }
+    }
+
+    // 喚起相機拍照
+    function triggerCamera() {
+      document.getElementById('cameraInput').click();
+    }
+
+    // 處理照片預覽
+    function handlePhotoSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      capturedPhotoFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = document.getElementById('photoPreview');
+        const prompt = document.getElementById('photoPrompt');
+        preview.src = e.target.result;
+        preview.classList.remove('hidden');
+        prompt.classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 送出迎賓卡
+    async function submitWelcomeCard() {
+      const name = document.getElementById('guestName').value.trim();
+      const phone = document.getElementById('guestPhone').value.trim();
+      const inviter = document.getElementById('inviterName').value.trim();
+
+      if (!name) return alert('請填寫你的名字或暱稱喔！');
+      if (!phone) return alert('請留下一組手機號碼，方便我們為你寄送問候！');
+
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在為你送出...`;
+
+      let uploadedPhotoUrl = null;
+
+      // 若有拍照，先上傳至 Supabase Storage
+      if (capturedPhotoFile) {
+        try {
+          const fileExt = capturedPhotoFile.name.split('.').pop() || 'jpg';
+          const fileName = `newcomers/${targetChurch}_${Date.now()}.${fileExt}`;
+          
+          const { data, error } = await db.storage.from('church-media').upload(fileName, capturedPhotoFile, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+          if (!error) {
+            const { data: publicData } = db.storage.from('church-media').getPublicUrl(fileName);
+            uploadedPhotoUrl = publicData.publicUrl;
+          }
+        } catch (e) {
+          console.error("Photo upload error:", e);
+        }
+      }
+
+      // 整理認識管道字串
+      let finalKnowFrom = selectedKnowFrom;
+      if (selectedKnowFrom === '朋友家人邀請' && inviter) {
+        finalKnowFrom = `朋友家人邀請 (${inviter})`;
+      }
+
+      // 整理要寫入 members 的生活化標籤
+      const memoText = `【新朋友初次見面】期待：${Array.from(selectedFeelings).join('、')}。來源：${finalKnowFrom}`;
+
+      const payload = {
+        church_id: targetChurch,
+        name: name,
+        gender: selectedGender,
+        phone: phone,
+        age_group: selectedAge,
+        district: selectedDistrict,
+        know_us_from: finalKnowFrom,
+        desired_feelings: Array.from(selectedFeelings),
+        interest_tags: Array.from(selectedInterests),
+        faith_status: '新朋友',
+        welcome_status: '新朋友',
+        group_name: '未編組',
+        ministry: Array.from(selectedInterests).join(', '),
+        photo_url: uploadedPhotoUrl,
+        memo: memoText
+      };
+
+      const { error: insertErr } = await db.from('members').insert([payload]);
+
+      if (insertErr) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨ 很高興認識你 · 留下今日印記</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+        return alert('送出失敗：' + insertErr.message);
+      }
+
+      // 成功切換至感謝卡畫面
+      document.getElementById('formSection').classList.add('hidden');
+      document.getElementById('successSection').classList.remove('hidden');
+      document.getElementById('successName').innerText = name;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
