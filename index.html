@@ -1264,33 +1264,98 @@
       renderMembersCards(cachedMembers);
     }
 
-    // 4. 代禱關懷
+// 4. 代禱關懷 (完整連動 LINE 推播與狀態回報)
     async function loadPrayers() {
-      const { data } = await db.from('prayer_requests').select('*').eq('church_id', activeChurch).order('created_at', { ascending: false });
+      const { data } = await db
+        .from('prayer_requests')
+        .select('*')
+        .eq('church_id', activeChurch)
+        .order('created_at', { ascending: false });
+
       const c = document.getElementById('prayerCardsList');
       if (!data || !data.length) {
-        c.innerHTML = '<div class="py-12 text-center text-stone-400 text-xs">目前無待處理代禱事項</div>';
+        c.innerHTML = '<div class="py-12 text-center text-stone-400 text-xs">目前無代禱事項</div>';
         return;
       }
-      c.innerHTML = data.map(p => `
-        <div class="lux-card p-5 flex justify-between items-center text-xs">
-          <div class="space-y-1.5 flex-1 pr-3">
-            <div class="flex items-center gap-2">
-              <span class="font-black text-base text-stone-800">${p.member_name}</span>
-              <span class="text-[10px] px-2.5 py-0.5 rounded-full ${p.urgency_level && p.urgency_level.includes('緊急') ? 'bg-rose-100 text-rose-700 font-extrabold' : 'bg-orange-100 text-orange-800 font-bold'}">${p.urgency_level || '一般'}</span>
-              <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString()}</span>
+
+      c.innerHTML = data.map(p => {
+        const isInterceded = p.status === '已守望';
+        const hasLine = !!p.line_user_id;
+
+        return `
+          <div class="lux-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+            <div class="space-y-1.5 flex-1 pr-2">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-base text-stone-800">${p.member_name}</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-full ${p.urgency_level && p.urgency_level.includes('緊急') ? 'bg-rose-100 text-rose-700 font-extrabold' : 'bg-orange-100 text-orange-800 font-bold'}">${p.urgency_level || '一般'}</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-full ${isInterceded ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-amber-100 text-amber-900 font-bold'}">${p.status || '待守望'}</span>
+                ${hasLine ? '<span class="text-[10px] text-emerald-600 font-bold"><i class="fa-brands fa-line mr-0.5"></i>已連動LINE</span>' : '<span class="text-[10px] text-stone-400">訪客代禱</span>'}
+                <span class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleDateString()}</span>
+              </div>
+              <p class="text-stone-600 text-xs leading-relaxed">「${p.content}」</p>
+              ${p.interceded_by ? `<p class="text-[11px] text-stone-400 font-medium">守望紀錄：${p.interceded_by} 同工已於 ${new Date(p.interceded_at).toLocaleDateString()} 晨禱守望</p>` : ''}
             </div>
-            <p class="text-stone-600 text-xs leading-relaxed">${p.content}</p>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+              ${!isInterceded ? `
+                <button onclick="markPrayerInterceded(${p.id}, '${p.member_name}', '${p.line_user_id || ''}')" class="px-4 py-2 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                  <i class="fa-solid fa-check text-xs"></i> <span>完成守望 (發送回響)</span>
+                </button>
+              ` : `
+                <span class="text-xs font-bold text-emerald-700 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80">
+                  <i class="fa-solid fa-check-double mr-1"></i>已守望完畢
+                </span>
+              `}
+              <button onclick="deletePrayer(${p.id})" class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
           </div>
-          <button onclick="markPrayerInterceded(${p.id}, '${p.member_name}')" class="px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm">
-            <i class="fa-solid fa-check text-xs"></i> <span>已同心守望</span>
-          </button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    async function markPrayerInterceded(id, name) {
-      alert(`✨ 已記錄同心守望！系統已將守望回響標記至代禱室！`);
+    // 完成守望：更新資料庫並觸發 LINE Push 推播給該會友
+    async function markPrayerInterceded(id, name, lineUserId) {
+      if (!confirm(`確定已為【${name}】完成守望？系統將同步紀錄並發送 LINE 守望回響！`)) return;
+
+      const workerName = currentUser ? currentUser.name : '教牧同工';
+
+      // 1. 更新資料庫狀態
+      await db.from('prayer_requests').update({
+        status: '已守望',
+        interceded_by: workerName,
+        interceded_at: new Date().toISOString()
+      }).eq('id', id);
+
+      // 2. 若有 LINE ID，呼叫 Edge Function 推播
+      if (lineUserId) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=push_interceded&church=${encodeURIComponent(activeChurch)}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+              userId: lineUserId,
+              memberName: name,
+              workerName: workerName
+            })
+          });
+        } catch (err) {
+          console.log("Push notice notice error:", err);
+        }
+      }
+
+      alert(`✨ 已成功完成守望！${lineUserId ? '已同步透過 LINE 發送守望回響給會友！' : '已完成狀態更新！'}`);
+      await loadPrayers();
+    }
+
+    async function deletePrayer(id) {
+      if (!confirm('確定刪除此筆代禱紀錄？')) return;
+      await db.from('prayer_requests').delete().eq('id', id);
+      await loadPrayers();
     }
 
     // 5. 【全新升級】教牧推播與多圖隨機管理中樞
