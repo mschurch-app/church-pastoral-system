@@ -10,10 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- 頂級人文字體：Plus Jakarta Sans & Noto Sans TC -->
+  <!-- 頂級人文字體 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -29,10 +29,9 @@
 
   <style>
     :root {
-      --brand-accent: #f97316; /* 陽光赤陶橘 */
+      --brand-accent: #f97316;
       --brand-accent-hover: #ea580c;
       --brand-subtle: #ffedd5;
-      --surface-bg: #FAF6F0;
       --card-bg: rgba(255, 255, 255, 0.94);
       --card-border: rgba(234, 218, 198, 0.75);
     }
@@ -48,10 +47,8 @@
       min-height: 100vh;
       width: 100vw;
       overflow-x: hidden;
-      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     }
 
-    /* 奢華微晶玻璃面板 */
     .lux-card {
       background: var(--card-bg);
       backdrop-filter: blur(18px);
@@ -87,7 +84,6 @@
       box-shadow: 0 30px 60px -12px rgba(100, 50, 10, 0.2);
     }
 
-    /* 恩賜點選標籤 Chips */
     .chip-item {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
@@ -101,7 +97,6 @@
       transform: translateY(-1px);
     }
 
-    /* 質感按鈕漸層 */
     .btn-warm {
       background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
       color: #ffffff;
@@ -124,7 +119,7 @@
 </head>
 <body class="flex flex-col font-sans pb-32 lg:pb-12 antialiased selection:bg-orange-200 selection:text-orange-950">
 
-  <!-- 頂部奢華導覽列 -->
+  <!-- 頂部導覽列 -->
   <header class="sticky top-0 z-40 lux-header px-4 sm:px-8 py-3.5 transition-all">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
       
@@ -167,7 +162,7 @@
     </div>
   </header>
 
-  <!-- 登入認證彈窗（溫暖優雅白系） -->
+  <!-- 登入認證彈窗 -->
   <div id="loginModal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="lux-modal p-8 rounded-[32px] max-w-sm w-full space-y-6 shadow-2xl relative overflow-hidden">
       <div class="text-center space-y-2">
@@ -225,6 +220,7 @@
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-stone-400 text-xs"></i>
             <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋會友姓名、電話..." class="w-full bg-white/95 border border-stone-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-stone-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
           </div>
+          <!-- 篩選下拉：純淨只讀取官方小家/小組清單 -->
           <select id="memberFilterGroupSelect" onchange="filterMembers()" class="bg-white/95 border border-stone-200/90 rounded-2xl px-3.5 py-2.5 text-xs text-stone-700 font-semibold shadow-sm focus:outline-none max-w-[150px] cursor-pointer">
             <option value="ALL">全部<span class="group-term-label">小家</span></option>
           </select>
@@ -281,7 +277,7 @@
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組五：【超級管理員控制台】堂會品牌與管理員授權 -->
+    <!-- 模組五：超級管理員控制台 -->
     <section id="mod-superadmin" class="space-y-6 hidden">
       
       <!-- 品牌自訂 -->
@@ -393,7 +389,7 @@
           <input type="text" id="svcSpeaker" placeholder="如：吳俊璋牧師" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
         </div>
 
-        <!-- 樂團 -->
+        <!-- 樂團同工配置 -->
         <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-3">
           <span class="text-xs font-black text-amber-900 block flex items-center gap-1.5">
             <i class="fa-solid fa-music text-orange-600"></i> 敬拜樂團同工配置
@@ -426,7 +422,7 @@
           </div>
         </div>
 
-        <!-- 影音招待 -->
+        <!-- 影音與招待 -->
         <div class="p-4 rounded-2xl bg-orange-50/50 border border-orange-200/60 space-y-3">
           <span class="text-xs font-black text-orange-950 block flex items-center gap-1.5">
             <i class="fa-solid fa-sliders text-orange-600"></i> 影音技術與主日接待
@@ -455,7 +451,7 @@
     </div>
   </div>
 
-  <!-- 【Modal: 會友名冊編輯】 -->
+  <!-- 【Modal: 會友名冊編輯】（含獨立 memo 欄位） -->
   <div id="memberEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-lg rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-5 max-h-[88vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
@@ -482,6 +478,11 @@
         <div>
           <label class="text-stone-600 font-bold block mb-1.5">服事恩賜 (點擊標籤切換勾選，免打字)：</label>
           <div id="ministryChipsContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
+        </div>
+        <!-- 獨立備註與牧養歷程欄位 -->
+        <div>
+          <label class="text-stone-600 font-bold block mb-1.5">個人牧養備註 / 歷程註記 (選填)</label>
+          <textarea id="editMemo" rows="2" placeholder="輸入個人備註、轉會來源或特殊關懷事項..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></textarea>
         </div>
       </div>
       <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
@@ -664,8 +665,8 @@
     }
 
     async function loadChurchData() {
-      await loadMembers();
-      await loadGroups();
+      await loadGroups();   // 先載入正式小家/小組清單
+      await loadMembers();  // 再載入會友並完成清爽下拉選單
       await loadServices();
       if (currentUser.role === 'SUPER_ADMIN' || currentUser.can_manage_prayers) loadPrayers();
       if (currentUser.role === 'SUPER_ADMIN') {
@@ -677,7 +678,7 @@
       else if (currentUser.can_manage_schedules) switchTab('services');
     }
 
-    // 1. 會友名冊 (奢華流暢卡片流)
+    // 1. 會友名冊 (奢華流暢卡片流，含獨立 memo 呈現)
     async function loadMembers() {
       const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
       cachedMembers = data || [];
@@ -715,12 +716,23 @@
                   ${m.group_name || '未編組'}
                 </span>
               </div>
+
+              <!-- 標籤雲：成熟度、區域、恩賜 -->
               <div class="flex flex-wrap gap-1.5 items-center pt-1">
                 <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人'}</span>
                 ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
                 ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
               </div>
+
+              <!-- 獨立備註便利貼展示 (若有備註才出現) -->
+              ${m.memo ? `
+                <div class="p-2.5 rounded-xl bg-stone-100/70 border border-stone-200/60 text-[11px] text-stone-600 flex items-start gap-2">
+                  <i class="fa-regular fa-note-sticky text-amber-600 mt-0.5 flex-shrink-0"></i>
+                  <span class="line-clamp-2 leading-relaxed">${m.memo}</span>
+                </div>
+              ` : ''}
             </div>
+
             <div class="pt-3 border-t border-stone-200/80 flex items-center justify-between">
               <span class="text-[11px] text-stone-400 font-medium">${m.register_date || '會友記錄'}</span>
               <div class="flex gap-2">
@@ -737,18 +749,24 @@
       }).join('');
     }
 
+    // 乾淨讀取正式小家/小組清單，絕不出現雜亂文字
     function populateGroupFilterDropdown() {
       const select = document.getElementById('memberFilterGroupSelect');
       const terms = getChurchTerms(activeChurch);
-      const groups = Array.from(new Set(cachedMembers.map(m => m.group_name).filter(Boolean)));
-      select.innerHTML = `<option value="ALL">全部${terms.group}</option>` + groups.map(g => `<option value="${g}">${g}</option>`).join('');
+      const officialGroups = cachedGroups.map(g => g.name).filter(Boolean);
+
+      select.innerHTML = `<option value="ALL">全部${terms.group}</option>` +
+        `<option value="未編組">未編組</option>` +
+        officialGroups.map(g => `<option value="${g}">${g}</option>`).join('');
     }
 
     function filterMembers() {
       const q = document.getElementById('memberSearch').value.toLowerCase();
       const filterGrp = document.getElementById('memberFilterGroupSelect').value;
       const filtered = cachedMembers.filter(m => {
-        const matchesQ = (m.name && m.name.toLowerCase().includes(q)) || (m.phone && m.phone.includes(q));
+        const matchesQ = (m.name && m.name.toLowerCase().includes(q)) || 
+                         (m.phone && m.phone.includes(q)) ||
+                         (m.memo && m.memo.toLowerCase().includes(q));
         const matchesGrp = filterGrp === 'ALL' || m.group_name === filterGrp;
         return matchesQ && matchesGrp;
       });
@@ -777,6 +795,7 @@
       document.getElementById('editMemberId').value = '';
       document.getElementById('editName').value = '';
       document.getElementById('editPhone').value = '';
+      document.getElementById('editMemo').value = '';
       populateMemberModalGroupDropdown('未編組');
       selectedMinistries.clear();
       renderMinistryChips();
@@ -799,6 +818,7 @@
       document.getElementById('editPhone').value = m.phone || '';
       document.getElementById('editFaithStatus').value = m.faith_status || '委身家人';
       document.getElementById('editDistrict').value = m.district || '大雅區';
+      document.getElementById('editMemo').value = m.memo || '';
       populateMemberModalGroupDropdown(m.group_name || '未編組');
       selectedMinistries.clear();
       if (m.ministry) m.ministry.split(',').map(s => s.trim()).forEach(i => i && selectedMinistries.add(i));
@@ -813,14 +833,22 @@
       const id = document.getElementById('editMemberId').value;
       const name = document.getElementById('editName').value.trim();
       if (!name) return alert('會友姓名為必填！');
+
       const payload = {
-        church_id: activeChurch, name: name, gender: document.getElementById('editGender').value,
-        phone: document.getElementById('editPhone').value.trim(), group_name: document.getElementById('editGroupSelect').value,
-        faith_status: document.getElementById('editFaithStatus').value, district: document.getElementById('editDistrict').value,
-        ministry: Array.from(selectedMinistries).join(', ')
+        church_id: activeChurch,
+        name: name,
+        gender: document.getElementById('editGender').value,
+        phone: document.getElementById('editPhone').value.trim(),
+        group_name: document.getElementById('editGroupSelect').value,
+        faith_status: document.getElementById('editFaithStatus').value,
+        district: document.getElementById('editDistrict').value,
+        ministry: Array.from(selectedMinistries).join(', '),
+        memo: document.getElementById('editMemo').value.trim()
       };
+
       if (id) await db.from('members').update(payload).eq('id', id);
       else await db.from('members').insert([payload]);
+
       closeMemberModal();
       await loadMembers();
       await loadGroups();
