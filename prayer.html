@@ -15,9 +15,9 @@
       min-height: 100vh;
     }
     .lux-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(18px);
-      border: 1px solid rgba(234, 218, 198, 0.8);
+      border: 1px solid rgba(234, 218, 198, 0.85);
       box-shadow: 0 16px 36px -6px rgba(184, 134, 76, 0.12);
       border-radius: 28px;
     }
@@ -31,25 +31,23 @@
 <body class="p-4 flex items-center justify-center min-h-screen">
   <div class="lux-card w-full max-w-sm p-6 sm:p-7 space-y-4 relative">
     
-    <!-- 頂部圖示與標題 -->
     <div class="text-center space-y-1.5">
       <div class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 mx-auto flex items-center justify-center text-2xl shadow-sm mb-2">
         🙏
       </div>
-      <h2 class="text-xl font-black text-stone-800 tracking-tight" id="churchTitle">需要禱告時 · 守望之火</h2>
-      <p class="text-xs text-stone-500 leading-relaxed">把你的不容易交給我們，教牧團隊每天晨禱同心為你提名守望</p>
+      <h2 class="text-xl font-black text-stone-800 tracking-tight" id="churchTitle">守望之火 · 提出代禱</h2>
+      <p class="text-xs text-stone-500 leading-relaxed">把你的不容易交給我們，教牧同工每天晨禱同心為你提名祈求</p>
     </div>
 
-    <!-- 表單區塊 -->
     <div class="space-y-3 text-xs pt-1">
       <div>
         <label class="font-bold text-stone-700 block mb-1">為誰代禱（您的姓名或稱呼）*</label>
-        <input type="text" id="pName" placeholder="載入中..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400">
+        <input type="text" id="pName" placeholder="載入稱呼中..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400">
       </div>
 
       <div>
         <label class="font-bold text-stone-700 block mb-1">代禱具體內容 *</label>
-        <textarea id="pContent" rows="4" placeholder="請告訴我們你想被守望的事項（如工作瓶頸、家庭關係、身體平安、心靈重擔）..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"></textarea>
+        <textarea id="pContent" rows="4" placeholder="請告訴我們你想被守望的事項（如職場瓶頸、人際家庭、身體健康、心靈重擔）..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"></textarea>
       </div>
 
       <div>
@@ -61,7 +59,6 @@
       </div>
     </div>
 
-    <!-- 送出按鈕 -->
     <button onclick="submitPrayer()" id="submitBtn" class="w-full py-3.5 rounded-2xl btn-warm font-extrabold text-xs tracking-wider uppercase shadow-md active:scale-98 transition flex items-center justify-center gap-2">
       <i class="fa-solid fa-fire text-amber-200"></i>
       <span>點亮守望燭火，送出代禱</span>
@@ -74,24 +71,28 @@
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const urlParams = new URLSearchParams(window.location.search);
-    const churchId = (urlParams.get('church') || 'SHiNE').trim();
+    const rawChurch = urlParams.get('church') || 'SHiNE';
+    const churchId = rawChurch.trim();
     let currentLineUserId = '';
 
-    // 初始化設定堂會名稱
+    // 依堂會指派專屬 LIFF ID
+    const LIFF_IDS = {
+      'SHiNE': '2011645391-rBmBFx40',
+      'M+': '2011645391-7JHlvDUE'
+    };
+
     document.getElementById('churchTitle').innerText = (churchId === 'SHiNE' ? '火樂教會' : 'Ｍ＋大雅教會') + ' · 守望之火';
 
-    // 初始化 LIFF
     async function initLiff() {
+      const targetLiffId = LIFF_IDS[churchId] || LIFF_IDS['SHiNE'];
       try {
-        // 若有 LIFF ID 則初始化，若無則依 URL 參數運作
         if (window.liff) {
-          // LIFF 初始化 (可支援通用 LIFF 或直接讀取)
-          await liff.init({ liffId: churchId === 'SHiNE' ? 'YOUR_SHINE_LIFF_ID' : 'YOUR_MPLUS_LIFF_ID' }).catch(() => {});
+          await liff.init({ liffId: targetLiffId });
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
             currentLineUserId = profile.userId;
 
-            // 嘗試從名冊自動匹配已綁定的會友真實姓名
+            // 嘗試比對名冊綁定姓名
             const { data: member } = await db.from('members')
               .select('name')
               .eq('church_id', churchId)
@@ -102,11 +103,10 @@
           }
         }
       } catch (e) {
-        console.log("LIFF Init Fallback:", e);
+        console.error("LIFF Init Error:", e);
       }
 
-      // 如果尚未抓到名字，提供乾淨預設值
-      if (!document.getElementById('pName').value || document.getElementById('pName').value === '載入中...') {
+      if (!document.getElementById('pName').value || document.getElementById('pName').value === '載入稱呼中...') {
         document.getElementById('pName').value = '';
         document.getElementById('pName').placeholder = '請輸入姓名';
       }
@@ -127,7 +127,6 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在為您點亮守望燭火...';
 
-      // 寫入 Supabase 代禱表 (含 line_user_id)
       const { error } = await db.from('prayer_requests').insert([{
         church_id: churchId,
         member_name: name,
@@ -146,7 +145,6 @@
 
       alert('🕯️ 守望燭火已為您點亮！教牧同工將在晨禱中同心為您提名祈求。');
 
-      // 關閉 LIFF 彈窗
       if (window.liff && liff.isInClient()) {
         liff.closeWindow();
       } else {
