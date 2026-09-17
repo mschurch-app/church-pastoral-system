@@ -71,8 +71,11 @@
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const urlParams = new URLSearchParams(window.location.search);
-    const rawChurch = urlParams.get('church') || 'SHiNE';
-    const churchId = rawChurch.trim();
+    let rawChurch = (urlParams.get('church') || 'SHiNE').trim();
+    if (rawChurch === 'M' || rawChurch === 'M ' || rawChurch.startsWith('M')) {
+      rawChurch = 'M+';
+    }
+    const churchId = rawChurch;
     let currentLineUserId = '';
 
     const LIFF_IDS = {
@@ -131,9 +134,7 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在為您點亮守望燭火...';
 
-      // ========================================================
-      // 🌟 智慧靜態綁定機制：拿填寫的姓名比對名冊並寫入 LINE ID
-      // ========================================================
+      // 1. 背景自動綁定機制：拿填寫的姓名比對名冊並寫入 LINE ID
       if (currentLineUserId) {
         try {
           const { data: matchMember } = await db.from('members')
@@ -153,7 +154,7 @@
         }
       }
 
-      // 送出代禱到資料庫
+      // 2. 送出代禱到資料庫
       const { error } = await db.from('prayer_requests').insert([{
         church_id: churchId,
         member_name: name,
@@ -170,11 +171,10 @@
         return alert('送出失敗：' + error.message);
       }
 
-      // ========================================================
-      // 🔔 即時通知牧者 (使用 await 確保推播送出完成後才關閉視窗)
-      // ========================================================
+      // 3. 即時通知牧者本人 (完整 await 確保送達)
       try {
-        await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_pastor&church=${encodeURIComponent(churchId)}`, {
+        const notifyUrl = `${SUPABASE_URL}/functions/v1/line-bot?action=notify_pastor&church=${encodeURIComponent(churchId)}`;
+        const res = await fetch(notifyUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -186,11 +186,13 @@
             urgency: urgency
           })
         });
+        const resData = await res.json();
+        console.log("牧者通知結果:", resData);
       } catch (notifyErr) {
-        console.error("通知牧者失敗:", notifyErr);
+        console.error("通知牧者連線異常:", notifyErr);
       }
 
-      alert('🕯️ 守望燭火已為您點亮！教牧同工將在晨禱中同心為您提名祈求。');
+      alert('🕯️ 守望燭火已為您點亮！牧者與教牧同工將同心為您切切守望。');
 
       if (window.liff && liff.isInClient()) {
         liff.closeWindow();
