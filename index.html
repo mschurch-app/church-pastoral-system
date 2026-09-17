@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>CHURCH OS · 智慧教牧行政治理平台</title>
   
-  <!-- Tailwind CSS & FontAwesome -->
+  <!-- Tailwind CSS & Supabase & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -233,7 +233,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">主日崇拜事工輪值</h2>
-          <p class="text-xs text-stone-500 mt-1">掌握講道、敬拜樂團、影音燈控與接待招待服事安排</p>
+          <p class="text-xs text-stone-500 mt-1" id="serviceSectionSubtitle">掌握講道、主領、影音燈控與招待服事安排</p>
         </div>
         <button onclick="openNewServiceModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center gap-2 flex-shrink-0">
           <i class="fa-solid fa-calendar-plus text-xs"></i>
@@ -269,14 +269,13 @@
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組五：【升級版】教牧推播與多圖隨機管理中心 -->
+    <!-- 模組五：教牧推播與多圖隨機管理中心 -->
     <section id="mod-pastoral-bot" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">LINE 教牧推播與圖片隨機庫</h2>
           <p class="text-xs text-stone-500 mt-1">自由修改金句、祝禱詞，並為「把愛傳出去」建立豐富圖片庫，每次隨機派發</p>
         </div>
-        <!-- 文案與圖片切換 Tab -->
         <div class="flex flex-wrap gap-1.5 p-1 bg-white/80 rounded-2xl border border-stone-200">
           <button onclick="switchBotSubTab('templates')" id="btn-sub-templates" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold btn-warm">祝禱範本</button>
           <button onclick="switchBotSubTab('cards')" id="btn-sub-cards" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">金句卡庫</button>
@@ -305,9 +304,8 @@
         <div id="journeyListContainer" class="space-y-3"></div>
       </div>
 
-      <!-- 子面板 4：【多圖隨機管理】祝福圖卡庫 -->
+      <!-- 子面板 4：祝福圖卡庫 -->
       <div id="sub-images" class="space-y-4 hidden">
-        <!-- 頂部控制列：情境分類切換 & 新增圖卡按鈕 -->
         <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
           <div class="flex gap-1.5 p-1 bg-stone-100 rounded-xl">
             <button onclick="filterGreetingCards('ALL')" id="tab-gc-ALL" class="px-3 py-1.5 rounded-lg text-xs font-extrabold btn-warm">全部圖卡 (<span id="count-gc-ALL">0</span>)</button>
@@ -321,10 +319,7 @@
           </button>
         </div>
 
-        <!-- 隱藏的快速換圖 input -->
         <input type="file" id="sharedImageFileInput" accept="image/*" class="hidden" onchange="handleImageFileSelected(event)">
-
-        <!-- 圖卡網格列表 -->
         <div id="greetingCardsGridContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
       </div>
     </section>
@@ -381,7 +376,7 @@
 
   </main>
 
-  <!-- 底部微浮現代晶透導覽列 -->
+  <!-- 底部導覽列 -->
   <nav class="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 max-w-lg w-full lux-dock rounded-3xl z-30 px-4 py-2.5 flex justify-around">
     <button onclick="switchTab('members')" id="nav-members" class="flex flex-col items-center gap-1 transition-all text-orange-600">
       <i class="fa-solid fa-users text-sm"></i>
@@ -411,7 +406,7 @@
 
   <!-- ======================== 彈窗 MODALS ======================== -->
 
-  <!-- 【Modal: 主日服事】 -->
+  <!-- 【Modal: 主日服事 堂會自適應升級版】 -->
   <div id="serviceEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-xl rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-5 max-h-[88vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
@@ -422,32 +417,120 @@
         <button onclick="closeServiceModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="editServiceId">
+      
       <div class="space-y-4 text-xs">
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-stone-600 font-bold block mb-1.5">主日日期 *</label><input type="text" id="svcDate" placeholder="例如：2027/04/11" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400"></div>
-          <div><label class="text-stone-600 font-bold block mb-1.5">特別活動 / 節日</label><input type="text" id="svcEvent" placeholder="如：復活節、浸禮主日" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></div>
-        </div>
-        <div><label class="text-stone-600 font-bold block mb-1.5">主日講員</label><input type="text" id="svcSpeaker" placeholder="如：吳俊璋牧師" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400"></div>
-        <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-3">
-          <span class="text-xs font-black text-amber-900 block flex items-center gap-1.5"><i class="fa-solid fa-music text-orange-600"></i> 敬拜樂團同工配置</span>
-          <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">敬拜主領</label><select id="svcLeader" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">敬拜歌者</label><input type="text" id="svcSingers" placeholder="歌者名單" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none"></div>
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">司琴鍵盤</label><select id="svcKeyboard" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">吉他手</label><select id="svcGuitar" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">貝斯手</label><select id="svcBass" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">爵士鼓手</label><select id="svcDrums" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
+          <div>
+            <label class="text-stone-600 font-bold block mb-1.5">主日日期 *</label>
+            <input type="text" id="svcDate" placeholder="例如：2026/04/12" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
+          </div>
+          <div>
+            <label class="text-stone-600 font-bold block mb-1.5">特別活動 / 節日</label>
+            <input type="text" id="svcEvent" placeholder="如：復活節、洗禮主日" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
           </div>
         </div>
-        <div class="p-4 rounded-2xl bg-orange-50/50 border border-orange-200/60 space-y-3">
-          <span class="text-xs font-black text-orange-950 block flex items-center gap-1.5"><i class="fa-solid fa-sliders text-orange-600"></i> 影音技術與主日接待</span>
+
+        <div>
+          <label class="text-stone-600 font-bold block mb-1.5">主日講員</label>
+          <input type="text" id="svcSpeaker" placeholder="如：吳俊璋牧師" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
+        </div>
+
+        <!-- 火樂教會專屬欄位：敬拜樂團配置 -->
+        <div id="shineFieldsWrapper" class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-3">
+          <span class="text-xs font-black text-amber-900 block flex items-center gap-1.5">
+            <i class="fa-solid fa-music text-orange-600"></i> 火樂敬拜樂團同工配置
+          </span>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">音控控台</label><select id="svcSound" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
-            <div><label class="text-stone-600 text-[11px] font-bold block mb-1">直播／導播</label><select id="svcVideo" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select></div>
-            <div class="col-span-2"><label class="text-stone-600 text-[11px] font-bold block mb-1">主日招待同工</label><input type="text" id="svcUshers" placeholder="招待人員名單" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none"></div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">敬拜主領</label>
+              <select id="svcLeader" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">敬拜歌者</label>
+              <input type="text" id="svcSingers" placeholder="歌者名單" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">司琴鍵盤</label>
+              <select id="svcKeyboard" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">吉他手</label>
+              <select id="svcGuitar" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">貝斯手</label>
+              <select id="svcBass" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">爵士鼓手</label>
+              <select id="svcDrums" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ｍ＋大雅專屬欄位：司會/報告、公禱、兒主師資、接送、聖禮與禱告會 -->
+        <div id="mplusFieldsWrapper" class="p-4 rounded-2xl bg-orange-50/60 border border-orange-200/60 space-y-3 hidden">
+          <span class="text-xs font-black text-orange-950 block flex items-center gap-1.5">
+            <i class="fa-solid fa-church text-orange-600"></i> Ｍ＋崇拜司會、兒主師資與聖禮服事
+          </span>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">司會（報告/主持）</label>
+              <select id="svcPresider" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">主日公禱</label>
+              <select id="svcPrayer" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">兒主主責老師</label>
+              <input type="text" id="svcSundaySchool" placeholder="如：師母、鈺庭" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">兒主助教</label>
+              <input type="text" id="svcSundaySchoolTa" placeholder="如：張毓、以路" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">長輩/肢體接送</label>
+              <input type="text" id="svcTransport" placeholder="如：黃麗珠" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">週三禱告會主理</label>
+              <input type="text" id="svcWedPrayer" placeholder="如：吳俊璋、曾恩茹" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            </div>
+            <div class="col-span-2 bg-white/80 p-2.5 rounded-xl border border-stone-200/80 space-y-1.5">
+              <label class="text-stone-700 font-bold block text-[11px]">🍞 聖餐聖禮安排 (選填)</label>
+              <div class="grid grid-cols-3 gap-2">
+                <input type="text" id="svcCommunion" placeholder="主禮牧者" class="bg-stone-50 border border-stone-200 rounded-lg p-2 text-stone-800 text-[11px] focus:outline-none">
+                <input type="text" id="svcCommunionBread" placeholder="分餅同工" class="bg-stone-50 border border-stone-200 rounded-lg p-2 text-stone-800 text-[11px] focus:outline-none">
+                <input type="text" id="svcCommunionCup" placeholder="分杯同工" class="bg-stone-50 border border-stone-200 rounded-lg p-2 text-stone-800 text-[11px] focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 影音與招待配置 -->
+        <div class="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-3">
+          <span class="text-xs font-black text-stone-800 block flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-orange-600"></i> 影音技術與主日接待
+          </span>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">音控控台</label>
+              <select id="svcSound" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">投影字幕 / 導播</label>
+              <select id="svcVideo" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"></select>
+            </div>
+            <div class="col-span-2">
+              <label class="text-stone-600 text-[11px] font-bold block mb-1">主日招待同工</label>
+              <input type="text" id="svcUshers" placeholder="如：A(維新+慈芬) / B(煌龍+真愛)" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            </div>
           </div>
         </div>
       </div>
+
       <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
         <button onclick="closeServiceModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
         <button onclick="saveServiceData()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存服事表</button>
@@ -572,7 +655,7 @@
     </div>
   </div>
 
-  <!-- 【Modal: 新增祝福圖卡 (直接本機上傳圖片)】 -->
+  <!-- 【Modal: 新增祝福圖卡】 -->
   <div id="newGreetingCardModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
       <div class="flex justify-between items-center border-b border-stone-200 pb-3">
@@ -704,7 +787,8 @@
     const MINISTRY_OPTIONS = [
       "敬拜主領", "敬拜歌者", "司琴鍵盤", "木吉他", "電吉他", "Bass手", 
       "爵士鼓手", "音控PA", "直播導播", "投影簡報", "主日招待", 
-      "主日學大童班", "主日學幼兒班", "青少輔導", "總務愛筵", "關懷代禱"
+      "主日學大童班", "主日學幼兒班", "青少輔導", "總務愛筵", "關懷代禱",
+      "司會報告", "主日禱告", "接送同工", "聖餐事奉"
     ];
     let selectedMinistries = new Set();
 
@@ -719,6 +803,13 @@
       document.querySelectorAll('.group-term-label').forEach(el => el.innerText = terms.group);
       document.querySelectorAll('.group-leader-term-label').forEach(el => el.innerText = terms.leader);
       document.querySelectorAll('.group-member-term-label').forEach(el => el.innerText = terms.member);
+      
+      const subTitle = document.getElementById('serviceSectionSubtitle');
+      if (subTitle) {
+        subTitle.innerText = (churchId === 'SHiNE')
+          ? '掌握講道、敬拜樂團、影音燈控與接待招待服事安排'
+          : '掌握講道、崇拜司會、主日公禱、兒主師資、聖餐與接送安排';
+      }
     }
 
     async function handleAuthLogin() {
@@ -801,7 +892,7 @@
       else if (currentUser.can_manage_schedules) switchTab('services');
     }
 
-    // 1. 會友名冊
+    // 1. 會友名冊模組
     async function loadMembers() {
       const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
       cachedMembers = data || [];
@@ -978,7 +1069,9 @@
       await loadMembers();
     }
 
-    // 2. 主日服事排程模組
+    // =========================================================================
+    // 2. 主日服事排程模組 (堂會自適應版面 + 模糊名字比對)
+    // =========================================================================
     async function loadServices() {
       const { data } = await db.from('service_schedules').select('*').eq('church_id', activeChurch).order('service_date', { ascending: true });
       cachedServices = data || [];
@@ -991,21 +1084,34 @@
         c.innerHTML = '<div class="col-span-2 text-center text-stone-400 py-16 text-xs">目前無排定之服事資料，請點擊上方按鈕新增！</div>';
         return;
       }
-      c.innerHTML = cachedServices.map(s => `
-        <div class="lux-card p-6 space-y-4 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-start border-b border-stone-200/80 pb-3.5">
-              <div>
-                <span class="font-black text-base sm:text-lg text-stone-800 flex items-center gap-2">
-                  <i class="fa-regular fa-calendar text-orange-600"></i>
-                  <span>${s.service_date}</span>
-                </span>
-                ${s.event ? `<span class="text-xs text-orange-800 font-extrabold mt-1 block">${s.event}</span>` : ''}
-              </div>
-              <span class="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-900 font-extrabold border border-orange-200/80">
-                講道：${s.speaker || '未定'}
-              </span>
+
+      const isMPlus = (activeChurch === 'M+');
+
+      c.innerHTML = cachedServices.map(s => {
+        let detailsHtml = '';
+
+        if (isMPlus) {
+          // Ｍ＋大雅專屬呈現
+          detailsHtml = `
+            <div class="space-y-1.5 text-xs text-stone-600 pt-3.5">
+              <div class="flex justify-between items-center"><span class="text-stone-400 font-medium">司會（主持/報告）：</span><span class="font-black text-stone-800">${s.presider || '－'}</span></div>
+              <div class="flex justify-between items-center"><span class="text-stone-400 font-medium">主日公禱：</span><span class="font-black text-stone-800">${s.prayer || '－'}</span></div>
+              <div class="flex justify-between items-center"><span class="text-stone-400 font-medium">兒主主責 / 助教：</span><span class="font-bold text-stone-700">${[s.sunday_school, s.sunday_school_ta].filter(Boolean).join(' / ') || '－'}</span></div>
+              <div class="flex justify-between items-center"><span class="text-stone-400 font-medium">音控 / 投影：</span><span class="font-bold text-stone-700">${s.tech_sound || '－'} / ${s.tech_video || '－'}</span></div>
+              <div class="flex justify-between items-center"><span class="text-stone-400 font-medium">主日接待：</span><span class="font-bold text-stone-700">${s.ushers || '－'}</span></div>
+              ${s.transport ? `<div class="flex justify-between items-center"><span class="text-stone-400 font-medium">長輩專車接送：</span><span class="font-bold text-amber-700">🚐 ${s.transport}</span></div>` : ''}
+              ${s.wed_prayer ? `<div class="flex justify-between items-center"><span class="text-stone-400 font-medium">週三禱告會主理：</span><span class="font-bold text-stone-700">🙏 ${s.wed_prayer}</span></div>` : ''}
+              ${s.communion ? `
+                <div class="flex justify-between items-center bg-amber-50/80 p-2 rounded-xl text-amber-900 border border-amber-200/60 mt-1">
+                  <span class="font-black">🍞 聖餐主禮：${s.communion}</span>
+                  <span class="text-[11px] text-amber-800 font-bold">分餅: ${s.communion_bread || '－'} | 分杯: ${s.communion_cup || '－'}</span>
+                </div>
+              ` : ''}
             </div>
+          `;
+        } else {
+          // 火樂教會 (SHiNE) 敬拜樂團呈現
+          detailsHtml = `
             <div class="grid grid-cols-2 gap-2.5 text-xs pt-3.5 text-stone-600">
               <div>敬拜主領：<span class="font-black text-stone-800">${s.worship_leader || '－'}</span></div>
               <div>敬拜歌者：<span class="font-black text-stone-800">${s.singers || '－'}</span></div>
@@ -1017,46 +1123,101 @@
               <div>直播導播：<span class="font-black text-stone-800">${s.tech_video || '－'}</span></div>
               <div class="col-span-2 pt-1 border-t border-stone-100">招待事工：<span class="font-black text-stone-800">${s.ushers || '－'}</span></div>
             </div>
-          </div>
-          <div class="pt-3.5 border-t border-stone-200/80 flex items-center justify-between">
-            <span class="text-xs text-stone-400 font-medium">主日崇拜服事表</span>
-            <div class="flex gap-2">
-              <button onclick="editServiceSchedule(${s.id})" class="text-xs px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition flex items-center gap-1">
-                <i class="fa-solid fa-pen text-[10px]"></i> 調整服事
-              </button>
-              <button onclick="deleteServiceSchedule(${s.id}, '${s.service_date}')" class="text-xs px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
-                <i class="fa-solid fa-trash"></i>
-              </button>
+          `;
+        }
+
+        return `
+          <div class="lux-card p-6 space-y-4 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start border-b border-stone-200/80 pb-3.5">
+                <div>
+                  <span class="font-black text-base sm:text-lg text-stone-800 flex items-center gap-2">
+                    <i class="fa-regular fa-calendar text-orange-600"></i>
+                    <span>${s.service_date}</span>
+                  </span>
+                  ${s.event ? `<span class="text-xs text-orange-800 font-extrabold mt-1 block">${s.event}</span>` : ''}
+                </div>
+                <span class="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-900 font-extrabold border border-orange-200/80">
+                  講道：${s.speaker || '未定'}
+                </span>
+              </div>
+              ${detailsHtml}
+            </div>
+            <div class="pt-3.5 border-t border-stone-200/80 flex items-center justify-between">
+              <span class="text-xs text-stone-400 font-medium">主日崇拜服事表</span>
+              <div class="flex gap-2">
+                <button onclick="editServiceSchedule(${s.id})" class="text-xs px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-pen text-[10px]"></i> 調整服事
+                </button>
+                <button onclick="deleteServiceSchedule(${s.id}, '${s.service_date}')" class="text-xs px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
+    // 支援簡稱、全名智慧匹配下拉選單
     function populateMinistryMemberDropdown(selectId, targetKeyword, currentValue) {
       const select = document.getElementById(selectId);
+      if (!select) return;
+
+      const cleanVal = (currentValue || '').trim();
+      const isMatch = (mName) => {
+        if (!cleanVal || cleanVal === '－') return false;
+        return mName === cleanVal || mName.endsWith(cleanVal) || cleanVal.endsWith(mName);
+      };
+
       const recommended = cachedMembers.filter(m => m.ministry && m.ministry.includes(targetKeyword));
       const others = cachedMembers.filter(m => !m.ministry || !m.ministry.includes(targetKeyword));
+      
       let html = `<option value="－">－ (無)</option>`;
-      if (recommended.length) html += `<optgroup label="🌟 推薦具恩賜同工">` + recommended.map(m => `<option value="${m.name}" ${m.name===currentValue?'selected':''}>${m.name} (${m.group_name})</option>`).join('') + `</optgroup>`;
-      html += `<optgroup label="全部名單">` + others.map(m => `<option value="${m.name}" ${m.name===currentValue?'selected':''}>${m.name}</option>`).join('') + `</optgroup>`;
+      if (recommended.length) {
+        html += `<optgroup label="🌟 推薦具恩賜同工">` + 
+          recommended.map(m => `<option value="${m.name}" ${isMatch(m.name) ? 'selected' : ''}>${m.name} (${m.group_name})</option>`).join('') + 
+          `</optgroup>`;
+      }
+      html += `<optgroup label="全部名單">` + 
+        others.map(m => `<option value="${m.name}" ${isMatch(m.name) ? 'selected' : ''}>${m.name}</option>`).join('') + 
+        `</optgroup>`;
       select.innerHTML = html;
     }
 
     function openNewServiceModal() {
+      const isMPlus = (activeChurch === 'M+');
       document.getElementById('editServiceId').value = '';
       document.getElementById('svcDate').value = '';
       document.getElementById('svcEvent').value = '';
       document.getElementById('svcSpeaker').value = '吳俊璋牧師';
-      document.getElementById('svcSingers').value = '';
       document.getElementById('svcUshers').value = '';
-      populateMinistryMemberDropdown('svcLeader', '主領', '');
-      populateMinistryMemberDropdown('svcKeyboard', '司琴', '');
-      populateMinistryMemberDropdown('svcGuitar', '吉他', '');
-      populateMinistryMemberDropdown('svcBass', 'Bass', '');
-      populateMinistryMemberDropdown('svcDrums', '鼓', '');
+
+      document.getElementById('shineFieldsWrapper').classList.toggle('hidden', isMPlus);
+      document.getElementById('mplusFieldsWrapper').classList.toggle('hidden', !isMPlus);
+
+      if (isMPlus) {
+        populateMinistryMemberDropdown('svcPresider', '司會', '');
+        populateMinistryMemberDropdown('svcPrayer', '禱告', '');
+        document.getElementById('svcSundaySchool').value = '';
+        document.getElementById('svcSundaySchoolTa').value = '';
+        document.getElementById('svcTransport').value = '';
+        document.getElementById('svcWedPrayer').value = '';
+        document.getElementById('svcCommunion').value = '';
+        document.getElementById('svcCommunionBread').value = '';
+        document.getElementById('svcCommunionCup').value = '';
+      } else {
+        document.getElementById('svcSingers').value = '';
+        populateMinistryMemberDropdown('svcLeader', '主領', '');
+        populateMinistryMemberDropdown('svcKeyboard', '司琴', '');
+        populateMinistryMemberDropdown('svcGuitar', '吉他', '');
+        populateMinistryMemberDropdown('svcBass', 'Bass', '');
+        populateMinistryMemberDropdown('svcDrums', '鼓', '');
+      }
+
       populateMinistryMemberDropdown('svcSound', '音控', '');
       populateMinistryMemberDropdown('svcVideo', '導播', '');
+
       document.getElementById('serviceModalTitle').querySelector('span').innerText = '新增主日服事週次';
       document.getElementById('serviceEditModal').classList.remove('hidden');
     }
@@ -1064,19 +1225,39 @@
     function editServiceSchedule(id) {
       const s = cachedServices.find(x => x.id === id);
       if (!s) return;
+
+      const isMPlus = (activeChurch === 'M+');
       document.getElementById('editServiceId').value = s.id;
-      document.getElementById('svcDate').value = s.service_date;
+      document.getElementById('svcDate').value = s.service_date || '';
       document.getElementById('svcEvent').value = s.event || '';
       document.getElementById('svcSpeaker').value = s.speaker || '';
-      document.getElementById('svcSingers').value = s.singers || '';
       document.getElementById('svcUshers').value = s.ushers || '';
-      populateMinistryMemberDropdown('svcLeader', '主領', s.worship_leader || '');
-      populateMinistryMemberDropdown('svcKeyboard', '司琴', s.keyboard || '');
-      populateMinistryMemberDropdown('svcGuitar', '吉他', s.guitar || '');
-      populateMinistryMemberDropdown('svcBass', 'Bass', s.bass || '');
-      populateMinistryMemberDropdown('svcDrums', '鼓', s.drums || '');
+
+      document.getElementById('shineFieldsWrapper').classList.toggle('hidden', isMPlus);
+      document.getElementById('mplusFieldsWrapper').classList.toggle('hidden', !isMPlus);
+
+      if (isMPlus) {
+        populateMinistryMemberDropdown('svcPresider', '司會', s.presider || '');
+        populateMinistryMemberDropdown('svcPrayer', '禱告', s.prayer || '');
+        document.getElementById('svcSundaySchool').value = s.sunday_school || '';
+        document.getElementById('svcSundaySchoolTa').value = s.sunday_school_ta || '';
+        document.getElementById('svcTransport').value = s.transport || '';
+        document.getElementById('svcWedPrayer').value = s.wed_prayer || '';
+        document.getElementById('svcCommunion').value = s.communion || '';
+        document.getElementById('svcCommunionBread').value = s.communion_bread || '';
+        document.getElementById('svcCommunionCup').value = s.communion_cup || '';
+      } else {
+        document.getElementById('svcSingers').value = s.singers || '';
+        populateMinistryMemberDropdown('svcLeader', '主領', s.worship_leader || '');
+        populateMinistryMemberDropdown('svcKeyboard', '司琴', s.keyboard || '');
+        populateMinistryMemberDropdown('svcGuitar', '吉他', s.guitar || '');
+        populateMinistryMemberDropdown('svcBass', 'Bass', s.bass || '');
+        populateMinistryMemberDropdown('svcDrums', '鼓', s.drums || '');
+      }
+
       populateMinistryMemberDropdown('svcSound', '音控', s.tech_sound || '');
       populateMinistryMemberDropdown('svcVideo', '導播', s.tech_video || '');
+
       document.getElementById('serviceModalTitle').querySelector('span').innerText = `調整服事：${s.service_date}`;
       document.getElementById('serviceEditModal').classList.remove('hidden');
     }
@@ -1087,22 +1268,41 @@
       const id = document.getElementById('editServiceId').value;
       const date = document.getElementById('svcDate').value.trim();
       if (!date) return alert('日期為必填！');
+
+      const isMPlus = (activeChurch === 'M+');
       const payload = {
-        church_id: activeChurch, service_date: date,
-        event: document.getElementById('svcEvent').value.trim(),
-        speaker: document.getElementById('svcSpeaker').value.trim(),
-        worship_leader: document.getElementById('svcLeader').value,
-        singers: document.getElementById('svcSingers').value.trim(),
-        keyboard: document.getElementById('svcKeyboard').value,
-        guitar: document.getElementById('svcGuitar').value,
-        bass: document.getElementById('svcBass').value,
-        drums: document.getElementById('svcDrums').value,
+        church_id: activeChurch,
+        service_date: date,
+        event: document.getElementById('svcEvent').value.trim() || null,
+        speaker: document.getElementById('svcSpeaker').value.trim() || null,
         tech_sound: document.getElementById('svcSound').value,
         tech_video: document.getElementById('svcVideo').value,
-        ushers: document.getElementById('svcUshers').value.trim()
+        ushers: document.getElementById('svcUshers').value.trim() || null
       };
+
+      if (isMPlus) {
+        payload.presider = document.getElementById('svcPresider').value;
+        payload.prayer = document.getElementById('svcPrayer').value;
+        payload.sunday_school = document.getElementById('svcSundaySchool').value.trim() || null;
+        payload.sunday_school_ta = document.getElementById('svcSundaySchoolTa').value.trim() || null;
+        payload.transport = document.getElementById('svcTransport').value.trim() || null;
+        payload.wed_prayer = document.getElementById('svcWedPrayer').value.trim() || null;
+        payload.communion = document.getElementById('svcCommunion').value.trim() || null;
+        payload.communion_bread = document.getElementById('svcCommunionBread').value.trim() || null;
+        payload.communion_cup = document.getElementById('svcCommunionCup').value.trim() || null;
+        payload.worship_leader = '敬拜團';
+      } else {
+        payload.worship_leader = document.getElementById('svcLeader').value;
+        payload.singers = document.getElementById('svcSingers').value.trim() || null;
+        payload.keyboard = document.getElementById('svcKeyboard').value;
+        payload.guitar = document.getElementById('svcGuitar').value;
+        payload.bass = document.getElementById('svcBass').value;
+        payload.drums = document.getElementById('svcDrums').value;
+      }
+
       if (id) await db.from('service_schedules').update(payload).eq('id', id);
       else await db.from('service_schedules').insert([payload]);
+
       closeServiceModal();
       await loadServices();
     }
@@ -1301,7 +1501,7 @@
       renderMembersCards(cachedMembers);
     }
 
-    // 4. 代禱關懷 (完整連動 LINE 推播與牧者祝禱回覆)
+    // 4. 代禱關懷模組
     async function loadPrayers() {
       const { data } = await db
         .from('prayer_requests')
@@ -1354,7 +1554,6 @@
       }).join('');
     }
 
-    // 開啟牧者親撰祝禱彈窗
     function openPrayerReplyModal(id, name, lineUserId, content) {
       document.getElementById('replyPrayerId').value = id;
       document.getElementById('replyLineUserId').value = lineUserId || '';
@@ -1369,7 +1568,6 @@
       document.getElementById('prayerReplyModal').classList.add('hidden');
     }
 
-    // 送出牧者親撰祝禱並推播回會友 LINE
     async function sendPastorPrayerReply() {
       const id = document.getElementById('replyPrayerId').value;
       const name = document.getElementById('replyMemberName').value;
@@ -1384,7 +1582,6 @@
 
       const workerName = currentUser ? currentUser.name : '教牧同工';
 
-      // 1. 更新資料庫
       await db.from('prayer_requests').update({
         status: '已守望',
         interceded_by: workerName,
@@ -1392,7 +1589,6 @@
         pastor_reply_prayer: prayerText
       }).eq('id', id);
 
-      // 2. 透過 LINE Push 推播給會友
       if (lineUserId) {
         try {
           await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=push_interceded&church=${encodeURIComponent(activeChurch)}`, {
@@ -1423,7 +1619,7 @@
       await loadPrayers();
     }
 
-    // 5. 【全新升級】教牧推播與多圖隨機管理中樞
+    // 5. LINE 教牧推播與圖卡庫
     async function loadPastoralBotSettings() {
       const { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', activeChurch);
       cachedTemplates = tpls || [];
@@ -1580,17 +1776,13 @@
       alert('✨ 該堂會新朋友旅程文案已儲存！');
     }
 
-    // ================= 【多圖隨機管理】真實祝福圖片卡 =================
     function filterGreetingCards(category) {
       currentGreetingFilter = category;
       ['ALL', '同事打拼', '低潮陪伴', '家人問候'].forEach(cat => {
         const btn = document.getElementById(`tab-gc-${cat}`);
         if (btn) {
-          if (cat === category) {
-            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold btn-warm';
-          } else {
-            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600';
-          }
+          if (cat === category) btn.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold btn-warm';
+          else btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600';
         }
       });
       renderGreetingCardsList();
@@ -1598,8 +1790,6 @@
 
     function renderGreetingCardsList() {
       const c = document.getElementById('greetingCardsGridContainer');
-      
-      // 更新統計數字
       const totalCount = cachedGreetingCards.length;
       const countColleague = cachedGreetingCards.filter(x => x.category === '同事打拼').length;
       const countLow = cachedGreetingCards.filter(x => x.category === '低潮陪伴').length;
@@ -1610,7 +1800,6 @@
       if (document.getElementById('count-gc-低潮陪伴')) document.getElementById('count-gc-低潮陪伴').innerText = countLow;
       if (document.getElementById('count-gc-家人問候')) document.getElementById('count-gc-家人問候').innerText = countFamily;
 
-      // 依分類過濾
       const displayCards = currentGreetingFilter === 'ALL' 
         ? cachedGreetingCards 
         : cachedGreetingCards.filter(x => x.category === currentGreetingFilter);
@@ -1628,7 +1817,6 @@
               <button onclick="deleteGreetingCard(${gc.id})" class="text-xs text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash mr-1"></i>刪除</button>
             </div>
 
-            <!-- 照片預覽與點擊換圖 -->
             <div class="relative w-full h-44 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 group">
               <img id="img-preview-${gc.id}" src="${gc.image_url}" alt="${gc.title}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105">
               <button onclick="triggerUploadImage(${gc.id})" class="absolute inset-0 bg-black/40 hover:bg-black/50 text-white text-xs font-bold flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition duration-200">
@@ -1726,7 +1914,6 @@
       await loadPastoralBotSettings();
     }
 
-    // 新增祝福圖卡彈窗操作
     function openNewGreetingCardModal() {
       document.getElementById('newGcTitle').value = '';
       document.getElementById('newGcUrl').value = '';
