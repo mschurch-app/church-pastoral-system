@@ -2660,11 +2660,18 @@
       const pwd = document.getElementById('admPwd').value.trim();
       const church = document.getElementById('admChurch').value;
 
-      if (!name) return alert('姓名不得為空！');
-      if (!id && !pwd) return alert('新增必須設定授權碼！');
+      if (!name) {
+        alert('請輸入同工姓名！');
+        return;
+      }
+      if (!id && !pwd) {
+        alert('新增管理員必須設定授權通行碼！');
+        return;
+      }
 
       const payload = {
-        name: name, assigned_church: church,
+        name: name, 
+        assigned_church: church,
         can_manage_members: document.getElementById('permMembers').checked,
         can_manage_schedules: document.getElementById('permSchedules').checked,
         can_manage_attendance: document.getElementById('permAttendance').checked,
@@ -2673,11 +2680,30 @@
       };
       if (pwd) payload.password = pwd;
 
-      if (id) await db.from('admin_users').update(payload).eq('id', id);
-      else { payload.role = 'CHURCH_ADMIN'; await db.from('admin_users').insert([payload]); }
+      try {
+        let error = null;
+        if (id) {
+          const res = await db.from('admin_users').update(payload).eq('id', id);
+          error = res.error;
+        } else {
+          payload.role = 'CHURCH_ADMIN';
+          const res = await db.from('admin_users').insert([payload]);
+          error = res.error;
+        }
 
-      closeAdminModal();
-      loadAdminUsersList();
+        if (error) {
+          alert('儲存失敗，資料庫回應：' + error.message);
+          console.error("Supabase Save Admin Error:", error);
+          return;
+        }
+
+        closeAdminModal();
+        alert('✨ 管理員權限已成功儲存！');
+        await loadAdminUsersList();
+      } catch (err) {
+        alert('發生未預期的錯誤，請查看主控台：' + err.message);
+        console.error("Unexpected error:", err);
+      }
     }
 
     async function deleteAdminUser(id, name) {
