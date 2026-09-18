@@ -145,7 +145,7 @@
           </div>
         </div>
 
-        <!-- 生活區域 (依堂會自適應排序呈現) -->
+        <!-- 生活區域 -->
         <div class="space-y-2">
           <label class="font-black text-stone-700 block text-xs">4. 你平時生活在哪一區？</label>
           <div class="flex flex-wrap gap-2" id="groupDistrict"></div>
@@ -199,10 +199,8 @@
             <span id="photoSourceBadge" class="text-[10px] text-orange-600 font-bold hidden">已帶入 LINE 大頭貼</span>
           </div>
 
-          <!-- 照片主預覽框 -->
           <div class="relative w-full h-44 rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50/70 overflow-hidden group">
             <img id="photoPreview" class="w-full h-full object-cover hidden" alt="印記照片">
-            
             <div id="photoPrompt" class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-stone-100 transition" onclick="triggerCameraCapture()">
               <i class="fa-solid fa-camera text-2xl text-orange-500"></i>
               <p class="text-xs font-bold text-stone-700">點此拍張自拍或與朋友合照</p>
@@ -210,7 +208,6 @@
             </div>
           </div>
 
-          <!-- 已有照片時的操作按鈕列 -->
           <div id="photoActionButtons" class="flex gap-2 pt-1 hidden">
             <button type="button" onclick="triggerCameraCapture()" class="flex-1 py-2 px-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold transition flex items-center justify-center gap-1.5 border border-orange-200/80 shadow-sm">
               <i class="fa-solid fa-camera text-orange-600"></i>
@@ -238,12 +235,11 @@
 
     </div>
 
-    <!-- 送出成功後的感謝卡 -->
+    <!-- 送出成功感謝卡 -->
     <div id="successSection" class="card-glass p-8 space-y-6 text-center hidden">
       <div class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
         <i class="fa-solid fa-seedling"></i>
       </div>
-      
       <div class="space-y-2">
         <h2 class="text-2xl font-black text-stone-800 tracking-tight">謝謝你今天來到我們當中！🌿</h2>
         <p class="text-xs text-stone-600 leading-relaxed pt-1">
@@ -252,11 +248,9 @@
           願今天成為你這週最充實、放鬆的充電時光！
         </p>
       </div>
-
       <div class="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/70 text-xs text-stone-700 leading-relaxed">
         「願你出也蒙福，入也蒙福；心中的一切憂慮，都在這裡化為滿滿的平安與力量。」
       </div>
-
       <div class="pt-2">
         <button onclick="closeLiffOrWindow()" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-extrabold transition">
           完成，關閉頁面
@@ -293,22 +287,19 @@
     let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
     let capturedPhotoFile = null;
 
-    // 動態渲染行政區選項（火樂：西屯擺前面、大雅移到沙鹿前；M+：大雅擺前面）
+    // 動態渲染行政區：火樂（西屯居首、大雅在沙鹿前）；M+（大雅居首）
     function renderDistrictPills() {
       const container = document.getElementById('groupDistrict');
-      
       const shineDistricts = [
         '西屯區', '南屯區', '北屯區', '西區', '北區', 
         '大雅區', '沙鹿區', '東區', '南區', '其他'
       ];
-
       const mplusDistricts = [
         '大雅區', '西屯區', '北屯區', '南屯區', 
         '西區', '北區', '東區', '南區', '沙鹿區', '其他'
       ];
 
       const list = isShine ? shineDistricts : mplusDistricts;
-
       container.innerHTML = list.map(d => {
         const isActive = (d === selectedDistrict);
         return `<div onclick="selectSinglePill('district', '${d}', this)" class="pill-btn ${isActive ? 'active' : ''}">📍 ${d}</div>`;
@@ -319,7 +310,7 @@
       renderDistrictPills();
 
       if (!DEFAULT_LIFF_ID) {
-        console.log("未提供 LIFF ID，以一般網頁模式運行");
+        console.log("以一般網頁模式運行");
         return;
       }
       try {
@@ -379,17 +370,13 @@
       selectedKnowFrom = value;
 
       const inviterBox = document.getElementById('inviterWrapper');
-      if (value === '朋友家人邀請') {
-        inviterBox.classList.remove('hidden');
-      } else {
-        inviterBox.classList.add('hidden');
-      }
+      if (value === '朋友家人邀請') inviterBox.classList.remove('hidden');
+      else inviterBox.classList.add('hidden');
     }
 
     function toggleMultiPill(element, type) {
       const text = element.innerText.trim();
       const targetSet = (type === 'feelings') ? selectedFeelings : selectedInterests;
-      
       if (targetSet.has(text)) {
         targetSet.delete(text);
         element.classList.remove('active');
@@ -399,13 +386,8 @@
       }
     }
 
-    function triggerCameraCapture() {
-      document.getElementById('cameraInput').click();
-    }
-
-    function triggerFilePicker() {
-      document.getElementById('galleryInput').click();
-    }
+    function triggerCameraCapture() { document.getElementById('cameraInput').click(); }
+    function triggerFilePicker() { document.getElementById('galleryInput').click(); }
 
     function handlePhotoSelected(event) {
       const file = event.target.files[0];
@@ -448,12 +430,10 @@
         try {
           const fileExt = capturedPhotoFile.name.split('.').pop() || 'jpg';
           const fileName = `newcomers/${targetChurch}_${Date.now()}.${fileExt}`;
-          
           const { data, error } = await db.storage.from('church-media').upload(fileName, capturedPhotoFile, {
             cacheControl: '3600',
             upsert: true
           });
-
           if (!error) {
             const { data: publicData } = db.storage.from('church-media').getPublicUrl(fileName);
             uploadedPhotoUrl = publicData.publicUrl;
@@ -468,8 +448,11 @@
         finalKnowFrom = `朋友家人邀請 (${inviter})`;
       }
 
-      const memoText = `【新朋友初次見面】期待：${Array.from(selectedFeelings).join('、')}。來源：${finalKnowFrom}`;
+      const feelingsList = Array.from(selectedFeelings);
+      const interestsList = Array.from(selectedInterests);
+      const memoText = `【新朋友初次見面】期待：${feelingsList.join('、')}。興趣：${interestsList.join('、')}。來源：${finalKnowFrom}`;
 
+      // 嚴格遵守：服事恩賜欄位 ministry 填 null，生活興趣與期待完整記錄於 memo
       const payload = {
         church_id: targetChurch,
         line_id: lineProfile.userId || null,
@@ -479,22 +462,47 @@
         age_group: selectedAge,
         district: selectedDistrict,
         know_us_from: finalKnowFrom,
-        desired_feelings: Array.from(selectedFeelings),
-        interest_tags: Array.from(selectedInterests),
+        desired_feelings: feelingsList,
+        interest_tags: interestsList,
         faith_status: '新朋友（初次聚會）',
         welcome_status: '新朋友',
         group_name: '未編組',
-        ministry: Array.from(selectedInterests).join(', '),
+        ministry: null,
         photo_url: uploadedPhotoUrl,
         memo: memoText
       };
 
-      const { error: insertErr } = await db.from('members').insert([payload]);
+      const { data: insertedData, error: insertErr } = await db.from('members').insert([payload]).select();
 
       if (insertErr) {
         btn.disabled = false;
         btn.innerHTML = `<span>✨ 很高興認識你 · 留下今日印記</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
         return alert('送出失敗：' + insertErr.message);
+      }
+
+      // 即時觸發 LINE Bot Push 通知給指定牧者/同工
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_newcomer&church=${encodeURIComponent(targetChurch)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          },
+          body: JSON.stringify({
+            church: targetChurch,
+            name: name,
+            gender: selectedGender,
+            phone: phone,
+            district: selectedDistrict,
+            ageGroup: selectedAge,
+            feelings: feelingsList,
+            interests: interestsList,
+            knowFrom: finalKnowFrom,
+            photoUrl: uploadedPhotoUrl
+          })
+        });
+      } catch (pushErr) {
+        console.warn("LINE 新朋友通知推播請求完成，若無配置接收人則不影響主表單存檔");
       }
 
       document.getElementById('formSection').classList.add('hidden');
