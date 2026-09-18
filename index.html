@@ -254,14 +254,14 @@
       <div id="serviceCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
     </section>
 
-    <!-- 模組三：小家 / 小組 行政中樞 -->
+    <!-- 模組三：小家 / 小組 行政中樞 (自由時間設定) -->
     <section id="mod-groups" class="space-y-6 hidden">
       <div class="flex justify-between items-center gap-3">
         <div>
           <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight flex items-center gap-2">
             <span class="group-term-label">小家</span>行政與調配中樞
           </h2>
-          <p class="text-xs text-stone-500 mt-1">建立<span class="group-term-label">小家</span>、指派<span class="group-leader-term-label">小家長</span>與組員調動</p>
+          <p class="text-xs text-stone-500 mt-1">建立<span class="group-term-label">小家</span>、自訂聚會時段與空間地點連結</p>
         </div>
         <button onclick="openGroupEditModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center gap-2 flex-shrink-0">
           <i class="fa-solid fa-plus text-xs"></i>
@@ -271,7 +271,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="groupCardsGrid"></div>
     </section>
 
-    <!-- 模組四：空間資源治理模組 (Church Spaces) -->
+    <!-- 模組四：空間資源治理模組 (可自由新增空間 & 全欄位編輯) -->
     <section id="mod-spaces" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -279,10 +279,9 @@
             <i class="fa-solid fa-door-open text-orange-600"></i>
             <span>教會空間與預約審批中心</span>
           </h2>
-          <p class="text-xs text-stone-500 mt-1">空間設定、小組防衝堂關聯、對外租借費用試算與審批</p>
+          <p class="text-xs text-stone-500 mt-1">自由管理空間、小組防衝堂關聯、對外租借費用試算與審批</p>
         </div>
         
-        <!-- 子切換標籤 & 預約按鈕 -->
         <div class="flex flex-wrap items-center gap-2">
           <div class="flex p-1 bg-white/80 rounded-2xl border border-stone-200 text-xs">
             <button onclick="switchSpaceSubTab('rooms')" id="btn-sp-rooms" class="px-3.5 py-1.5 rounded-xl font-extrabold btn-warm">空間清單</button>
@@ -292,14 +291,14 @@
             <i class="fa-solid fa-calendar-check text-xs"></i>
             <span>申請借用空間</span>
           </button>
-          <button onclick="openRoomEditModal()" class="py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5">
+          <button onclick="openRoomEditModal()" class="py-2.5 px-4 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-950 text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-plus text-xs"></i>
             <span>新增空間</span>
           </button>
         </div>
       </div>
 
-      <!-- 子面板 A: 空間列表 (預設僅主堂，可自由編輯) -->
+      <!-- 子面板 A: 空間列表 (支援全部資料編輯) -->
       <div id="sub-sp-rooms" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
       <!-- 子面板 B: 預約審批中心 -->
@@ -420,7 +419,7 @@
 
   </main>
 
-  <!-- 底部導覽列 (加入空間模組) -->
+  <!-- 底部導覽列 -->
   <nav class="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 max-w-xl w-full lux-dock rounded-3xl z-30 px-3 py-2.5 flex justify-around">
     <button onclick="switchTab('members')" id="nav-members" class="flex flex-col items-center gap-1 transition-all text-orange-600">
       <i class="fa-solid fa-users text-sm"></i>
@@ -454,35 +453,56 @@
 
   <!-- ======================== 彈窗 MODALS ======================== -->
 
-  <!-- 【Modal: 空間建立與編輯】 -->
+  <!-- 【Modal: 空間建立與完整編輯】 -->
   <div id="roomEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
       <div class="flex justify-between items-center border-b border-stone-200 pb-3">
         <h3 class="text-base font-black text-stone-800 flex items-center gap-2">
           <i class="fa-solid fa-door-open text-orange-600"></i>
-          <span id="roomModalTitle">編輯空間資料</span>
+          <span id="roomModalTitle">編輯空間完整資料</span>
         </h3>
         <button onclick="closeRoomEditModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="editRoomId">
       <div class="space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="font-bold text-stone-600 block mb-1">空間名稱 *</label><input type="text" id="rmName" placeholder="如：主堂" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 font-bold text-stone-800 focus:outline-none"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">所在樓層</label><input type="text" id="rmFloor" placeholder="如：1F" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none"></div>
+          <div>
+            <label class="font-bold text-stone-600 block mb-1">空間名稱 *</label>
+            <input type="text" id="rmName" placeholder="如：主堂、副堂、練團室" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 font-bold text-stone-800 focus:outline-none">
+          </div>
+          <div>
+            <label class="font-bold text-stone-600 block mb-1">所在樓層</label>
+            <input type="text" id="rmFloor" placeholder="如：1F、2F" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+          </div>
         </div>
-        <div>
-          <label class="font-bold text-stone-600 block mb-1">建議容納人數</label>
-          <input type="number" id="rmCapacity" placeholder="100" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-stone-600 block mb-1">建議容納人數</label>
+            <input type="number" id="rmCapacity" placeholder="100" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+          </div>
+          <div>
+            <label class="font-bold text-stone-600 block mb-1">對外租借權限</label>
+            <select id="rmAvailableRent" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-bold focus:outline-none">
+              <option value="true">開放對外租借</option>
+              <option value="false">僅限內部聚會使用</option>
+            </select>
+          </div>
         </div>
         <div>
           <label class="font-bold text-stone-600 block mb-1">附屬常設設備描述</label>
-          <textarea id="rmEquipment" rows="2" placeholder="音響控台、投影幕、麥克風、鋼琴" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none"></textarea>
+          <textarea id="rmEquipment" rows="2" placeholder="音響控台、投影幕、無線麥克風、鋼琴..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none leading-relaxed"></textarea>
         </div>
         <div class="p-3.5 rounded-2xl bg-orange-50/60 border border-orange-200/60 space-y-2">
-          <span class="font-black text-orange-950 block text-[11px]">對外租借計費規則</span>
+          <span class="font-black text-orange-950 block text-[11px]">場地計費設定 (內部聚會免收)</span>
           <div class="grid grid-cols-2 gap-2">
-            <div><label class="text-stone-600 font-bold block mb-1">每小時租金 (元)</label><input type="number" id="rmHourlyRate" placeholder="1000" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-mono font-bold focus:outline-none"></div>
-            <div><label class="text-stone-600 font-bold block mb-1">單次清潔費 (元)</label><input type="number" id="rmCleaningFee" placeholder="500" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-mono font-bold focus:outline-none"></div>
+            <div>
+              <label class="text-stone-600 font-bold block mb-1">每小時租金 (NT$)</label>
+              <input type="number" id="rmHourlyRate" placeholder="1000" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-mono font-bold focus:outline-none">
+            </div>
+            <div>
+              <label class="text-stone-600 font-bold block mb-1">單次清潔費 (NT$)</label>
+              <input type="number" id="rmCleaningFee" placeholder="500" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-mono font-bold focus:outline-none">
+            </div>
           </div>
         </div>
       </div>
@@ -493,7 +513,65 @@
     </div>
   </div>
 
-  <!-- 【Modal: 空間預約申請與費用試算 (含非必要加租設備)】 -->
+  <!-- 【Modal: 小家建立與編輯 (自訂聚會星期、開始與結束時間、關聯空間)】 -->
+  <div id="groupEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
+        <h3 class="text-lg font-black text-stone-800 flex items-center gap-2" id="groupModalTitle"><i class="fa-solid fa-people-roof text-orange-600"></i><span>設定<span class="group-term-label">小家</span>架構</span></h3>
+        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="hidden" id="editGroupId">
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="text-stone-600 font-bold block mb-1"><span class="group-term-label">小家</span>名稱 *</label>
+          <input type="text" id="grpName" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none">
+        </div>
+        <div>
+          <label class="text-stone-600 font-bold block mb-1">主要負責同工 (<span class="group-leader-term-label">小家長</span>) *</label>
+          <select id="grpLeaderSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></select>
+        </div>
+        
+        <!-- 自訂聚會星期與開始、結束時間 -->
+        <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-2">
+          <label class="font-bold text-amber-950 block text-[11px]">聚會時間排程 (可自由指定時段)</label>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="text-stone-500 text-[10px] block mb-1">聚會星期</label>
+              <select id="grpWeekdaySelect" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-bold focus:outline-none">
+                <option value="每週五">每週五</option>
+                <option value="每週六">每週六</option>
+                <option value="每週日">每週日</option>
+                <option value="每週二">每週二</option>
+                <option value="每週三">每週三</option>
+                <option value="每週四">每週四</option>
+                <option value="每週一">每週一</option>
+                <option value="隔週彈性">隔週彈性</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-stone-500 text-[10px] block mb-1">開始時間</label>
+              <input type="time" id="grpStartTime" value="19:30" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-semibold focus:outline-none">
+            </div>
+            <div>
+              <label class="text-stone-500 text-[10px] block mb-1">結束時間</label>
+              <input type="time" id="grpEndTime" value="21:30" class="w-full bg-white border border-stone-200 rounded-xl p-2 text-stone-800 font-semibold focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-stone-600 font-bold block mb-1">聚會地點 (關聯教會空間)</label>
+          <select id="grpLocationSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
+        <button onclick="closeGroupEditModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="saveGroupData()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 【Modal: 空間預約申請與費用試算】 -->
   <div id="bookingModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-lg rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4 max-h-[88vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-200 pb-3">
@@ -532,14 +610,14 @@
 
         <div>
           <label class="font-bold text-stone-600 block mb-1">活動主題與使用用途 *</label>
-          <input type="text" id="bkPurpose" placeholder="如：小組分享、慶生活動、講座分享" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+          <input type="text" id="bkPurpose" placeholder="如：小組分享、青年讀書會、外部講座" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
         </div>
 
         <!-- 額外加租設備 (非必要，自由勾選) -->
         <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-2">
           <div class="flex justify-between items-center">
             <span class="font-black text-amber-950 block text-[11px]">加租額外設備 (非必要，依需求自由勾選)</span>
-            <span class="text-[10px] text-amber-800 font-medium">單價包含在總試算</span>
+            <span class="text-[10px] text-amber-800 font-medium">單價自動加總</span>
           </div>
           <div id="amenitiesCheckList" class="space-y-1.5 pt-1"></div>
         </div>
@@ -674,32 +752,6 @@
       <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
         <button onclick="closeMemberModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
         <button onclick="saveMemberFromModal()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 【Modal: 小家建立與編輯 (聚會地點關聯空間)】 -->
-  <div id="groupEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
-      <div class="flex justify-between items-center border-b border-stone-200/80 pb-3.5">
-        <h3 class="text-lg font-black text-stone-800 flex items-center gap-2" id="groupModalTitle"><i class="fa-solid fa-people-roof text-orange-600"></i><span>設定<span class="group-term-label">小家</span>架構</span></h3>
-        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-800 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <input type="hidden" id="editGroupId">
-      <div class="space-y-3.5 text-xs">
-        <div><label class="text-stone-600 font-bold block mb-1"><span class="group-term-label">小家</span>名稱 *</label><input type="text" id="grpName" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></div>
-        <div><label class="text-stone-600 font-bold block mb-1">主要負責同工 (<span class="group-leader-term-label">小家長</span>) *</label><select id="grpLeaderSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></select></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-stone-600 font-bold block mb-1">聚會時間</label><select id="grpTimeSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"><option value="每週五 19:30">每週五 19:30</option><option value="每週六 10:00">每週六 10:00</option><option value="每週日 12:30">每週日 12:30</option><option value="彈性時間">彈性時間</option></select></div>
-          <div>
-            <label class="text-stone-600 font-bold block mb-1">聚會地點 (關聯空間)</label>
-            <select id="grpLocationSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 font-semibold focus:outline-none"></select>
-          </div>
-        </div>
-      </div>
-      <div class="flex justify-end gap-2.5 pt-3 border-t border-stone-200/80">
-        <button onclick="closeGroupEditModal()" class="py-2.5 px-5 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
-        <button onclick="saveGroupData()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold">確認儲存</button>
       </div>
     </div>
   </div>
@@ -977,6 +1029,7 @@
       if (!currentUser.can_manage_members) document.getElementById('nav-members').classList.add('hidden');
       if (!currentUser.can_manage_schedules) document.getElementById('nav-services').classList.add('hidden');
       if (!currentUser.can_manage_attendance) document.getElementById('nav-groups').classList.add('hidden');
+      if (!currentUser.can_manage_spaces) document.getElementById('nav-spaces').classList.add('hidden');
       if (!currentUser.can_manage_prayers) document.getElementById('nav-prayers').classList.add('hidden');
     }
 
@@ -997,7 +1050,7 @@
     }
 
     // =========================================================================
-    // 1. 空間資源治理模組 (Church Spaces & Bookings)
+    // 1. 空間資源治理模組 (全欄位完整編輯 + 自由新增空間)
     // =========================================================================
     async function loadRoomsAndSpaces() {
       const { data: rms } = await db.from('rooms').select('*').eq('church_id', activeChurch).eq('is_active', true).order('id');
@@ -1024,7 +1077,7 @@
     function renderRoomsCards() {
       const c = document.getElementById('sub-sp-rooms');
       if (!cachedRooms.length) {
-        c.innerHTML = `<div class="col-span-full py-16 text-center text-stone-400 text-xs">目前無空間資料，請點擊上方新增空間！</div>`;
+        c.innerHTML = `<div class="col-span-full py-16 text-center text-stone-400 text-xs">目前無空間資料，請點擊上方按鈕新增空間！</div>`;
         return;
       }
       c.innerHTML = cachedRooms.map(rm => `
@@ -1039,7 +1092,7 @@
                 <span class="text-xs text-stone-400 font-bold mt-0.5 block">${rm.floor || '1F'} · 容納約 ${rm.capacity || 100} 人</span>
               </div>
               <span class="text-[11px] px-2.5 py-1 rounded-xl bg-orange-100 text-orange-900 font-extrabold">
-                ${rm.is_available_for_rent ? '可對外租借' : '僅限內部'}
+                ${rm.is_available_for_rent ? '可對外租借' : '僅內部使用'}
               </span>
             </div>
             <div class="p-3 rounded-xl bg-stone-50 border border-stone-200/80 text-xs text-stone-600 space-y-1">
@@ -1053,9 +1106,11 @@
           </div>
           <div class="pt-3.5 border-t border-stone-200/80 flex justify-end gap-2">
             <button onclick="editRoom(${rm.id})" class="px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold transition flex items-center gap-1">
-              <i class="fa-solid fa-pen text-[10px]"></i> 編輯費率
+              <i class="fa-solid fa-pen text-[10px]"></i> 編輯空間資料
             </button>
-            ${rm.name !== '主堂' ? `<button onclick="deleteRoom(${rm.id}, '${rm.name}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>` : ''}
+            <button onclick="deleteRoom(${rm.id}, '${rm.name}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition">
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </div>
         </div>
       `).join('');
@@ -1126,7 +1181,8 @@
       document.getElementById('rmName').value = '';
       document.getElementById('rmFloor').value = '1F';
       document.getElementById('rmCapacity').value = '50';
-      document.getElementById('rmEquipment').value = '投影設備、無線麥克風';
+      document.getElementById('rmEquipment').value = '投影設備、無線麥克風、音響';
+      document.getElementById('rmAvailableRent').value = 'true';
       document.getElementById('rmHourlyRate').value = '800';
       document.getElementById('rmCleaningFee').value = '500';
       document.getElementById('roomModalTitle').innerText = '新增教會空間';
@@ -1141,6 +1197,7 @@
       document.getElementById('rmFloor').value = rm.floor || '1F';
       document.getElementById('rmCapacity').value = rm.capacity || 100;
       document.getElementById('rmEquipment').value = rm.equipment || '';
+      document.getElementById('rmAvailableRent').value = rm.is_available_for_rent ? 'true' : 'false';
       document.getElementById('rmHourlyRate').value = rm.hourly_rate || 1000;
       document.getElementById('rmCleaningFee').value = rm.cleaning_fee || 500;
       document.getElementById('roomModalTitle').innerText = `編輯空間：${rm.name}`;
@@ -1157,15 +1214,20 @@
       const payload = {
         church_id: activeChurch,
         name: name,
-        floor: document.getElementById('rmFloor').value.trim(),
-        capacity: parseInt(document.getElementById('rmCapacity').value) || 30,
+        floor: document.getElementById('rmFloor').value.trim() || '1F',
+        capacity: parseInt(document.getElementById('rmCapacity').value) || 50,
         equipment: document.getElementById('rmEquipment').value.trim(),
+        is_available_for_rent: document.getElementById('rmAvailableRent').value === 'true',
         hourly_rate: parseFloat(document.getElementById('rmHourlyRate').value) || 0,
-        cleaning_fee: parseFloat(document.getElementById('rmCleaningFee').value) || 0
+        cleaning_fee: parseFloat(document.getElementById('rmCleaningFee').value) || 0,
+        is_active: true
       };
 
-      if (id) await db.from('rooms').update(payload).eq('id', id);
-      else await db.from('rooms').insert([payload]);
+      if (id) {
+        await db.from('rooms').update(payload).eq('id', id);
+      } else {
+        await db.from('rooms').insert([payload]);
+      }
 
       closeRoomEditModal();
       await loadRoomsAndSpaces();
@@ -1316,7 +1378,7 @@
     }
 
     // =========================================================================
-    // 2. 會友名冊模組 (支援新朋友標籤)
+    // 2. 會友名冊模組
     // =========================================================================
     async function loadMembers() {
       const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
@@ -1495,7 +1557,7 @@
     }
 
     // =========================================================================
-    // 3. 主日服事排程模組 (堂會自適應版面)
+    // 3. 主日服事排程模組
     // =========================================================================
     async function loadServices() {
       const { data } = await db.from('service_schedules').select('*').eq('church_id', activeChurch).order('service_date', { ascending: true });
@@ -1797,7 +1859,7 @@
     }
 
     // =========================================================================
-    // 4. 小家 / 小組 模組 (聚會地點自動關聯空間)
+    // 4. 小家 / 小組 模組 (自訂時間 + 關聯空間)
     // =========================================================================
     async function loadGroups() {
       const { data } = await db.from('groups').select('*').eq('church_id', activeChurch).order('id');
@@ -1855,6 +1917,7 @@
       html += `<optgroup label="外部與其他">
         <option value="組員家庭" ${currentLoc === '組員家庭' ? 'selected' : ''}>組員家庭</option>
         <option value="線上聚會" ${currentLoc === '線上聚會' ? 'selected' : ''}>線上聚會</option>
+        <option value="外部咖啡廳" ${currentLoc === '外部咖啡廳' ? 'selected' : ''}>外部咖啡廳</option>
         <option value="彈性地點" ${currentLoc === '彈性地點' ? 'selected' : ''}>彈性地點</option>
       </optgroup>`;
       select.innerHTML = html;
@@ -1864,6 +1927,9 @@
       const terms = getChurchTerms(activeChurch);
       document.getElementById('editGroupId').value = '';
       document.getElementById('grpName').value = '';
+      document.getElementById('grpWeekdaySelect').value = '每週五';
+      document.getElementById('grpStartTime').value = '19:30';
+      document.getElementById('grpEndTime').value = '21:30';
       populateLeaderDropdown('');
       populateGroupLocationDropdown('');
       document.getElementById('groupModalTitle').querySelector('span').innerText = `新增${terms.group}架構`;
@@ -1882,6 +1948,18 @@
       const terms = getChurchTerms(activeChurch);
       document.getElementById('editGroupId').value = g.id;
       document.getElementById('grpName').value = g.name;
+
+      // 解析原有聚會時間 (如 "每週五 19:30-21:30")
+      if (g.meeting_time) {
+        const parts = g.meeting_time.split(' ');
+        if (parts.length >= 1) document.getElementById('grpWeekdaySelect').value = parts[0];
+        if (parts.length >= 2) {
+          const timeParts = parts[1].split(/[-~至]/);
+          if (timeParts[0]) document.getElementById('grpStartTime').value = timeParts[0].trim();
+          if (timeParts[1]) document.getElementById('grpEndTime').value = timeParts[1].trim();
+        }
+      }
+
       populateLeaderDropdown(g.leader || '');
       populateGroupLocationDropdown(g.location || '');
       document.getElementById('groupModalTitle').querySelector('span').innerText = `編輯${terms.group}：${g.name}`;
@@ -1895,11 +1973,20 @@
       const name = document.getElementById('grpName').value.trim();
       const leader = document.getElementById('grpLeaderSelect').value;
       if (!name || !leader) return alert('名稱與負責同工為必填！');
+
+      const weekday = document.getElementById('grpWeekdaySelect').value;
+      const st = document.getElementById('grpStartTime').value;
+      const et = document.getElementById('grpEndTime').value;
+      const meetingTimeFormatted = `${weekday} ${st}-${et}`;
+
       const payload = {
-        church_id: activeChurch, name: name, leader: leader,
-        meeting_time: document.getElementById('grpTimeSelect').value,
+        church_id: activeChurch,
+        name: name,
+        leader: leader,
+        meeting_time: meetingTimeFormatted,
         location: document.getElementById('grpLocationSelect').value
       };
+
       if (id) {
         const oldGrp = cachedGroups.find(x => x.id === parseInt(id));
         if (oldGrp && oldGrp.name !== name) {
