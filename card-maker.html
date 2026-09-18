@@ -257,7 +257,7 @@
       renderCardToCanvas();
     };
 
-    // 初始化 LIFF 並自動代入發送者署名
+    // 初始化 LIFF 並確保完成登入與授權
     async function initLiff() {
       if (!LIFF_ID) {
         console.log("未提供 liffId，以一般網頁預覽模式運行");
@@ -265,16 +265,17 @@
       }
       try {
         await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          if (profile.displayName) {
-            document.getElementById('targetSender').value = profile.displayName;
-          }
-        } else {
+        if (!liff.isLoggedIn()) {
           liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        if (profile.displayName) {
+          document.getElementById('targetSender').value = profile.displayName;
         }
       } catch (err) {
-        console.warn("LIFF 初始化跳過 (一般瀏覽器環境):", err);
+        console.warn("LIFF 初始化異常:", err);
       }
     }
 
@@ -361,7 +362,7 @@
     }
 
     // =========================================================================
-    // Canvas 真實圖片合成排版演算法
+    // Canvas 真實圖片合成排版演算法 (高解析度 1080x1350)
     // =========================================================================
     function renderCardToCanvas() {
       const loading = document.getElementById('renderLoading');
@@ -564,18 +565,24 @@
     }
 
     // =========================================================================
-    // ★ LINE 純圖片真傳模式：僅發送純圖物件，無網址文字
+    // ★ LINE 純圖片真傳模式：僅發送純圖物件，直接叫起原生好友清單
     // =========================================================================
     async function shareViaLiffTargetPicker() {
       const btn = document.getElementById('btnSharePicker');
       const canvas = document.getElementById('cardCanvas');
       const recipient = document.getElementById('targetRecipient').value.trim() || '好友';
 
+      // 1. 若在 LIFF 環境中且尚未登入，強制先導向登入以取得權限
+      if (window.liff && !liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在生成純圖...`;
 
       try {
-        // 1. 若尚未上傳，將畫布轉換為高品質圖片 Blob 並直傳 Supabase Storage
+        // 2. 若尚未上傳，將畫布轉換為高品質圖片 Blob 並直傳 Supabase Storage
         if (!currentUploadedCardUrl) {
           const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
           const fileName = `generated_cards/${currentChurch}_${Date.now()}.jpg`;
@@ -594,7 +601,7 @@
           currentUploadedCardUrl = publicData.publicUrl;
         }
 
-        // 2. 透過 LIFF shareTargetPicker 發送【純圖片】，聊天室直接呈現滿版大圖
+        // 3. 檢查並調用 LINE 原生 shareTargetPicker
         if (window.liff && liff.isApiAvailable('shareTargetPicker')) {
           const res = await liff.shareTargetPicker([
             {
@@ -608,12 +615,12 @@
             alert('🎉 祝賀小卡已直接發送至對方的聊天室！');
           }
         } else {
-          alert('請在 LINE App 內開啟此頁面，即可直接挑選好友傳圖！或長按上方圖片儲存至相簿。');
+          alert('請確認已在 LINE Developers 後台將「Share Target Picker」開關切換為 Enabled！\n或者可先長按上方圖片儲存至手機相簿。');
         }
       } catch (err) {
         console.error("Share error:", err);
         const errStr = String(err).toLowerCase();
-        // 若使用者在好友勾選清單按了「取消」或關閉視窗，不彈出報錯視窗打擾使用者
+        // 若使用者在好友勾選清單按了「取消」或關閉視窗，不彈出報錯視窗
         if (!errStr.includes('cancel') && err.code !== 'USER_CANCELLED') {
           alert('發送提示：' + err.message);
         }
