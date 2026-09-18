@@ -145,7 +145,7 @@
           </div>
         </div>
 
-        <!-- 生活區域 (依堂會自適應呈現) -->
+        <!-- 生活區域 (依堂會自適應排序呈現) -->
         <div class="space-y-2">
           <label class="font-black text-stone-700 block text-xs">4. 你平時生活在哪一區？</label>
           <div class="flex flex-wrap gap-2" id="groupDistrict"></div>
@@ -192,7 +192,7 @@
           </div>
         </div>
 
-        <!-- 微笑印記拍照留念 (已升級：預載 LINE 大頭貼時，清楚顯示開啟相機與換照片選項) -->
+        <!-- 微笑印記拍照留念 -->
         <div class="space-y-2 pt-2 border-t border-stone-200/80">
           <div class="flex justify-between items-center">
             <label class="font-black text-stone-700 block text-xs">8. 留下今天的微笑印記 📸 (選填)</label>
@@ -203,7 +203,6 @@
           <div class="relative w-full h-44 rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50/70 overflow-hidden group">
             <img id="photoPreview" class="w-full h-full object-cover hidden" alt="印記照片">
             
-            <!-- 尚未有照片時的引導提示 -->
             <div id="photoPrompt" class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-stone-100 transition" onclick="triggerCameraCapture()">
               <i class="fa-solid fa-camera text-2xl text-orange-500"></i>
               <p class="text-xs font-bold text-stone-700">點此拍張自拍或與朋友合照</p>
@@ -211,7 +210,7 @@
             </div>
           </div>
 
-          <!-- 已有照片時的操作按鈕列 (開啟相機現場拍 / 從相簿換一張 / 重設) -->
+          <!-- 已有照片時的操作按鈕列 -->
           <div id="photoActionButtons" class="flex gap-2 pt-1 hidden">
             <button type="button" onclick="triggerCameraCapture()" class="flex-1 py-2 px-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold transition flex items-center justify-center gap-1.5 border border-orange-200/80 shadow-sm">
               <i class="fa-solid fa-camera text-orange-600"></i>
@@ -223,7 +222,6 @@
             </button>
           </div>
 
-          <!-- 隱藏原生 input：相機直拍 (capture="user") 與 相簿選圖 -->
           <input type="file" id="cameraInput" accept="image/*" capture="user" class="hidden" onchange="handlePhotoSelected(event)">
           <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handlePhotoSelected(event)">
         </div>
@@ -273,15 +271,12 @@
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 堂會識別 (URL query 或預設 M+)
     const urlParams = new URLSearchParams(window.location.search);
     let targetChurch = urlParams.get('church') || 'M+';
     if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
     else targetChurch = 'M+';
 
     const isShine = (targetChurch === 'SHiNE');
-
-    // LIFF ID
     const DEFAULT_LIFF_ID = urlParams.get('liffId') || "";
 
     let lineProfile = {
@@ -290,7 +285,6 @@
       pictureUrl: null
     };
 
-    // 狀態暫存
     let selectedGender = '弟兄';
     let selectedAge = '20-30青年';
     let selectedDistrict = isShine ? '西屯區' : '大雅區';
@@ -299,20 +293,28 @@
     let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
     let capturedPhotoFile = null;
 
-    // 動態渲染生活區域 (火樂：西屯區、南屯區、北屯區、西區、北區、大雅區、其他地區)
+    // 動態渲染行政區選項（火樂：西屯擺前面、大雅移到沙鹿前；M+：大雅擺前面）
     function renderDistrictPills() {
       const container = document.getElementById('groupDistrict');
-      const shineDistricts = ['西屯區', '南屯區', '北屯區', '西區', '北區', '大雅區', '其他地區'];
-      const mplusDistricts = ['大雅區', '西屯區', '北屯區', '潭子區', '神岡區', '沙鹿區', '其他地區'];
+      
+      const shineDistricts = [
+        '西屯區', '南屯區', '北屯區', '西區', '北區', 
+        '大雅區', '沙鹿區', '東區', '南區', '其他'
+      ];
+
+      const mplusDistricts = [
+        '大雅區', '西屯區', '北屯區', '南屯區', 
+        '西區', '北區', '東區', '南區', '沙鹿區', '其他'
+      ];
 
       const list = isShine ? shineDistricts : mplusDistricts;
+
       container.innerHTML = list.map(d => {
         const isActive = (d === selectedDistrict);
         return `<div onclick="selectSinglePill('district', '${d}', this)" class="pill-btn ${isActive ? 'active' : ''}">📍 ${d}</div>`;
       }).join('');
     }
 
-    // 初始化 LIFF
     async function initLiff() {
       renderDistrictPills();
 
@@ -336,7 +338,6 @@
             nameInput.value = profile.displayName;
           }
 
-          // 若有 LINE 大頭貼，展示預覽並同步秀出相機拍照選項！
           if (profile.pictureUrl) {
             const preview = document.getElementById('photoPreview');
             const prompt = document.getElementById('photoPrompt');
@@ -353,7 +354,7 @@
           liff.login();
         }
       } catch (err) {
-        console.warn("LIFF init warning (非 LINE App 預覽中):", err);
+        console.warn("LIFF init warning:", err);
       }
     }
 
@@ -398,12 +399,10 @@
       }
     }
 
-    // 叫起相機直拍
     function triggerCameraCapture() {
       document.getElementById('cameraInput').click();
     }
 
-    // 叫起相簿選圖
     function triggerFilePicker() {
       document.getElementById('galleryInput').click();
     }
@@ -443,7 +442,6 @@
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在為你送出...`;
 
-      // 照片邏輯：如果現場有拍照，以上傳的新照片為準；若無則使用 LINE 頭貼
       let uploadedPhotoUrl = lineProfile.pictureUrl || null;
 
       if (capturedPhotoFile) {
@@ -483,7 +481,7 @@
         know_us_from: finalKnowFrom,
         desired_feelings: Array.from(selectedFeelings),
         interest_tags: Array.from(selectedInterests),
-        faith_status: '新朋友',
+        faith_status: '新朋友（初次聚會）',
         welcome_status: '新朋友',
         group_name: '未編組',
         ministry: Array.from(selectedInterests).join(', '),
