@@ -60,7 +60,6 @@
       transform: translateY(-2px);
     }
 
-    /* 新朋友專屬迎賓卡片樣式：溫暖柔和的橙光呼吸邊框 */
     .lux-card-newcomer {
       background: linear-gradient(135deg, rgba(255,247,237,0.95) 0%, rgba(255,255,255,0.96) 100%);
       border: 2px solid rgba(249, 115, 22, 0.45);
@@ -332,23 +331,61 @@
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組六：LINE 教牧推播與通知中心 -->
+    <!-- 模組六：LINE 教牧推播中心（完整包含：祝禱範本、金句卡庫、新朋友旅程、祝福圖卡庫、新朋友推播） -->
     <section id="mod-pastoral-bot" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">LINE 教牧推播與通知中心</h2>
-          <p class="text-xs text-stone-500 mt-1">設定新朋友即時推播接收人、祝禱範本與多圖隨機祝福庫</p>
+          <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">LINE 教牧推播與多圖隨機管理中心</h2>
+          <p class="text-xs text-stone-500 mt-1">自由修改金句、祝禱詞，並為「把愛傳出去」建立豐富圖片庫，每次隨機派發</p>
         </div>
         <div class="flex flex-wrap gap-1.5 p-1 bg-white/80 rounded-2xl border border-stone-200">
-          <button onclick="switchBotSubTab('newcomer-notify')" id="btn-sub-newcomer-notify" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold btn-warm">🌱 新朋友推播</button>
-          <button onclick="switchBotSubTab('templates')" id="btn-sub-templates" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">祝禱範本</button>
+          <button onclick="switchBotSubTab('templates')" id="btn-sub-templates" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold btn-warm">祝禱範本</button>
           <button onclick="switchBotSubTab('cards')" id="btn-sub-cards" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">金句卡庫</button>
+          <button onclick="switchBotSubTab('journey')" id="btn-sub-journey" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">新朋友旅程</button>
           <button onclick="switchBotSubTab('images')" id="btn-sub-images" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">🖼️ 祝福圖卡庫 (多圖)</button>
+          <button onclick="switchBotSubTab('newcomer-notify')" id="btn-sub-newcomer-notify" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">🌱 新朋友推播設定</button>
         </div>
       </div>
 
-      <!-- 子面板 1: 新朋友推播設定 -->
-      <div id="sub-newcomer-notify" class="space-y-4">
+      <!-- 子分頁 1：祝禱範本 -->
+      <div id="sub-templates" class="space-y-4">
+        <div id="templatesListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- 子分頁 2：金句卡庫 -->
+      <div id="sub-cards" class="space-y-4 hidden">
+        <div class="flex justify-end">
+          <button onclick="openNewCardModal()" class="py-2.5 px-4 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-plus text-xs"></i> <span>新增金句卡</span>
+          </button>
+        </div>
+        <div id="cardsListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- 子分頁 3：新朋友旅程 -->
+      <div id="sub-journey" class="space-y-4 hidden">
+        <div id="journeyListContainer" class="space-y-3"></div>
+      </div>
+
+      <!-- 子分頁 4：祝福圖卡庫 (多圖) -->
+      <div id="sub-images" class="space-y-4 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <div class="flex gap-1.5 p-1 bg-stone-100 rounded-xl">
+            <button onclick="filterGreetingCards('ALL')" id="tab-gc-ALL" class="px-3 py-1.5 rounded-lg text-xs font-extrabold btn-warm">全部圖卡 (<span id="count-gc-ALL">0</span>)</button>
+            <button onclick="filterGreetingCards('同事打拼')" id="tab-gc-同事打拼" class="px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600">💼 同事打拼 (<span id="count-gc-同事打拼">0</span>)</button>
+            <button onclick="filterGreetingCards('低潮陪伴')" id="tab-gc-低潮陪伴" class="px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600">🌧️ 低潮陪伴 (<span id="count-gc-低潮陪伴">0</span>)</button>
+            <button onclick="filterGreetingCards('家人問候')" id="tab-gc-家人問候" class="px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600">🏡 家人問候 (<span id="count-gc-家人問候">0</span>)</button>
+          </div>
+          <button onclick="openNewGreetingCardModal()" class="py-2.5 px-4 rounded-xl btn-warm text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+            <span>上傳新增圖卡</span>
+          </button>
+        </div>
+        <div id="greetingCardsGridContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+      </div>
+
+      <!-- 子分頁 5：新朋友即時推播設定 -->
+      <div id="sub-newcomer-notify" class="space-y-4 hidden">
         <div class="lux-card p-6 sm:p-8 space-y-4">
           <h3 class="font-black text-stone-800 text-base flex items-center gap-2">
             <i class="fa-solid fa-paper-plane text-orange-600"></i>
@@ -371,38 +408,6 @@
             <button onclick="saveNewcomerNotifySettings()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold shadow-sm">儲存推播接收設定</button>
           </div>
         </div>
-      </div>
-
-      <!-- 子面板 2: 祝禱範本 -->
-      <div id="sub-templates" class="space-y-4 hidden">
-        <div id="templatesListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      </div>
-
-      <!-- 子面板 3: 金句卡庫 -->
-      <div id="sub-cards" class="space-y-4 hidden">
-        <div class="flex justify-end">
-          <button onclick="openNewCardModal()" class="py-2.5 px-4 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
-            <i class="fa-solid fa-plus text-xs"></i> <span>新增金句卡</span>
-          </button>
-        </div>
-        <div id="cardsListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      </div>
-
-      <!-- 子面板 4: 祝福圖卡庫 (多圖) -->
-      <div id="sub-images" class="space-y-4 hidden">
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-          <div class="flex gap-1.5 p-1 bg-stone-100 rounded-xl">
-            <button onclick="filterGreetingCards('ALL')" id="tab-gc-ALL" class="px-3 py-1.5 rounded-lg text-xs font-extrabold btn-warm">全部圖卡 (<span id="count-gc-ALL">0</span>)</button>
-            <button onclick="filterGreetingCards('同事打拼')" id="tab-gc-同事打拼" class="px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600">💼 同事打拼 (<span id="count-gc-同事打拼">0</span>)</button>
-            <button onclick="filterGreetingCards('低潮陪伴')" id="tab-gc-低潮陪伴" class="px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600">🌧️ 低潮陪伴 (<span id="count-gc-低潮陪伴">0</span>)</button>
-            <button onclick="filterGreetingCards('家人問候')" id="tab-gc-家人問候" class="px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600">🏡 家人問候 (<span id="count-gc-家人問候">0</span>)</button>
-          </div>
-          <button onclick="openNewGreetingCardModal()" class="py-2.5 px-4 rounded-xl btn-warm text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-            <span>上傳新增圖卡</span>
-          </button>
-        </div>
-        <div id="greetingCardsGridContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
       </div>
     </section>
 
@@ -490,7 +495,7 @@
     </button>
   </nav>
 
-  <!-- ======================== 完整彈窗 MODALS ======================== -->
+  <!-- ======================== 彈窗 MODALS ======================== -->
 
   <!-- 【Modal: 空間編輯】 -->
   <div id="roomEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -956,6 +961,7 @@
     let cachedTemplates = [];
     let cachedCards = [];
     let cachedGreetingCards = [];
+    let cachedJourney = [];
     let memberViewMode = "cards";
     let currentGreetingFilter = "ALL";
     let activeManagingGroup = null;
@@ -1223,7 +1229,6 @@
                     ${isNewcomer ? '🌱 新朋友（迎賓中）' : (m.faith_status || '委身家人')}
                   </span>
                   ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
-                  ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
                   ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
                 </div>
 
@@ -1267,12 +1272,7 @@
     function renderMinistryChips() {
       const container = document.getElementById('ministryChipsContainer');
       if (!container) return;
-      const mPlusOnlyOptions = ["總務愛筵", "司會報告", "主日禱告", "聖餐事奉"];
-      const availableOptions = MINISTRY_OPTIONS.filter(opt => {
-        if (activeChurch === 'SHiNE' && mPlusOnlyOptions.includes(opt)) return false;
-        return true;
-      });
-      container.innerHTML = availableOptions.map(opt => `
+      container.innerHTML = MINISTRY_OPTIONS.map(opt => `
         <div onclick="toggleMinistryChip('${opt}')" class="chip-item px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedMinistries.has(opt) ? 'active' : 'bg-stone-50 border-stone-200 text-stone-600'}">${opt}</div>
       `).join('');
     }
@@ -1318,7 +1318,7 @@
       document.getElementById('editMemo').value = m.memo || '';
       populateMemberModalGroupDropdown(m.group_name || '未編組');
       selectedMinistries.clear();
-      if (m.ministry) m.ministry.split(',').map(s => s.trim()).forEach(i => i && selectedMinistries.add(i));
+      if (m.ministry) m.ministry.split(',').forEach(i => selectedMinistries.add(i.trim()));
       renderMinistryChips();
       document.getElementById('memberModalTitle').querySelector('span').innerText = `編輯會友：${m.name}`;
       document.getElementById('memberEditModal').classList.remove('hidden');
@@ -1329,7 +1329,7 @@
     async function saveMemberFromModal() {
       const id = document.getElementById('editMemberId').value;
       const name = document.getElementById('editName').value.trim();
-      if (!name) return alert('會友姓名為必填！');
+      if (!name) return alert('姓名為必填！');
 
       const payload = {
         church_id: activeChurch,
@@ -1878,7 +1878,7 @@
     }
 
     // ==========================================
-    // 6. LINE 教牧推播與通知中心
+    // 6. LINE 教牧推播與多圖隨機管理中心（完整恢復）
     // ==========================================
     async function loadPastoralBotSettings() {
       try {
@@ -1888,6 +1888,7 @@
           document.getElementById('notifyPastorLineId').value = churchInfo.notify_pastor_line_id || '';
         }
 
+        // 祝禱範本
         const { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', activeChurch);
         cachedTemplates = tpls || [];
         document.getElementById('templatesListContainer').innerHTML = cachedTemplates.map(t => `
@@ -1896,12 +1897,26 @@
             <textarea id="tpl-text-${t.id}" rows="3" class="w-full bg-stone-50 border rounded-xl p-3 text-xs leading-relaxed focus:outline-none">${t.content}</textarea>
             <div class="flex justify-end"><button onclick="saveTemplate(${t.id})" class="px-4 py-1.5 rounded-xl btn-warm text-xs font-bold">儲存</button></div>
           </div>
-        `).join('');
+        `).join('') || `<div class="col-span-2 py-8 text-center text-stone-400 text-xs">目前無祝禱範本</div>`;
 
+        // 金句卡庫
         const { data: cards } = await db.from('pastoral_scripture_cards').select('*').eq('church_id', activeChurch);
         cachedCards = cards || [];
         renderCardsList();
 
+        // 新朋友旅程
+        const { data: journeys } = await db.from('pastoral_journey_templates').select('*').eq('church_id', activeChurch).order('day_offset');
+        cachedJourney = journeys || [];
+        document.getElementById('journeyListContainer').innerHTML = cachedJourney.map(j => `
+          <div class="lux-card p-4 flex justify-between items-center text-xs">
+            <div>
+              <span class="font-bold text-orange-800">第 ${j.day_offset} 天：${j.title}</span>
+              <p class="text-stone-600 mt-1">${j.message}</p>
+            </div>
+          </div>
+        `).join('') || `<div class="py-8 text-center text-stone-400 text-xs">目前無新朋友旅程規劃</div>`;
+
+        // 祝福圖卡庫 (多圖)
         const { data: gcards } = await db.from('greeting_cards').select('*').eq('church_id', activeChurch);
         cachedGreetingCards = gcards || [];
         filterGreetingCards(currentGreetingFilter);
@@ -1929,7 +1944,8 @@
           <div class="space-y-1.5">
             <span class="px-2.5 py-0.5 rounded-lg bg-orange-100 text-orange-950 font-bold text-[10px]">${card.category}</span>
             <h4 class="font-black text-stone-800 text-sm">${card.reference}</h4>
-            <p class="text-stone-600">「${card.scripture}」</p>
+            <p class="text-stone-600 leading-relaxed">「${card.scripture}」</p>
+            ${card.prayer ? `<p class="text-stone-400 text-[11px] mt-1">祝禱：${card.prayer}</p>` : ''}
           </div>
           <div class="pt-2 border-t flex justify-end gap-1.5">
             <button onclick="editCard(${card.id})" class="px-3 py-1 rounded-xl bg-orange-50 text-orange-800 font-bold">編輯</button>
@@ -1998,7 +2014,7 @@
       if (!list.length) { container.innerHTML = '<div class="col-span-3 text-center text-stone-400 py-12 text-xs">目前無圖卡</div>'; return; }
       container.innerHTML = list.map(c => `
         <div class="lux-card overflow-hidden flex flex-col justify-between text-xs">
-          <div class="h-40 bg-stone-100 overflow-hidden">
+          <div class="h-44 bg-stone-100 overflow-hidden">
             <img src="${c.image_url}" class="w-full h-full object-cover">
           </div>
           <div class="p-4 space-y-2">
@@ -2067,8 +2083,9 @@
       await loadPastoralBotSettings();
     }
 
+    // 核心切換：教牧推播中心五大子分頁
     function switchBotSubTab(tab) {
-      ['newcomer-notify', 'templates', 'cards', 'images'].forEach(t => {
+      ['templates', 'cards', 'journey', 'images', 'newcomer-notify'].forEach(t => {
         const el = document.getElementById(`sub-${t}`);
         const btn = document.getElementById(`btn-sub-${t}`);
         if (el) el.classList.toggle('hidden', t !== tab);
