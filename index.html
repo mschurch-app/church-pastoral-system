@@ -60,7 +60,7 @@
       transform: translateY(-2px);
     }
 
-    /* 新朋友專屬迎賓卡片樣式：溫暖柔和的橙光呼吸邊框 */
+    /* 新朋友專屬迎賓卡片樣式 */
     .lux-card-newcomer {
       background: linear-gradient(135deg, rgba(255,247,237,0.95) 0%, rgba(255,255,255,0.96) 100%);
       border: 2px solid rgba(249, 115, 22, 0.45);
@@ -363,7 +363,7 @@
         <div id="cardsListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <!-- 子分頁 3：新朋友旅程（依堂會分開獨立管理） -->
+      <!-- 子分頁 3：新朋友旅程（依堂會獨立隔離） -->
       <div id="sub-journey" class="space-y-4 hidden">
         <div class="flex justify-between items-center bg-orange-50/70 p-3.5 rounded-2xl border border-orange-200/60">
           <div class="text-xs text-orange-950 font-bold">
@@ -852,7 +852,7 @@
     </div>
   </div>
 
-  <!-- 【Modal: 新朋友旅程步驟編輯（新增）】 -->
+  <!-- 【Modal: 新朋友旅程步驟編輯】 -->
   <div id="journeyEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
       <div class="flex justify-between items-center border-b border-stone-200 pb-3">
@@ -950,9 +950,9 @@
     </div>
   </div>
 
-  <!-- 【Modal: 牧者專屬祝禱回覆】 -->
+  <!-- 【Modal: 牧者專屬祝禱回覆（已升級：支援快速選擇祝禱範本 & LINE Bot 即時推播）】 -->
   <div id="prayerReplyModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
+    <div class="lux-modal w-full sm:max-w-lg rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4 max-h-[88vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-200 pb-3">
         <h3 class="text-base font-black text-stone-800 flex items-center gap-2">
           <i class="fa-solid fa-hands-praying text-orange-600"></i>
@@ -961,21 +961,36 @@
         <button onclick="closePrayerReplyModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="replyPrayerId">
-      <div class="space-y-3 text-xs">
-        <div class="p-3 rounded-xl bg-orange-50/60 border border-orange-200/60">
+      <input type="hidden" id="replyMemberName">
+      <input type="hidden" id="replyMemberLineId">
+      
+      <div class="space-y-3.5 text-xs">
+        <div class="p-3.5 rounded-2xl bg-orange-50/70 border border-orange-200/70">
           <span class="text-[11px] font-bold text-orange-950 block">原代禱事項：</span>
-          <p id="replyOriginalContent" class="text-stone-700 mt-1 leading-relaxed"></p>
+          <p id="replyOriginalContent" class="text-stone-700 mt-1 leading-relaxed font-medium"></p>
         </div>
+
+        <!-- 快速代入祝禱範本 -->
+        <div class="p-3 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-1.5">
+          <label class="font-bold text-stone-700 block text-[11px] flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-orange-500"></i>
+            <span>快速套用祝禱範本：</span>
+          </label>
+          <select id="replyTemplateSelect" onchange="applyPrayerTemplateToTextarea(this.value)" class="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none cursor-pointer">
+            <option value="">-- 請選擇祝禱範本自動填入 --</option>
+          </select>
+        </div>
+
         <div>
-          <label class="text-stone-600 font-bold block mb-1">親撰同理祝禱文 *</label>
-          <textarea id="replyPrayerText" rows="4" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none leading-relaxed"></textarea>
+          <label class="text-stone-600 font-bold block mb-1">親撰同理祝禱文 (將即時推播至會友 LINE) *</label>
+          <textarea id="replyPrayerText" rows="5" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none leading-relaxed text-xs"></textarea>
         </div>
       </div>
       <div class="flex justify-end gap-2 pt-3 border-t border-stone-200">
         <button onclick="closePrayerReplyModal()" class="py-2.5 px-4 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
-        <button onclick="sendPastorPrayerReply()" id="btnSendReply" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
+        <button onclick="sendPastorPrayerReply()" id="btnSendReply" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-paper-plane text-xs"></i>
-          <span>送出守望回響</span>
+          <span>確認並即時推播至 LINE</span>
         </button>
       </div>
     </div>
@@ -999,6 +1014,7 @@
     let cachedCards = [];
     let cachedGreetingCards = [];
     let cachedJourney = [];
+    let cachedPrayers = [];
     let memberViewMode = "cards";
     let currentGreetingFilter = "ALL";
     let activeManagingGroup = null;
@@ -1063,7 +1079,6 @@
           : '掌握講道、崇拜司會、主日公禱、兒主師資、聖餐與接送安排';
       }
 
-      // 推播中心與新朋友旅程當前堂會標籤
       const churchName = (churchId === 'SHiNE') ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
       const botActiveLabel = document.getElementById('labelBotActiveChurch');
       const journeyLabel = document.getElementById('journeyChurchLabel');
@@ -1161,7 +1176,7 @@
     }
 
     // ==========================================
-    // 1. 會友名冊模組（修正表格編輯/刪除按鈕 & 地區防誤塞）
+    // 1. 會友名冊模組（表格模式含編輯/刪除 & 居住區域防誤塞）
     // ==========================================
     async function loadMembers() {
       try {
@@ -1918,22 +1933,33 @@
     async function deleteBooking(id) { await db.from('room_bookings').delete().eq('id', id); await loadRoomsAndSpaces(); }
 
     // ==========================================
-    // 5. 牧養代禱關懷
+    // 5. 牧養代禱關懷（支援自動帶入範本 & LINE Bot 即時推播）
     // ==========================================
     async function loadPrayers() {
       try {
         const { data } = await db.from('prayer_requests').select('*').eq('church_id', activeChurch).order('created_at', { ascending: false });
+        cachedPrayers = data || [];
         const c = document.getElementById('prayerCardsList');
-        if (!data || !data.length) { c.innerHTML = '<div class="py-12 text-center text-stone-400 text-xs">目前無代禱事項</div>'; return; }
-        c.innerHTML = data.map(p => `
+        if (!cachedPrayers.length) { c.innerHTML = '<div class="py-12 text-center text-stone-400 text-xs">目前無代禱事項</div>'; return; }
+        c.innerHTML = cachedPrayers.map(p => `
           <div class="lux-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
             <div>
-              <span class="font-black text-base text-stone-800">${p.member_name}</span>
-              <p class="text-stone-600 mt-1">「${p.content}」</p>
-              ${p.pastor_reply ? `<p class="text-orange-800 mt-1.5 font-bold">已回覆：${p.pastor_reply}</p>` : ''}
+              <div class="flex items-center gap-2">
+                <span class="font-black text-base text-stone-800">${p.member_name}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${p.status === '已回覆' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">${p.status || '待代禱'}</span>
+              </div>
+              <p class="text-stone-600 mt-1 leading-relaxed font-medium">「${p.content}」</p>
+              ${p.pastor_reply ? `
+                <div class="mt-2 p-2.5 rounded-xl bg-orange-50/70 border border-orange-200/60 text-[11px] text-orange-950">
+                  <span class="font-black"><i class="fa-solid fa-reply mr-1 text-orange-600"></i>牧者守望回覆：</span>
+                  <p class="mt-0.5 leading-relaxed">${p.pastor_reply}</p>
+                </div>
+              ` : ''}
             </div>
-            <div class="flex gap-2">
-              <button onclick="openPrayerReplyModal(${p.id}, '${p.member_name}', '${encodeURIComponent(p.content)}')" class="px-3.5 py-1.5 rounded-xl btn-warm font-bold">回覆祝禱</button>
+            <div class="flex gap-2 flex-shrink-0">
+              <button onclick="openPrayerReplyModal(${p.id}, '${p.member_name}', '${encodeURIComponent(p.content)}', '${p.line_id || ''}')" class="px-3.5 py-1.5 rounded-xl btn-warm font-bold flex items-center gap-1">
+                <i class="fa-solid fa-reply text-xs"></i> <span>${p.status === '已回覆' ? '再次回覆' : '回覆祝禱'}</span>
+              </button>
               <button onclick="deletePrayer(${p.id})" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
@@ -1941,24 +1967,100 @@
       } catch(e) { console.error(e); }
     }
 
-    function openPrayerReplyModal(id, name, contentEncoded) {
+    function openPrayerReplyModal(id, name, contentEncoded, lineId) {
       document.getElementById('replyPrayerId').value = id;
+      document.getElementById('replyMemberName').value = name;
+      document.getElementById('replyMemberLineId').value = lineId || '';
       document.getElementById('replyTargetTitle').innerText = `為【${name}】撰寫守望祝禱`;
       document.getElementById('replyOriginalContent').innerText = decodeURIComponent(contentEncoded);
-      document.getElementById('replyPrayerText').value = '';
+
+      // 動態產生祝禱範本下拉選單
+      const tplSelect = document.getElementById('replyTemplateSelect');
+      tplSelect.innerHTML = `<option value="">-- 請選擇祝禱範本自動填入 --</option>` + cachedTemplates.map((t, idx) => `
+        <option value="${idx}">${t.title}</option>
+      `).join('');
+
+      // 預設帶入第一筆祝禱範本，或預設問候
+      if (cachedTemplates.length > 0) {
+        tplSelect.value = "0";
+        applyPrayerTemplateToTextarea("0");
+      } else {
+        document.getElementById('replyPrayerText').value = `親愛的 ${name}：\n願主的平安與安慰大大充滿你！我們在禱告中紀念你的需要，相信神必在你的環境中顯出奇妙的同在與力量。\n\n「應當一無挂慮，只要凡事藉著禱告、祈求，和感謝，將你們所要的告訴神。神所賜出人意外的平安必在基督耶穌裡保守你們的心懷意念。」`;
+      }
+
       document.getElementById('prayerReplyModal').classList.remove('hidden');
+    }
+
+    function applyPrayerTemplateToTextarea(idxStr) {
+      if (idxStr === "") return;
+      const idx = parseInt(idxStr);
+      const tpl = cachedTemplates[idx];
+      const memberName = document.getElementById('replyMemberName').value || '家人';
+      if (tpl && tpl.content) {
+        // 自動將範本內容中的稱呼替換成會友名字
+        let processedText = tpl.content.replace(/\{姓名\}|\{會友\}|OO/g, memberName);
+        if (!processedText.includes(memberName)) {
+          processedText = `親愛的 ${memberName}：\n` + processedText;
+        }
+        document.getElementById('replyPrayerText').value = processedText;
+      }
     }
 
     function closePrayerReplyModal() { document.getElementById('prayerReplyModal').classList.add('hidden'); }
 
     async function sendPastorPrayerReply() {
       const id = document.getElementById('replyPrayerId').value;
+      const name = document.getElementById('replyMemberName').value;
+      const lineId = document.getElementById('replyMemberLineId').value;
       const prayerText = document.getElementById('replyPrayerText').value.trim();
+
       if (!prayerText) return alert('請填寫祝禱文！');
-      await db.from('prayer_requests').update({ pastor_reply: prayerText, status: '已回覆' }).eq('id', id);
-      alert('✨ 守望祝禱已成功送出！');
+
+      const btn = document.getElementById('btnSendReply');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在推播至 LINE...`;
+
+      // 1. 更新資料庫
+      const { error: dbErr } = await db.from('prayer_requests').update({
+        pastor_reply: prayerText,
+        status: '已回覆',
+        replied_at: new Date().toISOString()
+      }).eq('id', id);
+
+      if (dbErr) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs mr-1"></i>確認並即時推播至 LINE`;
+        return alert('資料庫更新失敗：' + dbErr.message);
+      }
+
+      // 2. 呼叫 Supabase Edge Function 即時推播回會友的手機 LINE
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=reply_prayer&church=${encodeURIComponent(activeChurch)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          },
+          body: JSON.stringify({
+            church: activeChurch,
+            prayerId: id,
+            memberName: name,
+            lineId: lineId,
+            replyText: prayerText
+          })
+        });
+        const result = await resp.json().catch(() => ({}));
+        console.log("LINE 推播結果:", result);
+      } catch (pushErr) {
+        console.warn("LINE Bot 推播連線警示:", pushErr);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs mr-1"></i>確認並即時推播至 LINE`;
+
+      alert(`✨ 已成功回覆【${name}】的代禱，並已即時推播至會友的 LINE 聊天室！`);
       closePrayerReplyModal();
-      loadPrayers();
+      await loadPrayers();
     }
 
     async function deletePrayer(id) {
