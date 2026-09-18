@@ -737,22 +737,33 @@
           <div><label class="text-stone-600 font-bold block mb-1">受洗日期</label><input type="text" id="editBaptism" placeholder="例如：2023/12/25" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none"></div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-stone-600 font-bold block mb-1">信仰成熟度</label><select id="editFaithStatus" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none"><option value="委身家人">委身家人</option><option value="穩定聚會(8成以上)">穩定聚會(8成以上)</option><option value="初信受洗">初信受洗</option><option value="慕道友">慕道友</option><option value="關懷中">關懷中</option><option value="新朋友">新朋友</option></select></div>
-<div>
-  <label class="text-stone-600 font-bold block mb-1">居住區域</label>
-  <select id="editDistrict" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none">
-    <option value="大雅區">大雅</option>
-    <option value="西屯區">西屯</option>
-    <option value="北屯區">北屯</option>
-    <option value="南屯區">南屯</option>
-    <option value="西區">西區</option>
-    <option value="北區">北區</option>
-    <option value="東區">東區</option>
-    <option value="南區">南區</option>
-    <option value="沙鹿區">沙鹿</option>
-    <option value="其他">其他</option>
-  </select>
-</div>        </div>
+          <div>
+            <label class="text-stone-600 font-bold block mb-1">信仰成熟度</label>
+            <select id="editFaithStatus" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none">
+              <option value="委身家人">委身家人</option>
+              <option value="穩定聚會(8成以上)">穩定聚會(8成以上)</option>
+              <option value="初信受洗">初信受洗</option>
+              <option value="慕道友">慕道友</option>
+              <option value="關懷中">關懷中</option>
+              <option value="新朋友">新朋友</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-stone-600 font-bold block mb-1">居住區域</label>
+            <select id="editDistrict" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-semibold focus:outline-none">
+              <option value="大雅區">大雅</option>
+              <option value="西屯區">西屯</option>
+              <option value="北屯區">北屯</option>
+              <option value="南屯區">南屯</option>
+              <option value="西區">西區</option>
+              <option value="北區">北區</option>
+              <option value="東區">東區</option>
+              <option value="南區">南區</option>
+              <option value="沙鹿區">沙鹿</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
         <div>
           <label class="text-stone-600 font-bold block mb-1.5">服事恩賜 / 興趣標籤：</label>
           <div id="ministryChipsContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
@@ -1962,7 +1973,6 @@
       document.getElementById('editGroupId').value = g.id;
       document.getElementById('grpName').value = g.name;
 
-      // 解析原有聚會時間 (如 "每週五 19:30-21:30")
       if (g.meeting_time) {
         const parts = g.meeting_time.split(' ');
         if (parts.length >= 1) document.getElementById('grpWeekdaySelect').value = parts[0];
