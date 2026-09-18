@@ -971,6 +971,41 @@
     ];
     let selectedMinistries = new Set();
 
+    // 頁面載入時檢查是否已有記住的登入狀態
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadChurchesConfig();
+      const savedUserStr = localStorage.getItem('church_os_current_user');
+      const savedChurch = localStorage.getItem('church_os_active_church');
+      
+      if (savedUserStr) {
+        try {
+          currentUser = JSON.parse(savedUserStr);
+          document.getElementById('loginModal').classList.add('hidden');
+          document.getElementById('currentUserLabel').innerText = `目前同工：${currentUser.name}`;
+
+          if (currentUser.role === 'SUPER_ADMIN') {
+            document.getElementById('superChurchSelectorWrapper').classList.remove('hidden');
+            document.getElementById('nav-superadmin').classList.remove('hidden');
+            document.getElementById('adminRoleBadge').innerText = "SUPER ADMIN";
+            activeChurch = savedChurch || "SHiNE";
+            document.getElementById('superChurchSelector').value = activeChurch;
+          } else {
+            document.getElementById('superChurchSelectorWrapper').classList.add('hidden');
+            document.getElementById('nav-superadmin').classList.add('hidden');
+            document.getElementById('adminRoleBadge').innerText = "CHURCH ADMIN";
+            activeChurch = currentUser.assigned_church || "SHiNE";
+          }
+
+          applyChurchTheme(activeChurch);
+          updateDynamicTerms(activeChurch);
+          applyPermissions();
+          loadChurchData();
+        } catch (e) {
+          localStorage.removeItem('church_os_current_user');
+        }
+      }
+    });
+
     function getChurchTerms(churchId) {
       return churchId === 'SHiNE' 
         ? { group: '小家', leader: '小家長', member: '小家成員' }
@@ -1004,6 +1039,9 @@
       }
 
       currentUser = data[0];
+      // 記住登入狀態到瀏覽器
+      localStorage.setItem('church_os_current_user', JSON.stringify(currentUser));
+
       document.getElementById('loginModal').classList.add('hidden');
       document.getElementById('currentUserLabel').innerText = `目前同工：${currentUser.name}`;
 
@@ -1021,6 +1059,7 @@
         activeChurch = currentUser.assigned_church || "SHiNE";
       }
 
+      localStorage.setItem('church_os_active_church', activeChurch);
       applyChurchTheme(activeChurch);
       updateDynamicTerms(activeChurch);
       applyPermissions();
@@ -1442,7 +1481,7 @@
                 </span>
               </div>
               <div class="flex flex-wrap gap-1.5 items-center pt-1">
-                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人'}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人（穩定聚會）'}</span>
                 ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
                 ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
                 ${m.birthday ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold"><i class="fa-solid fa-cake-candles mr-1"></i>${m.birthday}</span>` : ''}
@@ -2745,6 +2784,7 @@
 
     function switchChurch(churchId) {
       activeChurch = churchId;
+      localStorage.setItem('church_os_active_church', activeChurch);
       applyChurchTheme(churchId);
       updateDynamicTerms(churchId);
       loadChurchData();
@@ -2771,6 +2811,8 @@
 
     function logout() {
       currentUser = null;
+      localStorage.removeItem('church_os_current_user');
+      localStorage.removeItem('church_os_active_church');
       document.getElementById('loginModal').classList.remove('hidden');
       document.getElementById('loginPwd').value = '';
     }
