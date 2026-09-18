@@ -98,13 +98,13 @@
         <span id="churchBadgeText">手作專屬祝福卡 · LIFF 即時合成</span>
       </div>
       <h1 class="text-2xl font-black text-stone-800 tracking-tight">把愛傳出去 · 專屬圖卡合成</h1>
-      <p class="text-xs text-stone-500">為好友客製姓名與祝禱，直接挑選好友傳送純圖片！</p>
+      <p class="text-xs text-stone-500">為好友客製姓名與祝禱，一鍵傳送純圖片至聊天室！</p>
     </div>
 
-    <!-- 合成預覽區 (即時呈現 Canvas 生成結果) -->
+    <!-- 合成預覽區 -->
     <div class="card-glass p-4 sm:p-5 space-y-3">
       <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden shadow-md bg-stone-900 flex items-center justify-center">
-        <!-- 畫布（在背景執行高畫質繪圖） -->
+        <!-- 畫布（背景執行高畫質繪圖） -->
         <canvas id="cardCanvas" width="1080" height="1350" class="hidden"></canvas>
         
         <!-- 最終生成的真實合成圖片 -->
@@ -117,7 +117,7 @@
         </div>
       </div>
 
-      <!-- 操作按鈕：長按下載 & 一鍵挑選 LINE 好友發送純圖片 -->
+      <!-- 操作按鈕：長按下載 & 一鍵傳送純圖片 -->
       <div class="grid grid-cols-2 gap-2 pt-1">
         <a id="btnDownload" download="blessing-card.png" class="py-3 px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-black flex items-center justify-center gap-1.5 transition text-center cursor-pointer shadow-sm">
           <i class="fa-solid fa-download"></i>
@@ -125,10 +125,10 @@
         </a>
         <button onclick="shareViaLiffTargetPicker()" id="btnSharePicker" class="py-3 px-4 rounded-xl btn-warm text-xs font-black flex items-center justify-center gap-1.5 shadow-sm">
           <i class="fa-brands fa-line text-sm"></i>
-          <span>選好友直接傳圖</span>
+          <span>一鍵傳送純圖</span>
         </button>
       </div>
-      <p class="text-[10px] text-center text-stone-400">💡 點擊「選好友直接傳圖」將直接以<strong>真實滿版圖片</strong>發送到對方的 LINE 聊天室！也可長按圖片直接儲存相簿。</p>
+      <p class="text-[10px] text-center text-stone-400">💡 點擊「一鍵傳送純圖」將直接發送<strong>滿版大圖</strong>到聊天室！也可長按圖片直接儲存相簿。</p>
     </div>
 
     <!-- 客製化控制面板 -->
@@ -157,7 +157,7 @@
         <div id="bgThumbnailStream" class="flex gap-2 overflow-x-auto pb-1"></div>
       </div>
 
-      <!-- 3. 輸入名字與署名 (LIFF 自動帶入署名) -->
+      <!-- 3. 輸入名字與署名 -->
       <div class="grid grid-cols-2 gap-3 pt-1">
         <div>
           <label class="font-bold text-stone-600 block mb-1">收件人稱呼</label>
@@ -196,7 +196,6 @@
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 1. 堂會識別 (URL query 或預設 M+)
     const urlParams = new URLSearchParams(window.location.search);
     let currentChurch = urlParams.get('church') || 'M+';
     if (currentChurch.toUpperCase().startsWith('SHINE')) currentChurch = 'SHiNE';
@@ -204,7 +203,6 @@
 
     const churchDisplayName = (currentChurch === 'SHiNE') ? '火樂教會 · SHiNE' : 'Ｍ＋大雅教會 · M+ CHURCH';
 
-    // 2. 官方專屬 LIFF ID 映射表
     const CHURCH_LIFF_MAP = {
       'M+': '2011645391-wdMYTy4E',
       'SHiNE': '2011645391-R4g2FZnW'
@@ -257,7 +255,6 @@
       renderCardToCanvas();
     };
 
-    // 初始化 LIFF 並確保完成登入與授權
     async function initLiff() {
       if (!LIFF_ID) {
         console.log("未提供 liffId，以一般網頁預覽模式運行");
@@ -361,9 +358,6 @@
       }, 300);
     }
 
-    // =========================================================================
-    // Canvas 真實圖片合成排版演算法 (高解析度 1080x1350)
-    // =========================================================================
     function renderCardToCanvas() {
       const loading = document.getElementById('renderLoading');
       loading.classList.remove('hidden');
@@ -383,7 +377,6 @@
         const W = canvas.width;  // 1080
         const H = canvas.height; // 1350
 
-        // 1. 滿版裁切底圖 (Cover)
         const imgRatio = img.width / img.height;
         const canvasRatio = W / H;
         let sW, sH, sX, sY;
@@ -401,7 +394,6 @@
         }
         ctx.drawImage(img, sX, sY, sW, sH, 0, 0, W, H);
 
-        // 2. 質感暗角漸層遮罩
         const bgGradient = ctx.createLinearGradient(0, 0, 0, H);
         bgGradient.addColorStop(0, "rgba(20, 15, 10, 0.45)");
         bgGradient.addColorStop(0.5, "rgba(20, 15, 10, 0.35)");
@@ -409,18 +401,15 @@
         ctx.fillStyle = bgGradient;
         ctx.fillRect(0, 0, W, H);
 
-        // 3. 金色優雅細緻外邊框
         ctx.strokeStyle = "rgba(255, 235, 215, 0.35)";
         ctx.lineWidth = 4;
         ctx.strokeRect(40, 40, W - 80, H - 80);
 
-        // 4. 頂部堂會標章
         ctx.textAlign = "center";
         ctx.font = "bold 28px 'Plus Jakarta Sans', sans-serif";
         ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
         ctx.fillText(`✦  ${churchDisplayName}  ✦`, W / 2, 100);
 
-        // 5. 收件人毛玻璃名牌
         const pillY = 170;
         const pillText = `To. ${recipient}`;
         ctx.font = "bold 38px 'Noto Sans TC', sans-serif";
@@ -434,7 +423,6 @@
         ctx.textBaseline = "middle";
         ctx.fillText(pillText, W / 2, pillY + pillH / 2);
 
-        // 6. 核心祝禱詞 (自動折行與立體陰影)
         ctx.textBaseline = "alphabetic";
         ctx.font = "900 48px 'Noto Serif TC', serif";
         ctx.fillStyle = "#FFFFFF";
@@ -459,7 +447,6 @@
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
-        // 7. 裝飾分隔線
         ctx.beginPath();
         ctx.moveTo(W / 2 - 80, startY + totalTextHeight + 40);
         ctx.lineTo(W / 2 + 80, startY + totalTextHeight + 40);
@@ -467,7 +454,6 @@
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // 8. 署名落款
         ctx.textAlign = "right";
         ctx.font = "bold 34px 'Noto Sans TC', sans-serif";
         ctx.fillStyle = "rgba(255, 245, 235, 0.95)";
@@ -477,7 +463,6 @@
         ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
         ctx.fillText(new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }), W - 110, H - 110);
 
-        // 9. 匯出真實圖片 DataURL
         const finalDataUrl = canvas.toDataURL("image/png");
         document.getElementById('finalCardImg').src = finalDataUrl;
 
@@ -564,25 +549,20 @@
       document.getElementById('btnDownload').href = finalDataUrl;
     }
 
-    // =========================================================================
-    // ★ LINE 純圖片真傳模式：僅發送純圖物件，直接叫起原生好友清單
-    // =========================================================================
+    // ★ LINE 純圖片直接傳送到聊天室
     async function shareViaLiffTargetPicker() {
       const btn = document.getElementById('btnSharePicker');
       const canvas = document.getElementById('cardCanvas');
-      const recipient = document.getElementById('targetRecipient').value.trim() || '好友';
 
-      // 1. 若在 LIFF 環境中且尚未登入，強制先導向登入以取得權限
       if (window.liff && !liff.isLoggedIn()) {
         liff.login();
         return;
       }
 
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在生成純圖...`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在傳送純圖...`;
 
       try {
-        // 2. 若尚未上傳，將畫布轉換為高品質圖片 Blob 並直傳 Supabase Storage
         if (!currentUploadedCardUrl) {
           const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
           const fileName = `generated_cards/${currentChurch}_${Date.now()}.jpg`;
@@ -593,17 +573,15 @@
             upsert: true
           });
 
-          if (error) {
-            throw new Error("圖片儲存失敗：" + error.message);
-          }
+          if (error) throw new Error("圖片上傳失敗：" + error.message);
 
           const { data: publicData } = db.storage.from('church-media').getPublicUrl(fileName);
           currentUploadedCardUrl = publicData.publicUrl;
         }
 
-        // 3. 檢查並調用 LINE 原生 shareTargetPicker
-        if (window.liff && liff.isApiAvailable('shareTargetPicker')) {
-          const res = await liff.shareTargetPicker([
+        if (window.liff && liff.isInClient()) {
+          // 直接傳送純圖片至當前聊天室
+          await liff.sendMessages([
             {
               type: "image",
               originalContentUrl: currentUploadedCardUrl,
@@ -611,22 +589,17 @@
             }
           ]);
 
-          if (res) {
-            alert('🎉 祝賀小卡已直接發送至對方的聊天室！');
-          }
+          alert('🎉 專屬手作祝賀圖卡已成功傳送至聊天室！');
+          liff.closeWindow();
         } else {
-          alert('請確認已在 LINE Developers 後台將「Share Target Picker」開關切換為 Enabled！\n或者可先長按上方圖片儲存至手機相簿。');
+          alert('請在 LINE 內開啟此頁面，即可一鍵發送純圖！或者您也可以直接「長按上方圖片」儲存至手機相簿。');
         }
       } catch (err) {
-        console.error("Share error:", err);
-        const errStr = String(err).toLowerCase();
-        // 若使用者在好友勾選清單按了「取消」或關閉視窗，不彈出報錯視窗
-        if (!errStr.includes('cancel') && err.code !== 'USER_CANCELLED') {
-          alert('發送提示：' + err.message);
-        }
+        console.error("Send error:", err);
+        alert('發送提示：請直接在卡片上「長按圖片」儲存至手機相簿，即可隨時傳給好友！');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-brands fa-line text-sm"></i> <span>選好友直接傳圖</span>`;
+        btn.innerHTML = `<i class="fa-brands fa-line text-sm"></i> <span>一鍵傳送純圖</span>`;
       }
     }
   </script>
