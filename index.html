@@ -60,6 +60,7 @@
       transform: translateY(-2px);
     }
 
+    /* 新朋友專屬迎賓卡片樣式：溫暖柔和的橙光呼吸邊框 */
     .lux-card-newcomer {
       background: linear-gradient(135deg, rgba(255,247,237,0.95) 0%, rgba(255,255,255,0.96) 100%);
       border: 2px solid rgba(249, 115, 22, 0.45);
@@ -331,7 +332,7 @@
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組六：LINE 教牧推播中心（完整包含：祝禱範本、金句卡庫、新朋友旅程、祝福圖卡庫、新朋友推播） -->
+    <!-- 模組六：LINE 教牧推播與多圖隨機管理中心 -->
     <section id="mod-pastoral-bot" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -1229,6 +1230,7 @@
                     ${isNewcomer ? '🌱 新朋友（迎賓中）' : (m.faith_status || '委身家人')}
                   </span>
                   ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
+                  ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
                   ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
                 </div>
 
@@ -1272,7 +1274,12 @@
     function renderMinistryChips() {
       const container = document.getElementById('ministryChipsContainer');
       if (!container) return;
-      container.innerHTML = MINISTRY_OPTIONS.map(opt => `
+      const mPlusOnlyOptions = ["總務愛筵", "司會報告", "主日禱告", "聖餐事奉"];
+      const availableOptions = MINISTRY_OPTIONS.filter(opt => {
+        if (activeChurch === 'SHiNE' && mPlusOnlyOptions.includes(opt)) return false;
+        return true;
+      });
+      container.innerHTML = availableOptions.map(opt => `
         <div onclick="toggleMinistryChip('${opt}')" class="chip-item px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedMinistries.has(opt) ? 'active' : 'bg-stone-50 border-stone-200 text-stone-600'}">${opt}</div>
       `).join('');
     }
@@ -1318,7 +1325,7 @@
       document.getElementById('editMemo').value = m.memo || '';
       populateMemberModalGroupDropdown(m.group_name || '未編組');
       selectedMinistries.clear();
-      if (m.ministry) m.ministry.split(',').forEach(i => selectedMinistries.add(i.trim()));
+      if (m.ministry) m.ministry.split(',').map(s => s.trim()).forEach(i => i && selectedMinistries.add(i));
       renderMinistryChips();
       document.getElementById('memberModalTitle').querySelector('span').innerText = `編輯會友：${m.name}`;
       document.getElementById('memberEditModal').classList.remove('hidden');
@@ -1329,7 +1336,7 @@
     async function saveMemberFromModal() {
       const id = document.getElementById('editMemberId').value;
       const name = document.getElementById('editName').value.trim();
-      if (!name) return alert('姓名為必填！');
+      if (!name) return alert('會友姓名為必填！');
 
       const payload = {
         church_id: activeChurch,
@@ -1878,19 +1885,23 @@
     }
 
     // ==========================================
-    // 6. LINE 教牧推播與多圖隨機管理中心（完整恢復）
+    // 6. LINE 教牧推播與多圖隨機管理中心（完整撈取並渲染）
     // ==========================================
     async function loadPastoralBotSettings() {
       try {
-        const { data: churchInfo } = await db.from('churches').select('*').eq('id', activeChurch).single();
+        const { data: churchInfo } = await db.from('churches').select('*').eq('id', activeChurch).maybeSingle();
         if (churchInfo) {
           document.getElementById('notifyPastorName').value = churchInfo.notify_pastor_name || '';
           document.getElementById('notifyPastorLineId').value = churchInfo.notify_pastor_line_id || '';
         }
 
-        // 祝禱範本
-        const { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', activeChurch);
-        cachedTemplates = tpls || [];
+        // 祝禱範本：優先目前堂會，沒有則全撈
+        let { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', activeChurch);
+        if (!tpls || !tpls.length) {
+          const { data: allTpls } = await db.from('pastoral_templates').select('*');
+          tpls = allTpls || [];
+        }
+        cachedTemplates = tpls;
         document.getElementById('templatesListContainer').innerHTML = cachedTemplates.map(t => `
           <div class="lux-card p-5 space-y-3">
             <h3 class="font-black text-sm text-stone-800">${t.title}</h3>
@@ -1899,14 +1910,18 @@
           </div>
         `).join('') || `<div class="col-span-2 py-8 text-center text-stone-400 text-xs">目前無祝禱範本</div>`;
 
-        // 金句卡庫
-        const { data: cards } = await db.from('pastoral_scripture_cards').select('*').eq('church_id', activeChurch);
+        // 金句卡庫：通用資源全讀取，不再被 church_id 濾成空
+        const { data: cards } = await db.from('pastoral_scripture_cards').select('*').order('id');
         cachedCards = cards || [];
         renderCardsList();
 
         // 新朋友旅程
-        const { data: journeys } = await db.from('pastoral_journey_templates').select('*').eq('church_id', activeChurch).order('day_offset');
-        cachedJourney = journeys || [];
+        let { data: journeys } = await db.from('pastoral_journey_templates').select('*').eq('church_id', activeChurch).order('day_offset');
+        if (!journeys || !journeys.length) {
+          const { data: allJourneys } = await db.from('pastoral_journey_templates').select('*').order('day_offset');
+          journeys = allJourneys || [];
+        }
+        cachedJourney = journeys;
         document.getElementById('journeyListContainer').innerHTML = cachedJourney.map(j => `
           <div class="lux-card p-4 flex justify-between items-center text-xs">
             <div>
@@ -1916,8 +1931,8 @@
           </div>
         `).join('') || `<div class="py-8 text-center text-stone-400 text-xs">目前無新朋友旅程規劃</div>`;
 
-        // 祝福圖卡庫 (多圖)
-        const { data: gcards } = await db.from('greeting_cards').select('*').eq('church_id', activeChurch);
+        // 祝福圖卡庫 (多圖)：通用圖庫全讀取，不再被 church_id 濾成空
+        const { data: gcards } = await db.from('greeting_cards').select('*').order('id', { ascending: false });
         cachedGreetingCards = gcards || [];
         filterGreetingCards(currentGreetingFilter);
       } catch(e) { console.error(e); }
@@ -1938,6 +1953,7 @@
 
     function renderCardsList() {
       const c = document.getElementById('cardsListContainer');
+      if (!c) return;
       if (!cachedCards.length) { c.innerHTML = '<div class="col-span-2 text-center text-stone-400 py-12 text-xs">目前無金句卡</div>'; return; }
       c.innerHTML = cachedCards.map(card => `
         <div class="lux-card p-5 space-y-2.5 text-xs flex flex-col justify-between">
@@ -2011,6 +2027,7 @@
       });
 
       const container = document.getElementById('greetingCardsGridContainer');
+      if (!container) return;
       if (!list.length) { container.innerHTML = '<div class="col-span-3 text-center text-stone-400 py-12 text-xs">目前無圖卡</div>'; return; }
       container.innerHTML = list.map(c => `
         <div class="lux-card overflow-hidden flex flex-col justify-between text-xs">
@@ -2091,6 +2108,8 @@
         if (el) el.classList.toggle('hidden', t !== tab);
         if (btn) btn.className = (t === tab) ? 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold btn-warm' : 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600';
       });
+      if (tab === 'cards') renderCardsList();
+      if (tab === 'images') filterGreetingCards(currentGreetingFilter);
     }
 
     // ==========================================
