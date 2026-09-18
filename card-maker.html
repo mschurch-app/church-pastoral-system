@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Google Fonts: 頂級人文字體與書法襯線體 -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
@@ -95,10 +95,10 @@
     <div class="text-center space-y-1">
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-[11px] font-bold">
         <i class="fa-solid fa-wand-magic-sparkles text-orange-600"></i>
-        <span id="churchBadgeText">手作專屬祝福卡 · LIFF 即時合成</span>
+        <span id="churchBadgeText">手作專屬祝福卡 · 挑選好友傳送</span>
       </div>
       <h1 class="text-2xl font-black text-stone-800 tracking-tight">把愛傳出去 · 專屬圖卡合成</h1>
-      <p class="text-xs text-stone-500">為好友客製姓名與祝禱，一鍵傳送純圖片至聊天室！</p>
+      <p class="text-xs text-stone-500">為好友客製姓名與祝禱，一鍵挑選 LINE 好友直接送出純圖片！</p>
     </div>
 
     <!-- 合成預覽區 -->
@@ -117,7 +117,7 @@
         </div>
       </div>
 
-      <!-- 操作按鈕：長按下載 & 一鍵傳送純圖片 -->
+      <!-- 操作按鈕：長按下載 & 挑選好友直接傳送 -->
       <div class="grid grid-cols-2 gap-2 pt-1">
         <a id="btnDownload" download="blessing-card.png" class="py-3 px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-black flex items-center justify-center gap-1.5 transition text-center cursor-pointer shadow-sm">
           <i class="fa-solid fa-download"></i>
@@ -125,10 +125,10 @@
         </a>
         <button onclick="shareViaLiffTargetPicker()" id="btnSharePicker" class="py-3 px-4 rounded-xl btn-warm text-xs font-black flex items-center justify-center gap-1.5 shadow-sm">
           <i class="fa-brands fa-line text-sm"></i>
-          <span>一鍵傳送純圖</span>
+          <span>選好友直接傳圖</span>
         </button>
       </div>
-      <p class="text-[10px] text-center text-stone-400">💡 點擊「一鍵傳送純圖」將直接發送<strong>滿版大圖</strong>到聊天室！也可長按圖片直接儲存相簿。</p>
+      <p class="text-[10px] text-center text-stone-400">💡 點擊「選好友直接傳圖」將彈出 LINE 好友清單，勾選後直接送出滿版圖片！</p>
     </div>
 
     <!-- 客製化控制面板 -->
@@ -247,7 +247,7 @@
     let currentUploadedCardUrl = null;
 
     window.onload = async () => {
-      document.getElementById('churchBadgeText').innerText = `${churchDisplayName} · LIFF 即時手作合成`;
+      document.getElementById('churchBadgeText').innerText = `${churchDisplayName} · 挑選好友傳送`;
       renderQuickQuotes();
       await initLiff();
       await fetchChurchGreetingImages();
@@ -549,7 +549,7 @@
       document.getElementById('btnDownload').href = finalDataUrl;
     }
 
-    // ★ LINE 純圖片直接傳送到聊天室
+    // ★ 透過 Share Target Picker：彈出好友勾選清單，直接傳送純圖片！
     async function shareViaLiffTargetPicker() {
       const btn = document.getElementById('btnSharePicker');
       const canvas = document.getElementById('cardCanvas');
@@ -560,7 +560,7 @@
       }
 
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在傳送純圖...`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在開啟好友清單...`;
 
       try {
         if (!currentUploadedCardUrl) {
@@ -579,9 +579,9 @@
           currentUploadedCardUrl = publicData.publicUrl;
         }
 
-        if (window.liff && liff.isInClient()) {
-          // 直接傳送純圖片至當前聊天室
-          await liff.sendMessages([
+        // 檢查並使用 shareTargetPicker 彈出好友清單
+        if (window.liff && liff.isApiAvailable('shareTargetPicker')) {
+          const res = await liff.shareTargetPicker([
             {
               type: "image",
               originalContentUrl: currentUploadedCardUrl,
@@ -589,17 +589,23 @@
             }
           ]);
 
-          alert('🎉 專屬手作祝賀圖卡已成功傳送至聊天室！');
-          liff.closeWindow();
+          if (res) {
+            alert('🎉 專屬祝賀圖卡已成功傳送給好友！');
+          }
         } else {
-          alert('請在 LINE 內開啟此頁面，即可一鍵發送純圖！或者您也可以直接「長按上方圖片」儲存至手機相簿。');
+          // 如果環境不支援，自動降級為標準分享文字/圖片連結
+          const shareText = `💌 祝福小卡：\n${currentUploadedCardUrl}`;
+          window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
         }
       } catch (err) {
-        console.error("Send error:", err);
-        alert('發送提示：請直接在卡片上「長按圖片」儲存至手機相簿，即可隨時傳給好友！');
+        console.error("Share error:", err);
+        const errStr = String(err).toLowerCase();
+        if (!errStr.includes('cancel') && err.code !== 'USER_CANCELLED') {
+          alert('發送提示：請直接長按圖片儲存至相簿，或確認 LIFF 權限。');
+        }
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-brands fa-line text-sm"></i> <span>一鍵傳送純圖</span>`;
+        btn.innerHTML = `<i class="fa-brands fa-line text-sm"></i> <span>選好友直接傳圖</span>`;
       }
     }
   </script>
