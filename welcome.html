@@ -110,7 +110,7 @@
         <!-- LINE 狀態提醒條 (LIFF 自動識別) -->
         <div id="lineStatusBadge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] text-emerald-800 font-bold hidden">
           <i class="fa-brands fa-line text-emerald-600 text-sm"></i>
-          <span>LINE 已連動：<strong id="lineUserDisplayName" class="text-emerald-950"></strong></span>
+          <span>LINE 已成功連動：<strong id="lineUserDisplayName" class="text-emerald-950"></strong></span>
         </div>
       </div>
 
@@ -130,7 +130,7 @@
 
         <!-- 聯絡手機 -->
         <div class="space-y-1.5">
-          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 (方便後續為你送上問候) *</label>
+          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 (方便後續向你問候) *</label>
           <input type="tel" id="guestPhone" placeholder="0912-345-678" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
         </div>
 
@@ -145,18 +145,10 @@
           </div>
         </div>
 
-        <!-- 生活區域 -->
+        <!-- 生活區域 (依堂會自適應呈現) -->
         <div class="space-y-2">
           <label class="font-black text-stone-700 block text-xs">4. 你平時生活在哪一區？</label>
-          <div class="flex flex-wrap gap-2" id="groupDistrict">
-            <div onclick="selectSinglePill('district', '大雅區', this)" class="pill-btn active">📍 大雅區</div>
-            <div onclick="selectSinglePill('district', '西屯區', this)" class="pill-btn">📍 西屯區</div>
-            <div onclick="selectSinglePill('district', '北屯區', this)" class="pill-btn">📍 北屯區</div>
-            <div onclick="selectSinglePill('district', '潭子區', this)" class="pill-btn">📍 潭子區</div>
-            <div onclick="selectSinglePill('district', '神岡區', this)" class="pill-btn">📍 神岡區</div>
-            <div onclick="selectSinglePill('district', '沙鹿區', this)" class="pill-btn">📍 沙鹿區</div>
-            <div onclick="selectSinglePill('district', '其他地區', this)" class="pill-btn">📍 其他地區</div>
-          </div>
+          <div class="flex flex-wrap gap-2" id="groupDistrict"></div>
         </div>
 
         <!-- 認識管道 -->
@@ -200,18 +192,40 @@
           </div>
         </div>
 
-        <!-- 微笑印記拍照留念 -->
+        <!-- 微笑印記拍照留念 (已升級：預載 LINE 大頭貼時，清楚顯示開啟相機與換照片選項) -->
         <div class="space-y-2 pt-2 border-t border-stone-200/80">
-          <label class="font-black text-stone-700 block text-xs">8. 留下今天的微笑印記 📸 (選填)</label>
-          <div class="relative w-full h-36 rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50/70 hover:bg-stone-100 flex flex-col items-center justify-center gap-2 cursor-pointer overflow-hidden transition" onclick="triggerCamera()">
-            <img id="photoPreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="印記照片">
-            <div id="photoPrompt" class="text-center space-y-1">
+          <div class="flex justify-between items-center">
+            <label class="font-black text-stone-700 block text-xs">8. 留下今天的微笑印記 📸 (選填)</label>
+            <span id="photoSourceBadge" class="text-[10px] text-orange-600 font-bold hidden">已帶入 LINE 大頭貼</span>
+          </div>
+
+          <!-- 照片主預覽框 -->
+          <div class="relative w-full h-44 rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50/70 overflow-hidden group">
+            <img id="photoPreview" class="w-full h-full object-cover hidden" alt="印記照片">
+            
+            <!-- 尚未有照片時的引導提示 -->
+            <div id="photoPrompt" class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-stone-100 transition" onclick="triggerCameraCapture()">
               <i class="fa-solid fa-camera text-2xl text-orange-500"></i>
               <p class="text-xs font-bold text-stone-700">點此拍張自拍或與朋友合照</p>
               <p class="text-[10px] text-stone-400">記錄今天美好的相遇</p>
             </div>
           </div>
+
+          <!-- 已有照片時的操作按鈕列 (開啟相機現場拍 / 從相簿換一張 / 重設) -->
+          <div id="photoActionButtons" class="flex gap-2 pt-1 hidden">
+            <button type="button" onclick="triggerCameraCapture()" class="flex-1 py-2 px-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold transition flex items-center justify-center gap-1.5 border border-orange-200/80 shadow-sm">
+              <i class="fa-solid fa-camera text-orange-600"></i>
+              <span>現場自拍/合照</span>
+            </button>
+            <button type="button" onclick="triggerFilePicker()" class="flex-1 py-2 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition flex items-center justify-center gap-1.5 border border-stone-200 shadow-sm">
+              <i class="fa-solid fa-image text-stone-500"></i>
+              <span>從相簿換一張</span>
+            </button>
+          </div>
+
+          <!-- 隱藏原生 input：相機直拍 (capture="user") 與 相簿選圖 -->
           <input type="file" id="cameraInput" accept="image/*" capture="user" class="hidden" onchange="handlePhotoSelected(event)">
+          <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handlePhotoSelected(event)">
         </div>
 
       </div>
@@ -226,7 +240,7 @@
 
     </div>
 
-    <!-- 送出成功後的感謝卡 (純粹真誠無兌換券) -->
+    <!-- 送出成功後的感謝卡 -->
     <div id="successSection" class="card-glass p-8 space-y-6 text-center hidden">
       <div class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
         <i class="fa-solid fa-seedling"></i>
@@ -259,79 +273,93 @@
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 兩間教會的官方專屬 LIFF ID 配置
-    const CHURCH_LIFF_CONFIG = {
-      'SHiNE': '2011645391-UQ9oGdyx', // 火樂教會
-      'M+': '2011645391-bmUWMJZT'     // Ｍ＋大雅教會
-    };
-
-    // 判斷當前所屬堂會 (支援網址參數 ?church= 或 LIFF URL 自動反推)
+    // 堂會識別 (URL query 或預設 M+)
     const urlParams = new URLSearchParams(window.location.search);
     let targetChurch = urlParams.get('church') || 'M+';
-    if (targetChurch.toUpperCase().includes('SHINE') || window.location.href.includes('UQ9oGdyx')) {
-      targetChurch = 'SHiNE';
-    } else {
-      targetChurch = 'M+';
-    }
+    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
+    else targetChurch = 'M+';
 
-    const activeLiffId = CHURCH_LIFF_CONFIG[targetChurch] || '2011645391-bmUWMJZT';
+    const isShine = (targetChurch === 'SHiNE');
 
-    // 儲存透過 LIFF 自動擷取的 LINE 用戶身份
+    // LIFF ID
+    const DEFAULT_LIFF_ID = urlParams.get('liffId') || "";
+
     let lineProfile = {
       userId: null,
       displayName: null,
       pictureUrl: null
     };
 
-    // 初始化 LINE LIFF SDK
+    // 狀態暫存
+    let selectedGender = '弟兄';
+    let selectedAge = '20-30青年';
+    let selectedDistrict = isShine ? '西屯區' : '大雅區';
+    let selectedKnowFrom = '朋友家人邀請';
+    let selectedFeelings = new Set(['🌿 讓心靈放鬆充電', '🎶 聽聽溫暖的音樂']);
+    let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
+    let capturedPhotoFile = null;
+
+    // 動態渲染生活區域 (火樂：西屯區、南屯區、北屯區、西區、北區、大雅區、其他地區)
+    function renderDistrictPills() {
+      const container = document.getElementById('groupDistrict');
+      const shineDistricts = ['西屯區', '南屯區', '北屯區', '西區', '北區', '大雅區', '其他地區'];
+      const mplusDistricts = ['大雅區', '西屯區', '北屯區', '潭子區', '神岡區', '沙鹿區', '其他地區'];
+
+      const list = isShine ? shineDistricts : mplusDistricts;
+      container.innerHTML = list.map(d => {
+        const isActive = (d === selectedDistrict);
+        return `<div onclick="selectSinglePill('district', '${d}', this)" class="pill-btn ${isActive ? 'active' : ''}">📍 ${d}</div>`;
+      }).join('');
+    }
+
+    // 初始化 LIFF
     async function initLiff() {
+      renderDistrictPills();
+
+      if (!DEFAULT_LIFF_ID) {
+        console.log("未提供 LIFF ID，以一般網頁模式運行");
+        return;
+      }
       try {
-        await liff.init({ liffId: activeLiffId });
+        await liff.init({ liffId: DEFAULT_LIFF_ID });
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
           lineProfile.userId = profile.userId;
           lineProfile.displayName = profile.displayName;
           lineProfile.pictureUrl = profile.pictureUrl;
 
-          // 畫面顯示已識別的 LINE 資訊
           document.getElementById('lineStatusBadge').classList.remove('hidden');
           document.getElementById('lineUserDisplayName').innerText = profile.displayName;
 
-          // 預設將 LINE 暱稱填入姓名欄位 (方便新朋友直接修改或沿用)
           const nameInput = document.getElementById('guestName');
           if (!nameInput.value && profile.displayName) {
             nameInput.value = profile.displayName;
           }
 
-          // 預設以 LINE 頭像作為微笑印記預覽
+          // 若有 LINE 大頭貼，展示預覽並同步秀出相機拍照選項！
           if (profile.pictureUrl) {
             const preview = document.getElementById('photoPreview');
             const prompt = document.getElementById('photoPrompt');
+            const actionBtns = document.getElementById('photoActionButtons');
+            const sourceBadge = document.getElementById('photoSourceBadge');
+
             preview.src = profile.pictureUrl;
             preview.classList.remove('hidden');
             prompt.classList.add('hidden');
+            actionBtns.classList.remove('hidden');
+            sourceBadge.classList.remove('hidden');
           }
         } else {
-          // 若在外部瀏覽器打開，引導登入獲取 LINE ID
           liff.login();
         }
       } catch (err) {
-        console.warn("LIFF 初始化完成 (非 LINE 環境模式測試運行):", err);
+        console.warn("LIFF init warning (非 LINE App 預覽中):", err);
       }
     }
 
     window.onload = () => {
       initLiff();
     };
-
-    // 狀態暫存
-    let selectedGender = '弟兄';
-    let selectedAge = '20-30青年';
-    let selectedDistrict = '大雅區';
-    let selectedKnowFrom = '朋友家人邀請';
-    let selectedFeelings = new Set(['🌿 讓心靈放鬆充電', '🎶 聽聽溫暖的音樂']);
-    let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
-    let capturedPhotoFile = null;
 
     function selectSinglePill(type, value, element) {
       const parent = element.parentElement;
@@ -370,8 +398,14 @@
       }
     }
 
-    function triggerCamera() {
+    // 叫起相機直拍
+    function triggerCameraCapture() {
       document.getElementById('cameraInput').click();
+    }
+
+    // 叫起相簿選圖
+    function triggerFilePicker() {
+      document.getElementById('galleryInput').click();
     }
 
     function handlePhotoSelected(event) {
@@ -383,9 +417,16 @@
       reader.onload = (e) => {
         const preview = document.getElementById('photoPreview');
         const prompt = document.getElementById('photoPrompt');
+        const actionBtns = document.getElementById('photoActionButtons');
+        const sourceBadge = document.getElementById('photoSourceBadge');
+
         preview.src = e.target.result;
         preview.classList.remove('hidden');
         prompt.classList.add('hidden');
+        actionBtns.classList.remove('hidden');
+
+        sourceBadge.innerText = "✨ 已拍攝今日照片";
+        sourceBadge.classList.remove('hidden');
       };
       reader.readAsDataURL(file);
     }
@@ -396,13 +437,13 @@
       const inviter = document.getElementById('inviterName').value.trim();
 
       if (!name) return alert('請填寫你的名字或暱稱喔！');
-      if (!phone) return alert('請留下一組手機號碼，方便我們為你送上問候！');
+      if (!phone) return alert('請留下一組手機號碼，方便我們為你寄送問候！');
 
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在為你送出...`;
 
-      // 照片優先序：現場自拍照 > LINE 既有頭像
+      // 照片邏輯：如果現場有拍照，以上傳的新照片為準；若無則使用 LINE 頭貼
       let uploadedPhotoUrl = lineProfile.pictureUrl || null;
 
       if (capturedPhotoFile) {
@@ -420,7 +461,7 @@
             uploadedPhotoUrl = publicData.publicUrl;
           }
         } catch (e) {
-          console.error("照片上傳異常:", e);
+          console.error("Photo upload error:", e);
         }
       }
 
@@ -431,10 +472,9 @@
 
       const memoText = `【新朋友初次見面】期待：${Array.from(selectedFeelings).join('、')}。來源：${finalKnowFrom}`;
 
-      // 完整寫入 Supabase members 表，並精確鎖定 LINE User ID！
       const payload = {
         church_id: targetChurch,
-        line_id: lineProfile.userId || null,       // ★ 自動收集到的真實 LINE ID
+        line_id: lineProfile.userId || null,
         name: name,
         gender: selectedGender,
         phone: phone,
@@ -459,7 +499,6 @@
         return alert('送出失敗：' + insertErr.message);
       }
 
-      // 成功切換感謝畫面
       document.getElementById('formSection').classList.add('hidden');
       document.getElementById('successSection').classList.remove('hidden');
       document.getElementById('successName').innerText = name;
@@ -468,7 +507,7 @@
 
     function closeLiffOrWindow() {
       if (window.liff && liff.isInClient && liff.isInClient()) {
-        liff.closeWindow(); // LINE App 內直接秒關閉 LIFF 彈窗回聊天室
+        liff.closeWindow();
       } else {
         window.close();
       }
