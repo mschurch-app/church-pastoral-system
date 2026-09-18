@@ -60,12 +60,18 @@
       transform: translateY(-2px);
     }
 
+    /* 今晚特別設計：新朋友專屬迎賓卡片樣式 */
     .lux-card-newcomer {
-      background: linear-gradient(135deg, rgba(255,247,237,0.95) 0%, rgba(255,255,255,0.96) 100%);
+      background: linear-gradient(135deg, rgba(255,247,237,0.96) 0%, rgba(255,255,255,0.98) 100%);
       border: 2px solid rgba(249, 115, 22, 0.45);
-      box-shadow: 0 16px 36px -4px rgba(249, 115, 22, 0.15), 0 4px 12px -2px rgba(249, 115, 22, 0.08);
+      box-shadow: 0 16px 36px -4px rgba(249, 115, 22, 0.16), 0 4px 12px -2px rgba(249, 115, 22, 0.08);
       border-radius: 24px;
       position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .lux-card-newcomer:hover {
+      box-shadow: 0 22px 42px -4px rgba(249, 115, 22, 0.22);
+      transform: translateY(-2px);
     }
 
     .lux-header {
@@ -128,7 +134,7 @@
     @media print {
       body { background: #ffffff !important; color: #000000 !important; }
       header, nav, button, .no-print { display: none !important; }
-      .lux-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+      .lux-card, .lux-card-newcomer { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
     }
 
     ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -342,7 +348,7 @@
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組六：LINE 教牧推播與多圖隨機管理中心 -->
+    <!-- 模組六：LINE 教牧推播中心 -->
     <section id="mod-pastoral-bot" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -405,7 +411,7 @@
         <div id="greetingCardsGridContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
       </div>
 
-      <!-- 子分頁 5：新朋友即時推播接收設定 -->
+      <!-- 子分頁 5：新朋友即時推播設定 -->
       <div id="sub-newcomer-notify" class="space-y-4 hidden">
         <div class="lux-card p-6 sm:p-8 space-y-4">
           <h3 class="font-black text-stone-800 text-base flex items-center gap-2">
@@ -905,7 +911,7 @@
           </div>
           <div>
             <label class="font-bold text-stone-600 block mb-1">關懷主題 *</label>
-            <input type="text" id="editJourneyTitle" placeholder="如：初次見面溫暖問候" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 focus:outline-none">
+            <input type="text" id="editJourneyTitle" placeholder="如：初次見面溫暖問候" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 font-bold text-stone-800 focus:outline-none">
           </div>
         </div>
         <div>
@@ -1190,7 +1196,7 @@
       if (!currentUser.can_manage_prayers) document.getElementById('nav-prayers').classList.add('hidden');
     }
 
-    // 核心修復：一定要先 loadMembers() 讓會友進記憶體，loadGroups() 算出來的人數才不會變成 0！
+    // 核心順序：一定要先 loadMembers() 抓回會友資料，loadGroups() 算出來的人數才不會變成 0！
     async function loadChurchData() {
       await loadMembers();
       await loadGroups();
@@ -1536,7 +1542,7 @@
     }
 
     // =========================================================================
-    // 2. 會友名冊模組（表格模式含編輯/刪除 & 居住區域防誤塞）
+    // 2. 會友名冊模組（🌱 新朋友迎賓特別卡版 + 表格檢視編輯/刪除 + 防誤塞區域）
     // =========================================================================
     async function loadMembers() {
       const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
@@ -1620,6 +1626,7 @@
                 <tbody class="divide-y divide-stone-200/60">
                   ${list.map(m => {
                     const hasLine = m.line_id && m.line_id.startsWith('U');
+                    const isNewcomer = m.faith_status === '新朋友（初次聚會）';
                     return `
                       <tr class="hover:bg-orange-50/30 transition">
                         <td class="p-3.5 font-black text-stone-800 whitespace-nowrap">
@@ -1631,7 +1638,11 @@
                         </td>
                         <td class="p-3.5 font-mono text-stone-600 whitespace-nowrap">${m.phone || '－'}</td>
                         <td class="p-3.5 font-bold text-stone-700 whitespace-nowrap">${m.group_name || '未編組'}</td>
-                        <td class="p-3.5 whitespace-nowrap"><span class="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人'}</span></td>
+                        <td class="p-3.5 whitespace-nowrap">
+                          <span class="px-2.5 py-0.5 rounded-lg ${isNewcomer ? 'bg-orange-500 text-white font-black animate-pulse' : 'bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold'}">
+                            ${isNewcomer ? '🌱 新朋友（初次聚會）' : (m.faith_status || '委身家人')}
+                          </span>
+                        </td>
                         <td class="p-3.5 text-stone-600 whitespace-nowrap">${m.district || '－'}</td>
                         <td class="p-3.5 text-stone-500 truncate max-w-[160px]">${m.ministry || '－'}</td>
                         <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
@@ -1647,12 +1658,16 @@
           </div>
         `;
       } else {
+        // 卡片網格視圖：完美呈現今晚的「🌱 新朋友迎賓特別卡版」
         container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
         container.innerHTML = list.map(m => {
           const hasLine = m.line_id && m.line_id.startsWith('U');
+          const isNewcomer = m.faith_status === '新朋友（初次聚會）';
           const ministries = m.ministry ? m.ministry.split(',').map(s => s.trim()).filter(Boolean) : [];
+          const cardClass = isNewcomer ? 'lux-card-newcomer p-5 space-y-3.5 flex flex-col justify-between' : 'lux-card p-5 space-y-3.5 flex flex-col justify-between';
+
           return `
-            <div class="lux-card p-5 space-y-3.5 flex flex-col justify-between">
+            <div class="${cardClass}">
               <div class="space-y-3">
                 <div class="flex justify-between items-start">
                   <div class="flex items-center gap-3">
@@ -1672,20 +1687,33 @@
                     ${m.group_name || '未編組'}
                   </span>
                 </div>
+
                 <div class="flex flex-wrap gap-1.5 items-center pt-1">
-                  <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人（穩定聚會）'}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-lg ${isNewcomer ? 'bg-orange-500 text-white font-black animate-pulse' : 'bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold'}">
+                    ${isNewcomer ? '🌱 新朋友（迎賓中）' : (m.faith_status || '委身家人')}
+                  </span>
                   ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
                   ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
                   ${m.birthday ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold"><i class="fa-solid fa-cake-candles mr-1"></i>${m.birthday}</span>` : ''}
                   ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
                 </div>
-                ${m.memo ? `
+
+                ${isNewcomer && m.memo ? `
+                  <div class="p-3 rounded-2xl bg-orange-50/90 border border-orange-200 text-xs text-stone-800 space-y-1.5 shadow-sm">
+                    <div class="flex items-center gap-1.5 font-black text-orange-950 text-[11px]">
+                      <i class="fa-solid fa-seedling text-orange-600"></i>
+                      <span>新朋友初次填寫摘要</span>
+                    </div>
+                    <p class="leading-relaxed font-medium text-[11px]">${m.memo}</p>
+                  </div>
+                ` : (m.memo ? `
                   <div class="p-2.5 rounded-xl bg-stone-100/70 border border-stone-200/60 text-[11px] text-stone-600 flex items-start gap-2">
                     <i class="fa-regular fa-note-sticky text-amber-600 mt-0.5 flex-shrink-0"></i>
                     <span class="line-clamp-2 leading-relaxed">${m.memo}</span>
                   </div>
-                ` : ''}
+                ` : '')}
               </div>
+
               <div class="pt-3 border-t border-stone-200/80 flex items-center justify-end">
                 <div class="flex gap-2">
                   <button onclick="editMember(${m.id})" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
@@ -1800,7 +1828,7 @@
 
       const payload = {
         church_id: activeChurch,
-        name: name,
+        name,
         gender: document.getElementById('editGender').value,
         phone: document.getElementById('editPhone').value.trim(),
         birthday: document.getElementById('editBirthday').value.trim(),
@@ -2130,7 +2158,7 @@
     }
 
     // =========================================================================
-    // 4. 小家 / 小組 模組（修復成員人數統計與寬鬆比對）
+    // 4. 小家 / 小組 模組
     // =========================================================================
     async function loadGroups() {
       const { data } = await db.from('groups').select('*').eq('church_id', activeChurch).order('id');
@@ -2147,7 +2175,6 @@
         return;
       }
       container.innerHTML = cachedGroups.map(g => {
-        // 寬鬆比對小家名稱（去除多餘空白）
         const gNameClean = (g.name || '').trim();
         const members = cachedMembers.filter(m => {
           const mGrpClean = (m.group_name || '').trim();
@@ -2494,7 +2521,7 @@
     }
 
     // =========================================================================
-    // 6. LINE 教牧推播與多圖隨機管理中心（完整 5 大子分頁）
+    // 6. LINE 教牧推播中心（完整保留 5 大功能）
     // =========================================================================
     async function loadPastoralBotSettings() {
       const { data: churchInfo } = await db.from('churches').select('*').eq('id', activeChurch).maybeSingle();
@@ -2503,22 +2530,18 @@
         document.getElementById('notifyPastorLineId').value = churchInfo.notify_pastor_line_id || '';
       }
 
-      // 1. 祝禱範本
       const { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', activeChurch);
       cachedTemplates = tpls || [];
       renderTemplatesList();
 
-      // 2. 金句卡庫
       const { data: cards } = await db.from('spiritual_cards').select('*').eq('church_id', activeChurch);
       cachedCards = cards || [];
       renderCardsList();
 
-      // 3. 新朋友旅程 (依堂會隔離)
       const { data: journey } = await db.from('newcomer_journey_steps').select('*').eq('church_id', activeChurch).order('day_offset', { ascending: true });
       cachedJourney = journey || [];
       renderJourneyList();
 
-      // 4. 祝福圖卡庫 (多圖)
       const { data: greetingCards } = await db.from('share_greeting_cards').select('*').eq('church_id', activeChurch).order('id', { ascending: false });
       cachedGreetingCards = greetingCards || [];
       renderGreetingCardsList();
@@ -2652,7 +2675,7 @@
           </div>
           <textarea id="jn-msg-${j.id}" rows="3" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-800 focus:outline-none leading-relaxed">${j.message}</textarea>
           <div class="flex justify-between items-center pt-1">
-            <span class="text-xs text-stone-500 font-medium">按鈕動作：<span class="font-bold text-stone-700">${j.action_label || '關懷確認'}</span></span>
+            <span class="text-xs text-stone-500 font-medium">按鈕動作：<span class="font-bold text-stone-700">${j.action_label || '我想了解更多'}</span></span>
             <div class="flex gap-2">
               <button onclick="editJourneyStep(${j.id})" class="px-3 py-1.5 rounded-xl bg-orange-50 text-orange-800 text-xs font-bold">編輯設定</button>
               <button onclick="saveJourneyStep(${j.id})" class="px-4 py-1.5 rounded-xl btn-warm text-xs font-bold shadow-sm">儲存文案</button>
