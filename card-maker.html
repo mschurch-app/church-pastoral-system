@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>把愛傳出去 · 專屬手作祝賀圖卡</title>
+  
+  <!-- LINE LIFF SDK 2.x -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <!-- Tailwind CSS & Supabase & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: 頂級黑體與襯線書法體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
+            serif: ['"Noto Serif TC"', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: radial-gradient(120% 80% at 50% -10%, #FFF4E8 0%, #FAF6F0 50%, #F5EEE6 100%);
+      color: #1c1917;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .card-glass {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(234, 218, 198, 0.85);
+      box-shadow: 0 16px 36px -6px rgba(184, 134, 76, 0.1);
+      border-radius: 28px;
+    }
+
+    .pill-btn {
+      padding: 7px 14px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #E7DED3;
+      background: #FFFFFF;
+      color: #57534E;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .pill-btn:active { transform: scale(0.96); }
+    .pill-btn.active {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #FFFFFF;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-warm {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 24px -3px rgba(234, 88, 12, 0.42);
+      transition: all 0.25s ease;
+    }
+    .btn-warm:hover {
+      box-shadow: 0 12px 28px -2px rgba(234, 88, 12, 0.52);
+      transform: translateY(-1px);
+    }
+    .btn-warm:active { transform: scale(0.98); }
+  </style>
+</head>
+<body class="p-3 sm:p-6 flex justify-center items-center">
+
+  <div class="w-full max-w-lg my-2 space-y-4">
+    
+    <!-- 頂部標題與說明 -->
+    <div class="text-center space-y-1">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-[11px] font-bold">
+        <i class="fa-solid fa-wand-magic-sparkles text-orange-600"></i>
+        <span id="churchBadgeText">手作專屬祝福卡 · LIFF 即時合成</span>
+      </div>
+      <h1 class="text-2xl font-black text-stone-800 tracking-tight">把愛傳出去 · 專屬圖卡合成</h1>
+      <p class="text-xs text-stone-500">為好友客製姓名與祝禱，直接挑選好友一鍵轉傳！</p>
+    </div>
+
+    <!-- 合成預覽區 (即時呈現 Canvas 生成結果) -->
+    <div class="card-glass p-4 sm:p-5 space-y-3">
+      <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden shadow-md bg-stone-900 flex items-center justify-center">
+        <!-- 畫布（在背景繪圖） -->
+        <canvas id="cardCanvas" width="1080" height="1350" class="hidden"></canvas>
+        
+        <!-- 最終生成的真實合成圖片 -->
+        <img id="finalCardImg" class="w-full h-full object-contain" alt="合成祝賀小卡">
+        
+        <!-- 繪圖載入遮罩 -->
+        <div id="renderLoading" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white gap-2">
+          <i class="fa-solid fa-spinner fa-spin text-2xl text-orange-400"></i>
+          <span class="text-xs font-bold">正在繪製專屬祝福小卡...</span>
+        </div>
+      </div>
+
+      <!-- 操作按鈕：長按下載 & 一鍵挑選 LINE 好友發送 -->
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <a id="btnDownload" download="blessing-card.png" class="py-3 px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-black flex items-center justify-center gap-1.5 transition text-center cursor-pointer shadow-sm">
+          <i class="fa-solid fa-download"></i>
+          <span>長按或下載圖片</span>
+        </a>
+        <button onclick="shareViaLiffTargetPicker()" id="btnSharePicker" class="py-3 px-4 rounded-xl btn-warm text-xs font-black flex items-center justify-center gap-1.5 shadow-sm">
+          <i class="fa-brands fa-line text-sm"></i>
+          <span>選好友直接傳送</span>
+        </button>
+      </div>
+      <p class="text-[10px] text-center text-stone-400">💡 點擊「選好友直接傳送」可直接勾選 LINE 朋友或群組秒發！也可長按圖片直接儲存相簿。</p>
+    </div>
+
+    <!-- 客製化控制面板 -->
+    <div class="card-glass p-5 sm:p-6 space-y-4 text-xs">
+      
+      <!-- 1. 挑選情境分類 -->
+      <div class="space-y-1.5">
+        <label class="font-black text-stone-700 block text-xs">1. 挑選祝福情境</label>
+        <div class="flex flex-wrap gap-1.5">
+          <div onclick="switchCategory('同事打拼', this)" class="pill-btn active">💼 同事打拼</div>
+          <div onclick="switchCategory('低潮陪伴', this)" class="pill-btn">🌧️ 低潮陪伴</div>
+          <div onclick="switchCategory('家人問候', this)" class="pill-btn">🏡 家人問候</div>
+          <div onclick="switchCategory('信心得勝', this)" class="pill-btn">☀️ 信心得勝</div>
+        </div>
+      </div>
+
+      <!-- 2. 選擇底圖 -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center">
+          <label class="font-black text-stone-700 block text-xs">2. 選擇卡片底圖</label>
+          <button onclick="pickRandomBackground()" class="text-orange-600 hover:text-orange-700 font-bold flex items-center gap-1 text-[11px]">
+            <i class="fa-solid fa-shuffle"></i>
+            <span>隨機換一張</span>
+          </button>
+        </div>
+        <div id="bgThumbnailStream" class="flex gap-2 overflow-x-auto pb-1"></div>
+      </div>
+
+      <!-- 3. 輸入名字與署名 (LIFF 自動帶入署名) -->
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <div>
+          <label class="font-bold text-stone-600 block mb-1">收件人稱呼</label>
+          <input type="text" id="targetRecipient" oninput="debounceRender()" value="親愛的好友" placeholder="如：志明、曉婷" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
+        </div>
+        <div>
+          <label class="font-bold text-stone-600 block mb-1">你的署名 (LIFF自動識別)</label>
+          <input type="text" id="targetSender" oninput="debounceRender()" value="為你守望的家人" placeholder="你的名字" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400">
+        </div>
+      </div>
+
+      <!-- 4. 祝禱文案內容 -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center">
+          <label class="font-bold text-stone-600 block">祝福話語 (自由編輯或點選下方靈感)</label>
+          <button onclick="pickRandomQuote()" class="text-orange-600 hover:text-orange-700 font-bold flex items-center gap-1 text-[11px]">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span>換句金句</span>
+          </button>
+        </div>
+        <textarea id="targetMessage" rows="3" oninput="debounceRender()" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed font-semibold">願上帝賜福給你，使你的心滿有平安與力量。知道你最近很努力，願出人意外的平安親自護衛你！</textarea>
+      </div>
+
+      <!-- 5. 快速金句靈感標籤 -->
+      <div class="space-y-1">
+        <span class="text-[10px] text-stone-400 font-bold block">點擊快速替換經典金句：</span>
+        <div id="quickQuotePills" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 1. 堂會識別 (URL query 或預設 M+)
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentChurch = urlParams.get('church') || 'M+';
+    if (currentChurch.toUpperCase().startsWith('SHINE')) currentChurch = 'SHiNE';
+    else currentChurch = 'M+';
+
+    const churchDisplayName = (currentChurch === 'SHiNE') ? '火樂教會 · SHiNE' : 'Ｍ＋大雅教會 · M+ CHURCH';
+
+    // 2. 官方專屬 LIFF ID 映射表
+    const CHURCH_LIFF_MAP = {
+      'M+': '2011645391-wdMYTy4E',
+      'SHiNE': '2011645391-R4g2FZnW'
+    };
+    const LIFF_ID = urlParams.get('liffId') || CHURCH_LIFF_MAP[currentChurch] || '';
+
+    const DEFAULT_BG_IMAGES = [
+      "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1200&q=80",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&q=80",
+      "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80",
+      "https://images.unsplash.com/photo-1499346030926-9a72daac6c63?w=1200&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80"
+    ];
+
+    const QUOTES_LIBRARY = {
+      "同事打拼": [
+        "願上帝賜福你手中的工作，在每一個挑戰中滿有智慧與恩典，奔跑卻不困倦，行走卻不疲乏！",
+        "知道你最近辛苦了！願出人意外的平安常與你同在，今天也要深深呼吸，你比想像中更剛強！",
+        "努力都有神的美意，願你出也蒙福、入也蒙福，工作有成就，心靈有安息！"
+      ],
+      "低潮陪伴": [
+        "你不需要總是堅強，在風雨中有雙溫暖的手正緊緊托住你。願基督的平安如暖流覆庇你的心懷意念。",
+        "流淚撒種的，必歡呼收割！不要怕，這段路我們一起走，明天會是嶄新的一天。",
+        "耶和華靠近傷心的人，拯救靈魂痛悔的。願今夜有安息的沉睡，明天有加倍的力量！"
+      ],
+      "家人問候": [
+        "好久不見，特別在心裡為你默默祝福！願喜樂如甘雨滋潤你的生活，天天經歷豐盛恩典！",
+        "無論相隔多遠，心中的思念與禱告不曾止息。願全家出入平安，滿載福樂與笑聲！",
+        "願耶和華賜福給你，保護你；願耶和華使祂的臉光照你，賜你一生平安喜樂！"
+      ],
+      "信心得勝": [
+        "你當剛強壯膽！不要懼怕，也不要驚惶；因為你無論往哪裡去，耶和華你的神必與你同在！",
+        "若神為我們，誰能敵擋我們呢？宣告新的門要為你大大打開，跨過高山，進入豐盛之地！",
+        "信是得著，就必得著！願心中的火熱重新被挑旺，展翅上騰如鷹！"
+      ]
+    };
+
+    let activeCategory = "同事打拼";
+    let cachedDbCards = [];
+    let currentSelectedBgUrl = DEFAULT_BG_IMAGES[0];
+    let renderTimer = null;
+    let currentUploadedCardUrl = null;
+
+    window.onload = async () => {
+      document.getElementById('churchBadgeText').innerText = `${churchDisplayName} · LIFF 即時手作合成`;
+      renderQuickQuotes();
+      await initLiff();
+      await fetchChurchGreetingImages();
+      initBackgroundSelector();
+      renderCardToCanvas();
+    };
+
+    // 初始化 LIFF 並自動代入發送者署名
+    async function initLiff() {
+      if (!LIFF_ID) {
+        console.log("未提供 liffId，以一般網頁預覽模式運行");
+        return;
+      }
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          if (profile.displayName) {
+            document.getElementById('targetSender').value = profile.displayName;
+          }
+        } else {
+          liff.login();
+        }
+      } catch (err) {
+        console.warn("LIFF 初始化跳過 (一般瀏覽器環境):", err);
+      }
+    }
+
+    async function fetchChurchGreetingImages() {
+      try {
+        const { data } = await db.from('share_greeting_cards').select('*').eq('church_id', currentChurch);
+        if (data && data.length) {
+          cachedDbCards = data;
+          currentSelectedBgUrl = data[0].image_url;
+        }
+      } catch (e) {
+        console.warn("Fetch greeting images error:", e);
+      }
+    }
+
+    function initBackgroundSelector() {
+      const container = document.getElementById('bgThumbnailStream');
+      const allUrls = [
+        ...cachedDbCards.map(c => c.image_url),
+        ...DEFAULT_BG_IMAGES
+      ];
+      const uniqueUrls = Array.from(new Set(allUrls));
+
+      container.innerHTML = uniqueUrls.map((url) => `
+        <div onclick="selectBgImage('${url}')" class="relative w-16 h-20 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer border-2 ${url === currentSelectedBgUrl ? 'border-orange-500 scale-95 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'} transition">
+          <img src="${url}" class="w-full h-full object-cover">
+        </div>
+      `).join('');
+    }
+
+    function selectBgImage(url) {
+      currentSelectedBgUrl = url;
+      initBackgroundSelector();
+      renderCardToCanvas();
+    }
+
+    function pickRandomBackground() {
+      const allUrls = [
+        ...cachedDbCards.map(c => c.image_url),
+        ...DEFAULT_BG_IMAGES
+      ];
+      const randomUrl = allUrls[Math.floor(Math.random() * allUrls.length)];
+      selectBgImage(randomUrl);
+    }
+
+    function switchCategory(cat, element) {
+      activeCategory = cat;
+      const parent = element.parentElement;
+      parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      element.classList.add('active');
+
+      renderQuickQuotes();
+      pickRandomQuote();
+    }
+
+    function renderQuickQuotes() {
+      const quotes = QUOTES_LIBRARY[activeCategory] || [];
+      const c = document.getElementById('quickQuotePills');
+      c.innerHTML = quotes.map((q, idx) => `
+        <button type="button" onclick="setQuoteText('${q.replace(/'/g, "\\'")}')" class="pill-btn text-[10px] py-1 px-2.5 bg-stone-50 border-stone-200/80">
+          靈感 ${idx + 1}
+        </button>
+      `).join('');
+    }
+
+    function setQuoteText(text) {
+      document.getElementById('targetMessage').value = text;
+      renderCardToCanvas();
+    }
+
+    function pickRandomQuote() {
+      const quotes = QUOTES_LIBRARY[activeCategory] || [];
+      if (quotes.length) {
+        const q = quotes[Math.floor(Math.random() * quotes.length)];
+        setQuoteText(q);
+      }
+    }
+
+    function debounceRender() {
+      if (renderTimer) clearTimeout(renderTimer);
+      renderTimer = setTimeout(() => {
+        renderCardToCanvas();
+      }, 300);
+    }
+
+    // =========================================================================
+    // Canvas 真實圖片合成排版演算法
+    // =========================================================================
+    function renderCardToCanvas() {
+      const loading = document.getElementById('renderLoading');
+      loading.classList.remove('hidden');
+      currentUploadedCardUrl = null;
+
+      const canvas = document.getElementById('cardCanvas');
+      const ctx = canvas.getContext('2d');
+      const recipient = document.getElementById('targetRecipient').value.trim() || '親愛的好友';
+      const sender = document.getElementById('targetSender').value.trim() || '為你守望的家人';
+      const message = document.getElementById('targetMessage').value.trim() || '願平安與喜樂天天伴隨你！';
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = currentSelectedBgUrl;
+
+      img.onload = () => {
+        const W = canvas.width;  // 1080
+        const H = canvas.height; // 1350
+
+        // 1. 滿版裁切底圖 (Cover)
+        const imgRatio = img.width / img.height;
+        const canvasRatio = W / H;
+        let sW, sH, sX, sY;
+
+        if (imgRatio > canvasRatio) {
+          sH = img.height;
+          sW = img.height * canvasRatio;
+          sX = (img.width - sW) / 2;
+          sY = 0;
+        } else {
+          sW = img.width;
+          sH = img.width / canvasRatio;
+          sX = 0;
+          sY = (img.height - sH) / 2;
+        }
+        ctx.drawImage(img, sX, sY, sW, sH, 0, 0, W, H);
+
+        // 2. 質感暗角漸層遮罩
+        const bgGradient = ctx.createLinearGradient(0, 0, 0, H);
+        bgGradient.addColorStop(0, "rgba(20, 15, 10, 0.45)");
+        bgGradient.addColorStop(0.5, "rgba(20, 15, 10, 0.35)");
+        bgGradient.addColorStop(1, "rgba(15, 10, 8, 0.85)");
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(0, 0, W, H);
+
+        // 3. 金色優雅細緻外邊框
+        ctx.strokeStyle = "rgba(255, 235, 215, 0.35)";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(40, 40, W - 80, H - 80);
+
+        // 4. 頂部堂會標章
+        ctx.textAlign = "center";
+        ctx.font = "bold 28px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fillText(`✦  ${churchDisplayName}  ✦`, W / 2, 100);
+
+        // 5. 收件人毛玻璃名牌
+        const pillY = 170;
+        const pillText = `To. ${recipient}`;
+        ctx.font = "bold 38px 'Noto Sans TC', sans-serif";
+        const textMetrics = ctx.measureText(pillText);
+        const pillW = Math.max(340, textMetrics.width + 80);
+        const pillH = 70;
+        const pillX = (W - pillW) / 2;
+
+        drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 35, "rgba(255, 255, 255, 0.22)", "rgba(255, 255, 255, 0.45)", 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textBaseline = "middle";
+        ctx.fillText(pillText, W / 2, pillY + pillH / 2);
+
+        // 6. 核心祝禱詞 (自動折行與優雅陰影)
+        ctx.textBaseline = "alphabetic";
+        ctx.font = "900 48px 'Noto Serif TC', serif";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+        ctx.shadowBlur = 16;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 4;
+
+        const maxTextWidth = W - 220;
+        const lineHeight = 76;
+        const lines = getWrappedLines(ctx, message, maxTextWidth);
+
+        const totalTextHeight = lines.length * lineHeight;
+        let startY = 480 + (420 - totalTextHeight) / 2;
+
+        lines.forEach((line, index) => {
+          ctx.fillText(line, W / 2, startY + (index * lineHeight));
+        });
+
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // 7. 裝飾線
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - 80, startY + totalTextHeight + 40);
+        ctx.lineTo(W / 2 + 80, startY + totalTextHeight + 40);
+        ctx.strokeStyle = "rgba(249, 115, 22, 0.85)";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 8. 署名落款
+        ctx.textAlign = "right";
+        ctx.font = "bold 34px 'Noto Sans TC', sans-serif";
+        ctx.fillStyle = "rgba(255, 245, 235, 0.95)";
+        ctx.fillText(`— 來自 ${sender} 的誠摯祝禱`, W - 110, H - 150);
+
+        ctx.font = "500 24px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+        ctx.fillText(new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }), W - 110, H - 110);
+
+        // 9. 匯出真實圖片
+        const finalDataUrl = canvas.toDataURL("image/png");
+        document.getElementById('finalCardImg').src = finalDataUrl;
+
+        const dlBtn = document.getElementById('btnDownload');
+        dlBtn.href = finalDataUrl;
+        dlBtn.download = `${recipient}_專屬祝福小卡.png`;
+
+        loading.classList.add('hidden');
+      };
+
+      img.onerror = () => {
+        drawGradientFallback(ctx, canvas, recipient, sender, message);
+        loading.classList.add('hidden');
+      };
+    }
+
+    function getWrappedLines(ctx, text, maxWidth) {
+      const words = text.split('');
+      const lines = [];
+      let currentLine = '';
+
+      for (let i = 0; i < words.length; i++) {
+        const char = words[i];
+        if (char === '\n') {
+          lines.push(currentLine);
+          currentLine = '';
+          continue;
+        }
+        const testLine = currentLine + char;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          lines.push(currentLine);
+          currentLine = char;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      return lines;
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle, strokeStyle, lineWidth) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      if (fillStyle) { ctx.fillStyle = fillStyle; ctx.fill(); }
+      if (strokeStyle) { ctx.strokeStyle = strokeStyle; ctx.lineWidth = lineWidth || 1; ctx.stroke(); }
+      ctx.restore();
+    }
+
+    function drawGradientFallback(ctx, canvas, recipient, sender, message) {
+      const W = canvas.width, H = canvas.height;
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, "#2c1810");
+      grad.addColorStop(0.5, "#4a2818");
+      grad.addColorStop(1, "#1a0f0a");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.textAlign = "center";
+      ctx.font = "bold 38px 'Noto Sans TC', sans-serif";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(`To. ${recipient}`, W / 2, 220);
+
+      ctx.font = "900 48px 'Noto Serif TC', serif";
+      const lines = getWrappedLines(ctx, message, W - 220);
+      lines.forEach((l, idx) => ctx.fillText(l, W / 2, 500 + idx * 76));
+
+      ctx.textAlign = "right";
+      ctx.font = "bold 32px 'Noto Sans TC', sans-serif";
+      ctx.fillText(`— 來自 ${sender} 的誠摯祝禱`, W - 110, H - 150);
+
+      const finalDataUrl = canvas.toDataURL("image/png");
+      document.getElementById('finalCardImg').src = finalDataUrl;
+      document.getElementById('btnDownload').href = finalDataUrl;
+    }
+
+    // =========================================================================
+    // LIFF 原生好友分享：自動上傳公開 CDN ➔ 喚起 shareTargetPicker
+    // =========================================================================
+    async function shareViaLiffTargetPicker() {
+      const btn = document.getElementById('btnSharePicker');
+      const canvas = document.getElementById('cardCanvas');
+      const recipient = document.getElementById('targetRecipient').value.trim() || '好友';
+      const sender = document.getElementById('targetSender').value.trim() || '我';
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 準備卡片中...`;
+
+      try {
+        if (!currentUploadedCardUrl) {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+          const fileName = `generated_cards/${currentChurch}_${Date.now()}.jpg`;
+
+          const { data, error } = await db.storage.from('church-media').upload(fileName, blob, {
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+            upsert: true
+          });
+
+          if (error) throw error;
+          const { data: publicData } = db.storage.from('church-media').getPublicUrl(fileName);
+          currentUploadedCardUrl = publicData.publicUrl;
+        }
+
+        if (window.liff && liff.isApiAvailable('shareTargetPicker')) {
+          const res = await liff.shareTargetPicker([
+            {
+              type: "image",
+              originalContentUrl: currentUploadedCardUrl,
+              previewImageUrl: currentUploadedCardUrl
+            },
+            {
+              type: "text",
+              text: `💌 親愛的 ${recipient}：\n這是一張由 ${sender} 特別為你合成的手作祝賀卡片，願上帝滿滿的恩典伴隨你！`
+            }
+          ]);
+          if (res) {
+            alert('🎉 專屬卡片已成功傳送給好友！');
+          }
+        } else {
+          const shareText = encodeURIComponent(`💌 親愛的 ${recipient}：\n這是一張由 ${sender} 特別為你合成的祝賀卡片：\n${currentUploadedCardUrl}`);
+          window.location.href = `https://line.me/R/msg/text/?${shareText}`;
+        }
+      } catch (err) {
+        console.error("Share error:", err);
+        alert('分享失敗或取消：' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-brands fa-line text-sm"></i> <span>選好友直接傳送</span>`;
+      }
+    }
+  </script>
+</body>
+</html>
