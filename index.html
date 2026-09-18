@@ -117,6 +117,13 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
+    /* 列印專屬樣式設定：列印時隱藏導覽、浮動選單與按鈕 */
+    @media print {
+      body { background: #ffffff !important; color: #000000 !important; }
+      header, nav, button, .no-print { display: none !important; }
+      .lux-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+    }
+
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(214, 186, 155, 0.45); border-radius: 9999px; }
@@ -220,23 +227,41 @@
     <!-- 模組一：會友名冊 -->
     <section id="mod-members" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-        <div class="flex items-center gap-2.5 flex-1">
-          <div class="relative flex-1">
+        <div class="flex flex-wrap items-center gap-2.5 flex-1">
+          <div class="relative flex-1 min-w-[200px]">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-stone-400 text-xs"></i>
             <input type="text" id="memberSearch" oninput="filterMembers()" placeholder="搜尋會友姓名、電話、備註..." class="w-full bg-white/95 border border-stone-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-stone-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
           </div>
           <select id="memberFilterGroupSelect" onchange="filterMembers()" class="bg-white/95 border border-stone-200/90 rounded-2xl px-3.5 py-2.5 text-xs text-stone-700 font-semibold shadow-sm focus:outline-none max-w-[150px] cursor-pointer">
             <option value="ALL">全部<span class="group-term-label">小家</span></option>
           </select>
+          <!-- 排序選單 -->
+          <select id="memberSortSelect" onchange="filterMembers()" class="bg-white/95 border border-stone-200/90 rounded-2xl px-3.5 py-2.5 text-xs text-stone-700 font-semibold shadow-sm focus:outline-none cursor-pointer">
+            <option value="name">排序：姓名筆畫</option>
+            <option value="faith">排序：信仰成熟度</option>
+            <option value="group">排序：所屬小家</option>
+          </select>
+          <!-- 檢視切換按鈕 -->
+          <div class="flex bg-white/95 border border-stone-200/90 rounded-2xl p-1 text-xs">
+            <button onclick="setMemberViewMode('cards')" id="btnViewCards" class="px-3 py-1.5 rounded-xl font-bold btn-warm">卡片</button>
+            <button onclick="setMemberViewMode('table')" id="btnViewTable" class="px-3 py-1.5 rounded-xl font-bold text-stone-600">表格</button>
+          </div>
         </div>
 
-        <button onclick="openMemberModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center justify-center gap-2 flex-shrink-0">
-          <i class="fa-solid fa-user-plus text-xs"></i>
-          <span>新增會友</span>
-        </button>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button onclick="window.print()" class="py-3 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-print text-xs"></i>
+            <span>列印名冊</span>
+          </button>
+          <button onclick="openMemberModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center justify-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-user-plus text-xs"></i>
+            <span>新增會友</span>
+          </button>
+        </div>
       </div>
 
-      <div id="memberCardsStream" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <!-- 會友呈現容器（卡片或表格） -->
+      <div id="memberCardsStream"></div>
     </section>
 
     <!-- 模組二：主日事工服事 (尊榮看板) -->
@@ -962,6 +987,7 @@
     let currentUploadCardId = null;
     let activeManagingGroup = null;
     let currentGreetingFilter = "ALL";
+    let memberViewMode = "cards"; // "cards" 或 "table"
 
     const MINISTRY_OPTIONS = [
       "敬拜主領", "敬拜歌者", "司琴鍵盤", "木吉他", "電吉他", "Bass手", 
@@ -1040,7 +1066,6 @@
       }
 
       currentUser = data[0];
-      // 記住登入狀態到瀏覽器
       localStorage.setItem('church_os_current_user', JSON.stringify(currentUser));
 
       document.getElementById('loginModal').classList.add('hidden');
@@ -1114,7 +1139,7 @@
     }
 
     // =========================================================================
-    // 1. 空間資源治理模組 (全欄位完整編輯 + 自由新增空間)
+    // 1. 空間資源治理模組
     // =========================================================================
     async function loadRoomsAndSpaces() {
       const { data: rms } = await db.from('rooms').select('*').eq('church_id', activeChurch).eq('is_active', true).order('id');
@@ -1442,73 +1467,171 @@
     }
 
     // =========================================================================
-    // 2. 會友名冊模組
+    // 2. 會友名冊模組（升級：多種排列、表格/卡片視圖切換、移除底部記錄）
     // =========================================================================
     async function loadMembers() {
       const { data } = await db.from('members').select('*').eq('church_id', activeChurch).order('id');
       cachedMembers = data || [];
-      renderMembersCards(cachedMembers);
+      filterMembers();
       populateGroupFilterDropdown();
     }
 
-    function renderMembersCards(list) {
+    function setMemberViewMode(mode) {
+      memberViewMode = mode;
+      const btnCards = document.getElementById('btnViewCards');
+      const btnTable = document.getElementById('btnViewTable');
+      if (mode === 'cards') {
+        btnCards.className = "px-3 py-1.5 rounded-xl font-bold btn-warm";
+        btnTable.className = "px-3 py-1.5 rounded-xl font-bold text-stone-600";
+      } else {
+        btnCards.className = "px-3 py-1.5 rounded-xl font-bold text-stone-600";
+        btnTable.className = "px-3 py-1.5 rounded-xl font-bold btn-warm";
+      }
+      filterMembers();
+    }
+
+    function filterMembers() {
+      const q = document.getElementById('memberSearch').value.toLowerCase();
+      const filterGrp = document.getElementById('memberFilterGroupSelect').value;
+      const sortBy = document.getElementById('memberSortSelect').value;
+
+      let filtered = cachedMembers.filter(m => {
+        const matchesQ = (m.name && m.name.toLowerCase().includes(q)) || 
+                         (m.phone && m.phone.includes(q)) ||
+                         (m.memo && m.memo.toLowerCase().includes(q));
+        const matchesGrp = filterGrp === 'ALL' || m.group_name === filterGrp;
+        return matchesQ && matchesGrp;
+      });
+
+      // 排序邏輯
+      const faithOrder = {
+        '新朋友（初次聚會）': 1,
+        '慕道友（偶爾出現）': 2,
+        '受洗初信': 3,
+        '委身家人（穩定聚會）': 4,
+        '門徒': 5,
+        '領袖': 6
+      };
+
+      filtered.sort((a, b) => {
+        if (sortBy === 'faith') {
+          return (faithOrder[a.faith_status] || 99) - (faithOrder[b.faith_status] || 99);
+        } else if (sortBy === 'group') {
+          return (a.group_name || '未編組').localeCompare(b.group_name || '未編組', 'zh-TW');
+        } else {
+          // 預設依姓名筆畫
+          return (a.name || '').localeCompare(b.name || '', 'zh-TW');
+        }
+      });
+
+      renderMembersView(filtered);
+    }
+
+    function renderMembersView(list) {
       const container = document.getElementById('memberCardsStream');
       if (!list.length) {
-        container.innerHTML = `<div class="col-span-full py-16 text-center text-stone-400 text-xs">查無名冊資料</div>`;
+        container.innerHTML = `<div class="py-16 text-center text-stone-400 text-xs">查無名冊資料</div>`;
         return;
       }
-      container.innerHTML = list.map(m => {
-        const hasLine = m.line_id && m.line_id.startsWith('U');
-        const ministries = m.ministry ? m.ministry.split(',').map(s => s.trim()).filter(Boolean) : [];
-        return `
-          <div class="lux-card p-5 space-y-3.5 flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="flex justify-between items-start">
-                <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 rounded-2xl ${m.gender === '姊妹' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-extrabold text-sm shadow-sm overflow-hidden">
-                    ${m.photo_url ? `<img src="${m.photo_url}" class="w-full h-full object-cover">` : m.name.slice(0, 1)}
-                  </div>
-                  <div>
-                    <div class="flex items-center gap-1.5">
-                      <span class="font-black text-stone-800 text-base">${m.name}</span>
-                      <span class="text-[11px] text-stone-400">(${m.gender})</span>
-                      ${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定 LINE"></i>' : ''}
-                    </div>
-                    <p class="text-xs text-stone-500 font-mono mt-0.5">${m.phone || '未登記電話'}</p>
-                  </div>
-                </div>
-                <span class="text-[11px] font-bold px-3 py-1 rounded-xl bg-stone-100 text-stone-700 border border-stone-200/80">
-                  ${m.group_name || '未編組'}
-                </span>
-              </div>
-              <div class="flex flex-wrap gap-1.5 items-center pt-1">
-                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人（穩定聚會）'}</span>
-                ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
-                ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
-                ${m.birthday ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold"><i class="fa-solid fa-cake-candles mr-1"></i>${m.birthday}</span>` : ''}
-                ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
-              </div>
-              ${m.memo ? `
-                <div class="p-2.5 rounded-xl bg-stone-100/70 border border-stone-200/60 text-[11px] text-stone-600 flex items-start gap-2">
-                  <i class="fa-regular fa-note-sticky text-amber-600 mt-0.5 flex-shrink-0"></i>
-                  <span class="line-clamp-2 leading-relaxed">${m.memo}</span>
-                </div>
-              ` : ''}
-            </div>
-            <div class="pt-3 border-t border-stone-200/80 flex items-center justify-between">
-              <span class="text-[11px] text-stone-400 font-medium">${m.register_date || '會友記錄'}</span>
-              <div class="flex gap-2">
-                <button onclick="editMember(${m.id})" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
-                  <i class="fa-solid fa-pen mr-1"></i>編輯
-                </button>
-                <button onclick="deleteMember(${m.id})" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
+
+      if (memberViewMode === 'table') {
+        // 表格清單視圖
+        container.innerHTML = `
+          <div class="lux-card overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-stone-100/80 border-b border-stone-200 text-stone-600 font-black">
+                    <th class="p-3.5">姓名 / 性別</th>
+                    <th class="p-3.5">電話號碼</th>
+                    <th class="p-3.5">所屬小家</th>
+                    <th class="p-3.5">信仰成熟度</th>
+                    <th class="p-3.5">居住區域</th>
+                    <th class="p-3.5">服事恩賜</th>
+                    <th class="p-3.5 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-200/60">
+                  ${list.map(m => {
+                    const hasLine = m.line_id && m.line_id.startsWith('U');
+                    return `
+                      <tr class="hover:bg-orange-50/30 transition">
+                        <td class="p-3.5 font-black text-stone-800 flex items-center gap-1.5">
+                          ${m.name} <span class="text-[10px] text-stone-400 font-normal">(${m.gender || '弟兄'})</span>
+                          ${hasLine ? '<i class="fa-brands fa-line text-emerald-500" title="已綁定LINE"></i>' : ''}
+                        </td>
+                        <td class="p-3.5 font-mono text-stone-600">${m.phone || '－'}</td>
+                        <td class="p-3.5 font-bold text-stone-700">${m.group_name || '未編組'}</td>
+                        <td class="p-3.5"><span class="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人'}</span></td>
+                        <td class="p-3.5 text-stone-600">${m.district || '－'}</td>
+                        <td class="p-3.5 text-stone-500 truncate max-w-[160px]">${m.ministry || '－'}</td>
+                        <td class="p-3.5 text-right space-x-1.5">
+                          <button onclick="editMember(${m.id})" class="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 font-bold hover:bg-orange-100"><i class="fa-solid fa-pen"></i></button>
+                          <button onclick="deleteMember(${m.id})" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 font-bold hover:bg-rose-100"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
             </div>
           </div>
         `;
-      }).join('');
+      } else {
+        // 卡片網格視圖（已移除底部無意義日期記錄）
+        container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+        container.innerHTML = list.map(m => {
+          const hasLine = m.line_id && m.line_id.startsWith('U');
+          const ministries = m.ministry ? m.ministry.split(',').map(s => s.trim()).filter(Boolean) : [];
+          return `
+            <div class="lux-card p-5 space-y-3.5 flex flex-col justify-between">
+              <div class="space-y-3">
+                <div class="flex justify-between items-start">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl ${m.gender === '姊妹' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-extrabold text-sm shadow-sm overflow-hidden">
+                      ${m.photo_url ? `<img src="${m.photo_url}" class="w-full h-full object-cover">` : m.name.slice(0, 1)}
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-black text-stone-800 text-base">${m.name}</span>
+                        <span class="text-[11px] text-stone-400">(${m.gender})</span>
+                        ${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定 LINE"></i>' : ''}
+                      </div>
+                      <p class="text-xs text-stone-500 font-mono mt-0.5">${m.phone || '未登記電話'}</p>
+                    </div>
+                  </div>
+                  <span class="text-[11px] font-bold px-3 py-1 rounded-xl bg-stone-100 text-stone-700 border border-stone-200/80">
+                    ${m.group_name || '未編組'}
+                  </span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 items-center pt-1">
+                  <span class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold">${m.faith_status || '委身家人（穩定聚會）'}</span>
+                  ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
+                  ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
+                  ${m.birthday ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold"><i class="fa-solid fa-cake-candles mr-1"></i>${m.birthday}</span>` : ''}
+                  ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
+                </div>
+                ${m.memo ? `
+                  <div class="p-2.5 rounded-xl bg-stone-100/70 border border-stone-200/60 text-[11px] text-stone-600 flex items-start gap-2">
+                    <i class="fa-regular fa-note-sticky text-amber-600 mt-0.5 flex-shrink-0"></i>
+                    <span class="line-clamp-2 leading-relaxed">${m.memo}</span>
+                  </div>
+                ` : ''}
+              </div>
+              <div class="pt-3 border-t border-stone-200/80 flex items-center justify-end">
+                <div class="flex gap-2">
+                  <button onclick="editMember(${m.id})" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
+                    <i class="fa-solid fa-pen mr-1"></i>編輯
+                  </button>
+                  <button onclick="deleteMember(${m.id})" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
     }
 
     function populateGroupFilterDropdown() {
@@ -1516,19 +1639,6 @@
       const terms = getChurchTerms(activeChurch);
       const officialGroups = cachedGroups.map(g => g.name).filter(Boolean);
       select.innerHTML = `<option value="ALL">全部${terms.group}</option><option value="未編組">未編組</option>` + officialGroups.map(g => `<option value="${g}">${g}</option>`).join('');
-    }
-
-    function filterMembers() {
-      const q = document.getElementById('memberSearch').value.toLowerCase();
-      const filterGrp = document.getElementById('memberFilterGroupSelect').value;
-      const filtered = cachedMembers.filter(m => {
-        const matchesQ = (m.name && m.name.toLowerCase().includes(q)) || 
-                         (m.phone && m.phone.includes(q)) ||
-                         (m.memo && m.memo.toLowerCase().includes(q));
-        const matchesGrp = filterGrp === 'ALL' || m.group_name === filterGrp;
-        return matchesQ && matchesGrp;
-      });
-      renderMembersCards(filtered);
     }
 
     function renderMinistryChips() {
@@ -1931,7 +2041,7 @@
     }
 
     // =========================================================================
-    // 4. 小家 / 小組 模組 (自訂時間 + 關聯空間)
+    // 4. 小家 / 小組 模組
     // =========================================================================
     async function loadGroups() {
       const { data } = await db.from('groups').select('*').eq('church_id', activeChurch).order('id');
@@ -2148,7 +2258,7 @@
       renderGroupMembersManagerList();
       populateUnassignedMembersDropdown();
       renderGroupsCards();
-      renderMembersCards(cachedMembers);
+      filterMembers();
     }
 
     async function assignSelectedMemberToCurrentGroup() {
@@ -2161,7 +2271,7 @@
       renderGroupMembersManagerList();
       populateUnassignedMembersDropdown();
       renderGroupsCards();
-      renderMembersCards(cachedMembers);
+      filterMembers();
     }
 
     // =========================================================================
