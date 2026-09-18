@@ -332,7 +332,7 @@
       <div id="prayerCardsList" class="space-y-3"></div>
     </section>
 
-    <!-- 模組六：LINE 教牧推播與多圖隨機管理中心 -->
+    <!-- 模組六：LINE 教牧推播中心 -->
     <section id="mod-pastoral-bot" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -1885,7 +1885,7 @@
     }
 
     // ==========================================
-    // 6. LINE 教牧推播與多圖隨機管理中心（完整撈取並渲染）
+    // 6. LINE 教牧推播中心（已修復對齊表名 spiritual_cards 與 share_greeting_cards）
     // ==========================================
     async function loadPastoralBotSettings() {
       try {
@@ -1895,7 +1895,7 @@
           document.getElementById('notifyPastorLineId').value = churchInfo.notify_pastor_line_id || '';
         }
 
-        // 祝禱範本：優先目前堂會，沒有則全撈
+        // 祝禱範本
         let { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', activeChurch);
         if (!tpls || !tpls.length) {
           const { data: allTpls } = await db.from('pastoral_templates').select('*');
@@ -1910,32 +1910,39 @@
           </div>
         `).join('') || `<div class="col-span-2 py-8 text-center text-stone-400 text-xs">目前無祝禱範本</div>`;
 
-        // 金句卡庫：通用資源全讀取，不再被 church_id 濾成空
-        const { data: cards } = await db.from('pastoral_scripture_cards').select('*').order('id');
+        // 核心對齊：金句卡庫改撈 spiritual_cards
+        let { data: cards, error: cardErr } = await db.from('spiritual_cards').select('*').order('id');
+        if (cardErr) {
+          console.warn("spiritual_cards load error:", cardErr);
+          // 若 spiritual_cards 讀取失敗，降級嘗試 pastoral_scripture_cards
+          const { data: fallbackCards } = await db.from('pastoral_scripture_cards').select('*').order('id');
+          cards = fallbackCards || [];
+        }
         cachedCards = cards || [];
         renderCardsList();
 
-        // 新朋友旅程
-        let { data: journeys } = await db.from('pastoral_journey_templates').select('*').eq('church_id', activeChurch).order('day_offset');
-        if (!journeys || !journeys.length) {
-          const { data: allJourneys } = await db.from('pastoral_journey_templates').select('*').order('day_offset');
-          journeys = allJourneys || [];
-        }
-        cachedJourney = journeys;
+        // 新朋友旅程（對齊 newcomer_journey_steps）
+        let { data: journeys } = await db.from('newcomer_journey_steps').select('*').order('id');
+        cachedJourney = journeys || [];
         document.getElementById('journeyListContainer').innerHTML = cachedJourney.map(j => `
           <div class="lux-card p-4 flex justify-between items-center text-xs">
             <div>
-              <span class="font-bold text-orange-800">第 ${j.day_offset} 天：${j.title}</span>
-              <p class="text-stone-600 mt-1">${j.message}</p>
+              <span class="font-bold text-orange-800">第 ${j.day_offset || 1} 天：${j.title || '關懷問候'}</span>
+              <p class="text-stone-600 mt-1">${j.message || j.content || ''}</p>
             </div>
           </div>
         `).join('') || `<div class="py-8 text-center text-stone-400 text-xs">目前無新朋友旅程規劃</div>`;
 
-        // 祝福圖卡庫 (多圖)：通用圖庫全讀取，不再被 church_id 濾成空
-        const { data: gcards } = await db.from('greeting_cards').select('*').order('id', { ascending: false });
+        // 核心對齊：祝福圖卡庫改撈 share_greeting_cards
+        let { data: gcards, error: gcErr } = await db.from('share_greeting_cards').select('*').order('id', { ascending: false });
+        if (gcErr) {
+          console.warn("share_greeting_cards load error:", gcErr);
+          const { data: fallbackGcards } = await db.from('greeting_cards').select('*').order('id', { ascending: false });
+          gcards = fallbackGcards || [];
+        }
         cachedGreetingCards = gcards || [];
         filterGreetingCards(currentGreetingFilter);
-      } catch(e) { console.error(e); }
+      } catch(e) { console.error("loadPastoralBotSettings error:", e); }
     }
 
     async function saveNewcomerNotifySettings() {
@@ -1959,8 +1966,8 @@
         <div class="lux-card p-5 space-y-2.5 text-xs flex flex-col justify-between">
           <div class="space-y-1.5">
             <span class="px-2.5 py-0.5 rounded-lg bg-orange-100 text-orange-950 font-bold text-[10px]">${card.category}</span>
-            <h4 class="font-black text-stone-800 text-sm">${card.reference}</h4>
-            <p class="text-stone-600 leading-relaxed">「${card.scripture}」</p>
+            <h4 class="font-black text-stone-800 text-sm">${card.reference || ''}</h4>
+            <p class="text-stone-600 leading-relaxed">「${card.scripture || ''}」</p>
             ${card.prayer ? `<p class="text-stone-400 text-[11px] mt-1">祝禱：${card.prayer}</p>` : ''}
           </div>
           <div class="pt-2 border-t flex justify-end gap-1.5">
@@ -1984,8 +1991,8 @@
       if (!c) return;
       document.getElementById('editCardId').value = c.id;
       document.getElementById('editCardCat').value = c.category;
-      document.getElementById('editCardRef').value = c.reference;
-      document.getElementById('editCardScripture').value = c.scripture;
+      document.getElementById('editCardRef').value = c.reference || '';
+      document.getElementById('editCardScripture').value = c.scripture || '';
       document.getElementById('editCardPrayer').value = c.prayer || '';
       document.getElementById('cardEditModal').classList.remove('hidden');
     }
@@ -2001,15 +2008,26 @@
         scripture: document.getElementById('editCardScripture').value.trim(),
         prayer: document.getElementById('editCardPrayer').value.trim()
       };
-      if (id) await db.from('pastoral_scripture_cards').update(payload).eq('id', id);
-      else await db.from('pastoral_scripture_cards').insert([payload]);
+      
+      // 優先寫入 spiritual_cards
+      try {
+        if (id) await db.from('spiritual_cards').update(payload).eq('id', id);
+        else await db.from('spiritual_cards').insert([payload]);
+      } catch(e) {
+        if (id) await db.from('pastoral_scripture_cards').update(payload).eq('id', id);
+        else await db.from('pastoral_scripture_cards').insert([payload]);
+      }
       closeCardModal();
       await loadPastoralBotSettings();
     }
 
     async function deleteCard(id) {
       if (!confirm('確定刪除此金句卡？')) return;
-      await db.from('pastoral_scripture_cards').delete().eq('id', id);
+      try {
+        await db.from('spiritual_cards').delete().eq('id', id);
+      } catch(e) {
+        await db.from('pastoral_scripture_cards').delete().eq('id', id);
+      }
       await loadPastoralBotSettings();
     }
 
@@ -2032,14 +2050,14 @@
       container.innerHTML = list.map(c => `
         <div class="lux-card overflow-hidden flex flex-col justify-between text-xs">
           <div class="h-44 bg-stone-100 overflow-hidden">
-            <img src="${c.image_url}" class="w-full h-full object-cover">
+            <img src="${c.image_url || c.photo_url || ''}" class="w-full h-full object-cover">
           </div>
           <div class="p-4 space-y-2">
             <div class="flex justify-between items-center">
-              <h4 class="font-black text-stone-800 text-sm">${c.title}</h4>
+              <h4 class="font-black text-stone-800 text-sm">${c.title || ''}</h4>
               <span class="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 font-bold text-stone-600">${c.category}</span>
             </div>
-            <p class="text-stone-500 line-clamp-2">${c.caption || ''}</p>
+            <p class="text-stone-500 line-clamp-2">${c.caption || c.quote || ''}</p>
           </div>
           <div class="p-3 border-t flex justify-end">
             <button onclick="deleteGreetingCard(${c.id})" class="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 font-bold"><i class="fa-solid fa-trash"></i></button>
@@ -2076,7 +2094,7 @@
         if (upErr) throw upErr;
 
         const { data: pubData } = db.storage.from('church-media').getPublicUrl(fileName);
-        await db.from('greeting_cards').insert([{
+        await db.from('share_greeting_cards').insert([{
           church_id: activeChurch,
           title,
           category,
@@ -2096,11 +2114,10 @@
 
     async function deleteGreetingCard(id) {
       if (!confirm('確定刪除此祝福圖卡？')) return;
-      await db.from('greeting_cards').delete().eq('id', id);
+      await db.from('share_greeting_cards').delete().eq('id', id);
       await loadPastoralBotSettings();
     }
 
-    // 核心切換：教牧推播中心五大子分頁
     function switchBotSubTab(tab) {
       ['templates', 'cards', 'journey', 'images', 'newcomer-notify'].forEach(t => {
         const el = document.getElementById(`sub-${t}`);
