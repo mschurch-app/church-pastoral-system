@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>遇見你真好 · 歡迎回家</title>
   
+  <!-- LINE LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
   <!-- Tailwind CSS & Supabase & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -46,7 +49,6 @@
       border-radius: 28px;
     }
 
-    /* 點選膠囊標籤 */
     .pill-btn {
       padding: 8px 14px;
       border-radius: 9999px;
@@ -90,10 +92,9 @@
 </head>
 <body class="p-4 sm:p-8 flex justify-center items-center">
 
-  <!-- 表單主容器 -->
   <div class="w-full max-w-md my-4">
     
-    <!-- 1. 迎賓表單本體 -->
+    <!-- 迎賓表單本體 -->
     <div id="formSection" class="card-glass p-6 sm:p-8 space-y-6">
       
       <!-- 頂部問候區 -->
@@ -105,9 +106,15 @@
         <p class="text-xs text-stone-500 leading-relaxed max-w-xs mx-auto">
           很高興今天有你在我們當中！希望這裡能成為你放鬆心情、充飽電的溫暖角落 🌿
         </p>
+
+        <!-- LINE 狀態提醒條 (LIFF 自動識別) -->
+        <div id="lineStatusBadge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] text-emerald-800 font-bold hidden">
+          <i class="fa-brands fa-line text-emerald-600 text-sm"></i>
+          <span>LINE 已連動：<strong id="lineUserDisplayName" class="text-emerald-950"></strong></span>
+        </div>
       </div>
 
-      <!-- 快速填寫內容 (大多為指尖點選) -->
+      <!-- 快速填寫內容 -->
       <div class="space-y-5 text-xs">
         
         <!-- 姓名與性別 -->
@@ -123,7 +130,7 @@
 
         <!-- 聯絡手機 -->
         <div class="space-y-1.5">
-          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 (方便後續向你問候) *</label>
+          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 (方便後續為你送上問候) *</label>
           <input type="tel" id="guestPhone" placeholder="0912-345-678" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
         </div>
 
@@ -200,11 +207,10 @@
             <img id="photoPreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="印記照片">
             <div id="photoPrompt" class="text-center space-y-1">
               <i class="fa-solid fa-camera text-2xl text-orange-500"></i>
-              <p class="text-xs font-bold text-stone-700">點此拍張自拍或與朋友的合照</p>
+              <p class="text-xs font-bold text-stone-700">點此拍張自拍或與朋友合照</p>
               <p class="text-[10px] text-stone-400">記錄今天美好的相遇</p>
             </div>
           </div>
-          <!-- 隱藏原生相機 input -->
           <input type="file" id="cameraInput" accept="image/*" capture="user" class="hidden" onchange="handlePhotoSelected(event)">
         </div>
 
@@ -220,7 +226,7 @@
 
     </div>
 
-    <!-- 2. 送出成功後呈現的感謝卡 (純粹真誠無兌換券) -->
+    <!-- 送出成功後的感謝卡 (純粹真誠無兌換券) -->
     <div id="successSection" class="card-glass p-8 space-y-6 text-center hidden">
       <div class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
         <i class="fa-solid fa-seedling"></i>
@@ -240,8 +246,8 @@
       </div>
 
       <div class="pt-2">
-        <button onclick="window.close()" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-extrabold transition">
-          完成，關閉此頁
+        <button onclick="closeLiffOrWindow()" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-extrabold transition">
+          完成，關閉頁面
         </button>
       </div>
     </div>
@@ -253,11 +259,70 @@
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 取得網址上的堂會參數 (預設為 M+，也可為 SHiNE)
+    // 兩間教會的官方專屬 LIFF ID 配置
+    const CHURCH_LIFF_CONFIG = {
+      'SHiNE': '2011645391-UQ9oGdyx', // 火樂教會
+      'M+': '2011645391-bmUWMJZT'     // Ｍ＋大雅教會
+    };
+
+    // 判斷當前所屬堂會 (支援網址參數 ?church= 或 LIFF URL 自動反推)
     const urlParams = new URLSearchParams(window.location.search);
     let targetChurch = urlParams.get('church') || 'M+';
-    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
-    else targetChurch = 'M+';
+    if (targetChurch.toUpperCase().includes('SHINE') || window.location.href.includes('UQ9oGdyx')) {
+      targetChurch = 'SHiNE';
+    } else {
+      targetChurch = 'M+';
+    }
+
+    const activeLiffId = CHURCH_LIFF_CONFIG[targetChurch] || '2011645391-bmUWMJZT';
+
+    // 儲存透過 LIFF 自動擷取的 LINE 用戶身份
+    let lineProfile = {
+      userId: null,
+      displayName: null,
+      pictureUrl: null
+    };
+
+    // 初始化 LINE LIFF SDK
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: activeLiffId });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          lineProfile.userId = profile.userId;
+          lineProfile.displayName = profile.displayName;
+          lineProfile.pictureUrl = profile.pictureUrl;
+
+          // 畫面顯示已識別的 LINE 資訊
+          document.getElementById('lineStatusBadge').classList.remove('hidden');
+          document.getElementById('lineUserDisplayName').innerText = profile.displayName;
+
+          // 預設將 LINE 暱稱填入姓名欄位 (方便新朋友直接修改或沿用)
+          const nameInput = document.getElementById('guestName');
+          if (!nameInput.value && profile.displayName) {
+            nameInput.value = profile.displayName;
+          }
+
+          // 預設以 LINE 頭像作為微笑印記預覽
+          if (profile.pictureUrl) {
+            const preview = document.getElementById('photoPreview');
+            const prompt = document.getElementById('photoPrompt');
+            preview.src = profile.pictureUrl;
+            preview.classList.remove('hidden');
+            prompt.classList.add('hidden');
+          }
+        } else {
+          // 若在外部瀏覽器打開，引導登入獲取 LINE ID
+          liff.login();
+        }
+      } catch (err) {
+        console.warn("LIFF 初始化完成 (非 LINE 環境模式測試運行):", err);
+      }
+    }
+
+    window.onload = () => {
+      initLiff();
+    };
 
     // 狀態暫存
     let selectedGender = '弟兄';
@@ -268,7 +333,6 @@
     let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
     let capturedPhotoFile = null;
 
-    // 單選膠囊切換
     function selectSinglePill(type, value, element) {
       const parent = element.parentElement;
       parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
@@ -279,7 +343,6 @@
       else if (type === 'district') selectedDistrict = value;
     }
 
-    // 認識管道切換
     function selectKnowFrom(value, element) {
       const parent = element.parentElement;
       parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
@@ -294,7 +357,6 @@
       }
     }
 
-    // 多選膠囊切換
     function toggleMultiPill(element, type) {
       const text = element.innerText.trim();
       const targetSet = (type === 'feelings') ? selectedFeelings : selectedInterests;
@@ -308,12 +370,10 @@
       }
     }
 
-    // 喚起相機拍照
     function triggerCamera() {
       document.getElementById('cameraInput').click();
     }
 
-    // 處理照片預覽
     function handlePhotoSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -330,22 +390,21 @@
       reader.readAsDataURL(file);
     }
 
-    // 送出迎賓卡
     async function submitWelcomeCard() {
       const name = document.getElementById('guestName').value.trim();
       const phone = document.getElementById('guestPhone').value.trim();
       const inviter = document.getElementById('inviterName').value.trim();
 
       if (!name) return alert('請填寫你的名字或暱稱喔！');
-      if (!phone) return alert('請留下一組手機號碼，方便我們為你寄送問候！');
+      if (!phone) return alert('請留下一組手機號碼，方便我們為你送上問候！');
 
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在為你送出...`;
 
-      let uploadedPhotoUrl = null;
+      // 照片優先序：現場自拍照 > LINE 既有頭像
+      let uploadedPhotoUrl = lineProfile.pictureUrl || null;
 
-      // 若有拍照，先上傳至 Supabase Storage
       if (capturedPhotoFile) {
         try {
           const fileExt = capturedPhotoFile.name.split('.').pop() || 'jpg';
@@ -361,21 +420,21 @@
             uploadedPhotoUrl = publicData.publicUrl;
           }
         } catch (e) {
-          console.error("Photo upload error:", e);
+          console.error("照片上傳異常:", e);
         }
       }
 
-      // 整理認識管道字串
       let finalKnowFrom = selectedKnowFrom;
       if (selectedKnowFrom === '朋友家人邀請' && inviter) {
         finalKnowFrom = `朋友家人邀請 (${inviter})`;
       }
 
-      // 整理要寫入 members 的生活化標籤
       const memoText = `【新朋友初次見面】期待：${Array.from(selectedFeelings).join('、')}。來源：${finalKnowFrom}`;
 
+      // 完整寫入 Supabase members 表，並精確鎖定 LINE User ID！
       const payload = {
         church_id: targetChurch,
+        line_id: lineProfile.userId || null,       // ★ 自動收集到的真實 LINE ID
         name: name,
         gender: selectedGender,
         phone: phone,
@@ -400,11 +459,19 @@
         return alert('送出失敗：' + insertErr.message);
       }
 
-      // 成功切換至感謝卡畫面
+      // 成功切換感謝畫面
       document.getElementById('formSection').classList.add('hidden');
       document.getElementById('successSection').classList.remove('hidden');
       document.getElementById('successName').innerText = name;
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeLiffOrWindow() {
+      if (window.liff && liff.isInClient && liff.isInClient()) {
+        liff.closeWindow(); // LINE App 內直接秒關閉 LIFF 彈窗回聊天室
+      } else {
+        window.close();
+      }
     }
   </script>
 </body>
