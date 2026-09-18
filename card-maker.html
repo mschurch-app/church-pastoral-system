@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts: 頂級人文字體與書法襯線體 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
@@ -549,7 +549,7 @@
       document.getElementById('btnDownload').href = finalDataUrl;
     }
 
-    // ★ 透過 Share Target Picker：彈出好友勾選清單，直接傳送純圖片！
+    // ★ 使用 shareTargetPicker：彈出 LINE 好友/群組勾選清單，直接傳送滿版純圖片
     async function shareViaLiffTargetPicker() {
       const btn = document.getElementById('btnSharePicker');
       const canvas = document.getElementById('cardCanvas');
@@ -579,7 +579,6 @@
           currentUploadedCardUrl = publicData.publicUrl;
         }
 
-        // 檢查並使用 shareTargetPicker 彈出好友清單
         if (window.liff && liff.isApiAvailable('shareTargetPicker')) {
           const res = await liff.shareTargetPicker([
             {
@@ -590,18 +589,16 @@
           ]);
 
           if (res) {
-            alert('🎉 專屬祝賀圖卡已成功傳送給好友！');
+            alert('🎉 專屬手作祝賀圖卡已成功傳送給好友！');
           }
         } else {
-          // 如果環境不支援，自動降級為標準分享文字/圖片連結
-          const shareText = `💌 祝福小卡：\n${currentUploadedCardUrl}`;
-          window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
+          alert('提示：請確認已在 LINE Developers 後台勾選「chat_message.write」權限！');
         }
       } catch (err) {
         console.error("Share error:", err);
         const errStr = String(err).toLowerCase();
         if (!errStr.includes('cancel') && err.code !== 'USER_CANCELLED') {
-          alert('發送提示：請直接長按圖片儲存至相簿，或確認 LIFF 權限。');
+          alert('發送提示：請直接長按圖片儲存至相簿，或確認 LIFF 授權。');
         }
       } finally {
         btn.disabled = false;
