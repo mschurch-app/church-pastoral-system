@@ -229,9 +229,20 @@
           </div>
         </div>
 
-        <!-- ======================= 分支 B：既有會友專屬欄位 (識別到名字後自動展示) ======================= -->
+        <!-- ======================= 分支 B：既有會友專屬欄位 ======================= -->
         <div id="existingMemberFieldsWrapper" class="space-y-5 hidden pt-2 border-t border-orange-200/60">
           
+          <!-- 所屬小家展示條 (保護既有編組不被改動) -->
+          <div class="p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] text-stone-500 font-bold block">目前所屬小家 / 小組</span>
+              <strong id="displayCurrentGroupName" class="text-sm font-black text-orange-900">未編組</strong>
+            </div>
+            <span class="text-[10px] px-2.5 py-1 rounded-full bg-white text-orange-800 font-bold border border-orange-200">
+              <i class="fa-solid fa-lock text-[9px] mr-1"></i>小家編組維持不變
+            </span>
+          </div>
+
           <!-- 會友服事恩賜意願 -->
           <div class="space-y-2">
             <div class="flex justify-between items-center">
@@ -546,7 +557,13 @@
         setTimeout(() => { notice.classList.add('hidden'); }, 4000);
       }
 
-      // 3. 自動填入基本資料
+      // 3. 顯示目前小家名稱（保護不被改掉）
+      const groupDisplay = document.getElementById('displayCurrentGroupName');
+      if (groupDisplay) {
+        groupDisplay.innerText = data.group_name || '未編組';
+      }
+
+      // 4. 自動填入基本資料
       if (data.phone) document.getElementById('guestPhone').value = data.phone;
       if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
       if (data.baptism_date) document.getElementById('memberBaptismDate').value = data.baptism_date;
@@ -567,7 +584,7 @@
         renderDistrictPills();
       }
 
-      // 4. 帶入既有服事恩賜 (若有)
+      // 5. 帶入既有服事恩賜 (若有)
       selectedMinistries.clear();
       if (data.ministry) {
         const arr = Array.isArray(data.ministry) ? data.ministry : data.ministry.split('、');
@@ -579,7 +596,7 @@
         else btn.classList.remove('active');
       });
 
-      // 5. 隱藏新朋友專屬 6, 7, 8, 9 項，顯示會友專屬項目
+      // 6. 隱藏新朋友專屬 6, 7, 8, 9 項，顯示會友專屬項目
       document.getElementById('newcomerFieldsWrapper').classList.add('hidden');
       document.getElementById('existingMemberFieldsWrapper').classList.remove('hidden');
     }
@@ -631,7 +648,7 @@
       let query;
 
       if (isExistingMember) {
-        // ================= 既有會友更新流程 =================
+        // ================= 既有會友更新流程 (嚴格保護小家、成熟度不被動搖) =================
         const baptismDate = document.getElementById('memberBaptismDate').value.trim();
         const prayerNote = document.getElementById('memberPrayerNote').value.trim();
         const ministriesList = Array.from(selectedMinistries);
@@ -651,7 +668,18 @@
           district: selectedDistrict,
           ministry: ministriesList.length ? ministriesList.join('、') : existingMemberRecord.ministry,
           memo: updateMemo
+          // 💡 關鍵：絕不把 group_name 設為未編組！完全保留原有的 group_name
         };
+        
+        if (existingMemberRecord.group_name) {
+          payload.group_name = existingMemberRecord.group_name;
+        }
+        if (existingMemberRecord.faith_status) {
+          payload.faith_status = existingMemberRecord.faith_status;
+        }
+        if (existingMemberRecord.welcome_status) {
+          payload.welcome_status = existingMemberRecord.welcome_status;
+        }
         if (baptismDate) payload.baptism_date = baptismDate;
         if (uploadedPhotoUrl) payload.photo_url = uploadedPhotoUrl;
 
