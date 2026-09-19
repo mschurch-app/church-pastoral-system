@@ -298,6 +298,7 @@
   </div>
 
   <script>
+    let isExistingMember = false; // 預設為新朋友
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -560,7 +561,6 @@
       if (!name || name.length < 2) return;
 
       try {
-        // 從 Supabase 查詢該堂會是否有同名會友
         const { data, error } = await db
           .from('members')
           .select('*')
@@ -568,22 +568,28 @@
           .eq('name', name)
           .maybeSingle();
 
-        if (error || !data) return; // 找不到或發生錯誤就靜默不處理
-
-        // 1. 自動帶入手機
-        if (data.phone) {
-          document.getElementById('guestPhone').value = data.phone;
+        if (error || !data) {
+          isExistingMember = false; // 找不到就是新朋友
+          return; 
         }
 
-        // 2. 自動帶入生日
-        if (data.birthday) {
-          document.getElementById('guestBirthday').value = data.birthday;
-        }
+        // 🌟 找到了！這是既有會友，切換為「資料更新」模式
+        isExistingMember = true;
 
-        // 3. 自動帶入性別按鈕狀態
+        // 變更頁面標題提示
+        const mainTitle = document.querySelector('h1');
+        if (mainTitle) mainTitle.innerText = "平安！更新個人檔案 🌿";
+        
+        const subTitle = mainTitle.nextElementSibling;
+        if (subTitle) subTitle.innerText = `哈囉 ${data.name}！系統已自動帶入您的既有檔案，若有異動可以直接修改更新。`;
+
+        // 自動帶入各欄位...
+        if (data.phone) document.getElementById('guestPhone').value = data.phone;
+        if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
+
         if (data.gender) {
           selectedGender = data.gender;
-          const genderParent = document.getElementById('guestName').parentElement.nextElementSibling;
+          const genderParent = nameInput.parentElement.nextElementSibling;
           if (genderParent) {
             genderParent.querySelectorAll('.pill-btn').forEach(btn => {
               if (btn.innerText.includes(data.gender)) btn.classList.add('active');
@@ -591,6 +597,23 @@
             });
           }
         }
+
+        if (data.district) {
+          selectedDistrict = data.district;
+          renderDistrictPills();
+        }
+
+        const notice = document.getElementById('autoFillNotice');
+        if (notice) {
+          notice.innerHTML = `<i class="fa-solid fa-check mr-1"></i>已識別為既有會友 (更新模式)`;
+          notice.classList.remove('hidden');
+          setTimeout(() => { notice.classList.add('hidden'); }, 4000);
+        }
+
+      } catch (err) {
+        console.warn("Auto fill check error:", err);
+      }
+    }
 
         // 4. 自動帶入居住區域按鈕狀態
         if (data.district) {
