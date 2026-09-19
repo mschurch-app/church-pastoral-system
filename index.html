@@ -1063,6 +1063,7 @@
   </div>
 
   <!-- 引入主控導航與各模組 JS -->
+  <!-- 引入主控導航與各模組 JS -->
   <script type="module">
     import { state, db } from './js/state.js';
     import { loadMembers } from './js/members.js';
@@ -1073,7 +1074,43 @@
     import { loadPastoralBotSettings } from './js/pastoral-bot.js';
     import { loadAdminUsersList } from './js/superadmin.js';
 
-    // 核心修復：直接在全域提供切換推播中心子分頁的函式，確保 sub-todays 能被正常打開
+    // 🌟 核心：根據堂會動態調整「小家 / 小組」稱謂
+    function updateTerminology(churchId) {
+      const isMPlus = (churchId === 'M+');
+      const termGroup = isMPlus ? '小組' : '小家';
+      const termLeader = isMPlus ? '小組長' : '小家長';
+      const termMember = isMPlus ? '組員' : '組員';
+
+      // 1. 更新所有帶有 .group-term-label 的元素（包含底部導覽列、標題、下拉選單）
+      document.querySelectorAll('.group-term-label').forEach(el => {
+        el.innerText = termGroup;
+      });
+
+      // 2. 更新小組長/小家長標籤
+      document.querySelectorAll('.group-leader-term-label').forEach(el => {
+        el.innerText = termLeader;
+      });
+
+      // 3. 更新組員標籤
+      document.querySelectorAll('.group-member-term-label').forEach(el => {
+        el.innerText = termMember;
+      });
+
+      // 4. 更新主日服事區塊專屬欄位（M+ 顯示崇拜司會，SHiNE 顯示樂團配置）
+      const shineFields = document.getElementById('shineFieldsWrapper');
+      const mplusFields = document.getElementById('mplusFieldsWrapper');
+      if (shineFields && mplusFields) {
+        if (isMPlus) {
+          shineFields.classList.add('hidden');
+          mplusFields.classList.remove('hidden');
+        } else {
+          shineFields.classList.remove('hidden');
+          mplusFields.classList.add('hidden');
+        }
+      }
+    }
+
+    // 提供全域切換推播中心子分頁的函式
     window.switchBotSubTab = function(tab) {
       const allSubTabs = ['templates', 'cards', 'todays', 'journey', 'images', 'newcomer-notify'];
       allSubTabs.forEach(t => {
@@ -1132,7 +1169,6 @@
       const { data } = await db.from('churches').select('*');
       if (data) {
         data.forEach(c => state.cachedChurches[c.id] = c);
-        // 同步載入目前堂會的「給今天的你」
         const cur = data.find(c => c.id === state.activeChurch);
         if (cur) {
           const vEl = document.getElementById('todaysVerseContent');
@@ -1144,6 +1180,9 @@
     }
 
     function applyChurchTheme(churchId) {
+      // 1. 更新堂會術語（小組 / 小家）
+      updateTerminology(churchId);
+
       const c = state.cachedChurches[churchId];
       if (!c) {
         const fallbackName = (churchId === 'SHiNE') ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
@@ -1208,7 +1247,7 @@
           roleBadge.innerText = "SUPER ADMIN";
           roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 font-bold border border-orange-200";
         }
-        state.activeChurch = localStorage.getItem('church_os_active_church') || "SHiNE";
+        state.activeChurch = localStorage.getItem('church_os_active_church') || "M+";
         document.getElementById('superChurchSelector').value = state.activeChurch;
       } else {
         document.getElementById('superChurchSelectorWrapper').classList.add('hidden');
@@ -1217,7 +1256,7 @@
           roleBadge.innerText = "CHURCH ADMIN";
           roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-200";
         }
-        state.activeChurch = state.currentUser.assigned_church || "SHiNE";
+        state.activeChurch = state.currentUser.assigned_church || "M+";
       }
 
       localStorage.setItem('church_os_active_church', state.activeChurch);
@@ -1248,7 +1287,7 @@
               roleBadge.innerText = "SUPER ADMIN";
               roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 font-bold border border-orange-200";
             }
-            state.activeChurch = savedChurch || "SHiNE";
+            state.activeChurch = savedChurch || "M+";
             document.getElementById('superChurchSelector').value = state.activeChurch;
           } else {
             document.getElementById('superChurchSelectorWrapper').classList.add('hidden');
@@ -1257,7 +1296,7 @@
               roleBadge.innerText = "CHURCH ADMIN";
               roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-200";
             }
-            state.activeChurch = state.currentUser.assigned_church || "SHiNE";
+            state.activeChurch = state.currentUser.assigned_church || "M+";
           }
 
           loadChurchData();
