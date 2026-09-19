@@ -86,9 +86,9 @@
     <button onclick="switchTab('pastoral-bot')" id="nav-pastoral-bot" class="flex flex-col items-center gap-1 text-stone-400"><i class="fa-solid fa-paper-plane text-sm"></i><span class="text-[10px]">推播</span></button>
   </nav>
 
-  <!-- 引入主控導航與各模組 JS -->
+ <!-- 引入主控導航與各模組 JS -->
   <script type="module">
-    import { state, db } from './js/state.js';
+    import { state, db, getChurchTerms } from './js/state.js';
     import { loadMembers } from './js/members.js';
     import { loadGroups } from './js/groups.js';
     import { loadServices } from './js/services.js';
@@ -97,6 +97,7 @@
     import { loadPastoralBotSettings } from './js/pastoral-bot.js';
     import { loadAdminUsersList } from './js/superadmin.js';
 
+    // 1. 將核心控制函式明確掛載到 window，供 HTML 的 onclick 呼叫
     window.switchTab = function(tabId) {
       ['members', 'services', 'groups', 'spaces', 'prayers', 'pastoral-bot', 'superadmin'].forEach(t => {
         const el = document.getElementById(`mod-${t}`);
@@ -104,8 +105,10 @@
         if (el) el.classList.add('hidden');
         if (nav) { nav.classList.remove('text-orange-600'); nav.classList.add('text-stone-400'); }
       });
-      document.getElementById(`mod-${tabId}`).classList.remove('hidden');
-      document.getElementById(`nav-${tabId}`).classList.replace('text-stone-400', 'text-orange-600');
+      const targetMod = document.getElementById(`mod-${tabId}`);
+      const targetNav = document.getElementById(`nav-${tabId}`);
+      if (targetMod) targetMod.classList.remove('hidden');
+      if (targetNav) targetNav.classList.replace('text-stone-400', 'text-orange-600');
     }
 
     window.switchChurch = function(churchId) {
@@ -115,6 +118,11 @@
     }
 
     async function loadChurchData() {
+      // 確保畫面標籤更新
+      const churchName = (state.activeChurch === 'SHiNE') ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
+      const churchLabel = document.getElementById('currentChurchLabel');
+      if (churchLabel) churchLabel.innerText = churchName;
+
       await loadMembers();
       await loadGroups();
       await loadRoomsAndSpaces();
@@ -127,16 +135,27 @@
     window.handleAuthLogin = async function() {
       const name = document.getElementById('loginNameSelect').value;
       const pwd = document.getElementById('loginPwd').value;
-      const { data } = await db.from('admin_users').select('*').eq('name', name).eq('password', pwd);
-      if (!data || !data.length) {
-        document.getElementById('loginError').innerText = '密碼錯誤';
-        document.getElementById('loginError').classList.remove('hidden');
+      const { data, error } = await db.from('admin_users').select('*').eq('name', name).eq('password', pwd);
+      
+      if (error || !data || !data.length) {
+        const errEl = document.getElementById('loginError');
+        if (errEl) {
+          errEl.innerText = '授權密碼錯誤，請重新確認！';
+          errEl.classList.remove('hidden');
+        }
         return;
       }
+
       state.currentUser = data[0];
       localStorage.setItem('church_os_current_user', JSON.stringify(state.currentUser));
       document.getElementById('loginModal').classList.add('hidden');
+      
       state.activeChurch = state.currentUser.assigned_church || 'SHiNE';
+      localStorage.setItem('church_os_active_church', state.activeChurch);
+      
+      const userLabel = document.getElementById('currentUserLabel');
+      if (userLabel) userLabel.innerText = `目前同工：${state.currentUser.name}`;
+
       loadChurchData();
     }
 
@@ -144,6 +163,26 @@
       localStorage.clear();
       location.reload();
     }
+
+    // 2. 頁面載入自動檢查登入狀態
+    window.addEventListener('DOMContentLoaded', async () => {
+      const savedUserStr = localStorage.getItem('church_os_current_user');
+      const savedChurch = localStorage.getItem('church_os_active_church');
+      
+      if (savedUserStr) {
+        try {
+          state.currentUser = JSON.parse(savedUserStr);
+          document.getElementById('loginModal').classList.add('hidden');
+          const userLabel = document.getElementById('currentUserLabel');
+          if (userLabel) userLabel.innerText = `目前同工：${state.currentUser.name}`;
+
+          state.activeChurch = savedChurch || state.currentUser.assigned_church || 'SHiNE';
+          loadChurchData();
+        } catch (e) {
+          localStorage.clear();
+        }
+      }
+    });
   </script>
 </body>
 </html>
