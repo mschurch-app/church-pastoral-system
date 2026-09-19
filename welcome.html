@@ -87,16 +87,16 @@
 
   <div class="w-full max-w-md my-4">
     
-    <!-- 迎賓表單本體 -->
+    <!-- 表單本體 -->
     <div id="formSection" class="card-glass p-6 sm:p-8 space-y-6">
       
       <!-- 頂部問候區 -->
       <div class="text-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
-          <i class="fa-solid fa-heart"></i>
+        <div id="headerIconWrapper" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
+          <i id="headerIcon" class="fa-solid fa-heart"></i>
         </div>
-        <h1 class="text-2xl font-black text-stone-800 tracking-tight pt-1">遇見你真好 · 歡迎回家</h1>
-        <p class="text-xs text-stone-500 leading-relaxed max-w-xs mx-auto">
+        <h1 id="pageMainTitle" class="text-2xl font-black text-stone-800 tracking-tight pt-1">遇見你真好 · 歡迎回家</h1>
+        <p id="pageSubTitle" class="text-xs text-stone-500 leading-relaxed max-w-xs mx-auto">
           很高興今天有你在我們當中！希望這裡能成為你放鬆心情、充飽電的溫暖角落 🌿
         </p>
 
@@ -107,16 +107,16 @@
         </div>
       </div>
 
-      <!-- 快速填寫內容 -->
+      <!-- 基本通用資料區 (新朋友與舊會友皆具備) -->
       <div class="space-y-5 text-xs">
         
-        <!-- 1. 姓名與性別 (輸入名字後會自動觸發 autoFillExistingMember 檢查是否為既有會友) -->
+        <!-- 1. 姓名與性別 -->
         <div class="space-y-2">
           <label class="font-black text-stone-700 block text-xs">1. 怎麼稱呼你？ *</label>
           <div class="relative">
-            <input type="text" id="guestName" onblur="autoFillExistingMember()" placeholder="輸入名字，若已在名冊中會自動帶入..." class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
-            <span id="autoFillNotice" class="absolute right-3.5 top-3.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-full hidden shadow-sm">
-              <i class="fa-solid fa-check mr-1"></i>已帶入既有檔案
+            <input type="text" id="guestName" onblur="autoFillExistingMember()" placeholder="輸入名字，既有會友將自動切換更新模式" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
+            <span id="autoFillNotice" class="absolute right-3.5 top-3.5 text-[10px] text-emerald-700 font-bold bg-emerald-100/90 px-2.5 py-1 rounded-full hidden shadow-sm">
+              <i class="fa-solid fa-check mr-1"></i>已識別為家人 (會友更新模式)
             </span>
           </div>
           
@@ -128,13 +128,13 @@
 
         <!-- 2. 聯絡手機 -->
         <div class="space-y-1.5">
-          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 (方便後續向你問候) *</label>
+          <label class="font-black text-stone-700 block text-xs">2. 聯絡手機 *</label>
           <input type="tel" id="guestPhone" placeholder="0912-345-678" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
         </div>
 
-        <!-- 3. 生日 (MM/DD) -->
+        <!-- 3. 生日 -->
         <div class="space-y-1.5">
-          <label class="font-black text-stone-700 block text-xs">3. 你的生日 (選填，讓我們在生日時祝福你)</label>
+          <label class="font-black text-stone-700 block text-xs">3. 你的生日 (方便教會在生日前後為你守望祝福)</label>
           <input type="text" id="guestBirthday" placeholder="例如：08/15 (或 8月15日)" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
         </div>
 
@@ -155,101 +155,138 @@
           <div class="flex flex-wrap gap-2" id="groupDistrict"></div>
         </div>
 
-        <!-- 6. 認識管道 (已增加 YouTube/網站，並修正 IG臉書) -->
-        <div class="space-y-2">
-          <label class="font-black text-stone-700 block text-xs">6. 今天是怎麼認識我們的？</label>
-          <div class="flex flex-wrap gap-2" id="groupKnow">
-            <div onclick="selectKnowFrom('朋友家人邀請', this)" class="pill-btn active">🙋 朋友家人邀請</div>
-            <div onclick="selectKnowFrom('IG臉書', this)" class="pill-btn">📱 IG臉書</div>
-            <div onclick="selectKnowFrom('YouTube/網站', this)" class="pill-btn">💻 YouTube/網站</div>
-            <div onclick="selectKnowFrom('散步路過好奇', this)" class="pill-btn">🚶 散步路過</div>
-            <div onclick="selectKnowFrom('參加社區趣味活動', this)" class="pill-btn">🎪 社區趣味活動</div>
+        <!-- ======================= 分支 A：新朋友專屬欄位 (第 6, 7, 8, 9 項) ======================= -->
+        <div id="newcomerFieldsWrapper" class="space-y-5">
+          <!-- 6. 認識管道 -->
+          <div class="space-y-2">
+            <label class="font-black text-stone-700 block text-xs">6. 今天是怎麼認識我們的？</label>
+            <div class="flex flex-wrap gap-2" id="groupKnow">
+              <div onclick="selectKnowFrom('朋友家人邀請', this)" class="pill-btn active">🙋 朋友家人邀請</div>
+              <div onclick="selectKnowFrom('IG臉書', this)" class="pill-btn">📱 IG臉書</div>
+              <div onclick="selectKnowFrom('YouTube/網站', this)" class="pill-btn">💻 YouTube/網站</div>
+              <div onclick="selectKnowFrom('散步路過好奇', this)" class="pill-btn">🚶 散步路過</div>
+              <div onclick="selectKnowFrom('參加社區趣味活動', this)" class="pill-btn">🎪 社區趣味活動</div>
+            </div>
+            <div id="inviterWrapper" class="pt-1.5">
+              <input type="text" id="inviterName" placeholder="是哪位朋友邀請你來的呢？" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400">
+            </div>
           </div>
-          <div id="inviterWrapper" class="pt-1.5">
-            <input type="text" id="inviterName" placeholder="是哪位朋友邀請你來的呢？" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400">
+
+          <!-- 7. 信仰近況調查 -->
+          <div class="space-y-2.5 pt-1 border-t border-stone-200/80">
+            <label class="font-black text-stone-700 block text-xs">7. 關於你的信仰近況 (單選)：</label>
+            <div class="space-y-2" id="groupFaithStatus">
+              <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
+                <input type="radio" name="faithRadio" value="我還不是基督徒，不排斥到教會聚會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
+                <span>我還不是基督徒，不排斥到教會聚會。</span>
+              </label>
+              <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
+                <input type="radio" name="faithRadio" value="我尚未受洗，希望更進一步認識基督信仰。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
+                <span>我尚未受洗，希望更進一步認識基督信仰。</span>
+              </label>
+              <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
+                <input type="radio" name="faithRadio" value="我是基督徒，因臨時需要來到火樂教會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
+                <div class="flex-1 space-y-1.5">
+                  <span>我是基督徒，因臨時需要來到火樂教會。</span>
+                  <input type="text" id="churchOrigin1" placeholder="請填寫原屬教會名稱..." class="w-full bg-white border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none hidden">
+                </div>
+              </label>
+              <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
+                <input type="radio" name="faithRadio" value="我是基督徒，目前正在尋找合適的教會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
+                <div class="flex-1 space-y-1.5">
+                  <span>我是基督徒，目前正在尋找合適的教會。</span>
+                  <input type="text" id="churchOrigin2" placeholder="請填寫原屬教會名稱..." class="w-full bg-white border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none hidden">
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 8. 今天想感受的 -->
+          <div class="space-y-2">
+            <label class="font-black text-stone-700 block text-xs">8. 今天來到這裡，最想感受的是什麼？(可多選)</label>
+            <div class="flex flex-wrap gap-2" id="groupFeelings">
+              <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn active">🌿 讓心靈放鬆充電</div>
+              <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn active">🎶 聽聽溫暖的音樂</div>
+              <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">🤝 認識聊得來的朋友</div>
+              <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">💡 探索未來的方向</div>
+              <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">📖 想多了解聖經</div>
+            </div>
+          </div>
+
+          <!-- 9. 平常生活休閒興趣 -->
+          <div class="space-y-2">
+            <label class="font-black text-stone-700 block text-xs">9. 平常的生活興趣與休閒？(可多選)</label>
+            <div class="flex flex-wrap gap-2" id="groupInterests">
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">☕ 咖啡品嚐與手作</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn active">🎸 音樂欣賞與彈唱</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">💼 職場交流與成長</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🏕️ 戶外踏青與露營</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">👶 親子育兒與教養</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🍳 美食探店與料理</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🏸 羽球健走等運動</div>
+              <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">📖 靜心閱讀與寫作</div>
+            </div>
           </div>
         </div>
 
-        <!-- 7. 信仰背景與近況調查 (單選四大選項) -->
-        <div class="space-y-2.5 pt-1 border-t border-stone-200/80">
-          <label class="font-black text-stone-700 block text-xs">7. 關於你的信仰近況 (單選)：</label>
-          <div class="space-y-2" id="groupFaithStatus">
-            <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
-              <input type="radio" name="faithRadio" value="我還不是基督徒，不排斥到教會聚會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
-              <span>我還不是基督徒，不排斥到教會聚會。</span>
-            </label>
-            <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
-              <input type="radio" name="faithRadio" value="我尚未受洗，希望更進一步認識基督信仰。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
-              <span>我尚未受洗，希望更進一步認識基督信仰。</span>
-            </label>
-            <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
-              <input type="radio" name="faithRadio" value="我是基督徒，因臨時需要來到火樂教會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
-              <div class="flex-1 space-y-1.5">
-                <span>我是基督徒，因臨時需要來到火樂教會。</span>
-                <input type="text" id="churchOrigin1" placeholder="請填寫原屬教會名稱..." class="w-full bg-white border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none hidden">
-              </div>
-            </label>
-            <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
-              <input type="radio" name="faithRadio" value="我是基督徒，目前正在尋找合適的教會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
-              <div class="flex-1 space-y-1.5">
-                <span>我是基督徒，目前正在尋找合適的教會。</span>
-                <input type="text" id="churchOrigin2" placeholder="請填寫原屬教會名稱..." class="w-full bg-white border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none hidden">
-              </div>
-            </label>
+        <!-- ======================= 分支 B：既有會友專屬欄位 (識別到名字後自動展示) ======================= -->
+        <div id="existingMemberFieldsWrapper" class="space-y-5 hidden pt-2 border-t border-orange-200/60">
+          
+          <!-- 會友服事恩賜意願 -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="font-black text-stone-700 block text-xs">✨ 服事恩賜與負擔意願 (可多選)</label>
+              <span class="text-[10px] text-orange-600 font-bold">歡迎加入事工團隊</span>
+            </div>
+            <div class="flex flex-wrap gap-2" id="groupMinistries">
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🎤 敬拜主領/歌手</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🎹 司琴鍵盤</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🎸 吉他/貝斯</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🥁 爵士鼓</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🎛️ 音響控台</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">💻 投影字幕/導播</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🤝 招待迎賓/禮儀</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">👶 兒童主日學/師資</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">☕ 咖啡餐點愛宴</div>
+              <div onclick="toggleMinistryPill(this)" class="pill-btn">🙏 守望代禱團隊</div>
+            </div>
+          </div>
+
+          <!-- 受洗日期 -->
+          <div class="space-y-1.5">
+            <label class="font-black text-stone-700 block text-xs">受洗日期 (選填，補齊名冊檔案)</label>
+            <input type="text" id="memberBaptismDate" placeholder="例如：2023/12/25 (若忘記年份可填月日)" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
+          </div>
+
+          <!-- 近況代禱與給牧者的話 -->
+          <div class="space-y-1.5">
+            <label class="font-black text-stone-700 block text-xs">近況代禱 / 想跟牧者同工說的話</label>
+            <textarea id="memberPrayerNote" rows="3" placeholder="最近生活中經歷了什麼？有什麼需要教會團隊為你守望的嗎？" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"></textarea>
           </div>
         </div>
 
-        <!-- 8. 今天想感受的 (多選) -->
-        <div class="space-y-2">
-          <label class="font-black text-stone-700 block text-xs">8. 今天來到這裡，最想感受的是什麼？(可多選)</label>
-          <div class="flex flex-wrap gap-2" id="groupFeelings">
-            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn active">🌿 讓心靈放鬆充電</div>
-            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn active">🎶 聽聽溫暖的音樂</div>
-            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">🤝 認識聊得來的朋友</div>
-            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">💡 探索未來的方向</div>
-            <div onclick="toggleMultiPill(this, 'feelings')" class="pill-btn">📖 想多了解聖經</div>
-          </div>
-        </div>
-
-        <!-- 9. 平常的生活興趣與愛好 (多選) -->
-        <div class="space-y-2">
-          <label class="font-black text-stone-700 block text-xs">9. 平常的生活興趣與休閒？(可多選)</label>
-          <div class="flex flex-wrap gap-2" id="groupInterests">
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">☕ 咖啡品嚐與手作</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn active">🎸 音樂欣賞與彈唱</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">💼 職場交流與成長</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🏕️ 戶外踏青與露營</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">👶 親子育兒與教養</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🍳 美食探店與料理</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">🏸 羽球健走等運動</div>
-            <div onclick="toggleMultiPill(this, 'interests')" class="pill-btn">📖 靜心閱讀與寫作</div>
-          </div>
-        </div>
-
-        <!-- 10. 微笑印記拍照留念 (直覺式雙按鈕設計) -->
+        <!-- 10. 微笑印記照片 (通用) -->
         <div class="space-y-2.5 pt-2 border-t border-stone-200/80">
           <div class="flex justify-between items-center">
-            <label class="font-black text-stone-700 block text-xs">10. 留下今天的微笑印記 📸 (選填)</label>
+            <label id="photoLabelText" class="font-black text-stone-700 block text-xs">今日照片留念 📸 (選填)</label>
             <span id="photoSourceBadge" class="text-[10px] text-orange-600 font-bold hidden">已帶入 LINE 大頭貼</span>
           </div>
 
-          <!-- 預覽與按鈕區 -->
           <div class="space-y-3">
             <div class="relative w-full h-44 rounded-2xl border border-stone-200 bg-stone-50 overflow-hidden flex items-center justify-center">
               <img id="photoPreview" class="w-full h-full object-cover hidden" alt="印記照片">
               <div id="photoPlaceholder" class="flex flex-col items-center justify-center text-stone-400 gap-1">
                 <i class="fa-solid fa-camera-retro text-2xl text-orange-400"></i>
-                <p class="text-xs font-bold text-stone-600">記錄今天美好的相遇</p>
+                <p id="photoPlaceholderText" class="text-xs font-bold text-stone-600">拍照或挑選更新個人照片</p>
               </div>
             </div>
 
-            <!-- 直覺式雙按鈕：打開相機 / 從相簿挑選 -->
             <div class="grid grid-cols-2 gap-2.5">
-              <button type="button" onclick="triggerCameraCapture()" class="py-3 px-4 rounded-2xl btn-warm text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-camera text-sm"></i>
+              <button type="button" onclick="triggerCameraCapture()" class="py-3 px-4 rounded-2xl bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition">
+                <i class="fa-solid fa-camera text-sm text-orange-600"></i>
                 <span>打開相機</span>
               </button>
-              <button type="button" onclick="triggerFilePicker()" class="py-3 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+              <button type="button" onclick="triggerFilePicker()" class="py-3 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition">
                 <i class="fa-solid fa-image text-stone-500 text-sm"></i>
                 <span>從相簿挑選</span>
               </button>
@@ -265,7 +302,7 @@
       <!-- 送出按鈕 -->
       <div class="pt-3">
         <button onclick="submitWelcomeCard()" id="btnSubmit" class="w-full py-4 rounded-2xl btn-submit text-sm font-black tracking-wide flex items-center justify-center gap-2 shadow-lg">
-          <span>✨ 很高興認識你 · 留下今日印記</span>
+          <span id="btnSubmitText">✨ 很高興認識你 · 留下今日印記</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
       </div>
@@ -275,17 +312,16 @@
     <!-- 送出成功感謝卡 -->
     <div id="successSection" class="card-glass p-8 space-y-6 text-center hidden">
       <div class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-orange-500/30" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
-        <i class="fa-solid fa-seedling"></i>
+        <i id="successIcon" class="fa-solid fa-seedling"></i>
       </div>
       <div class="space-y-2">
-        <h2 class="text-2xl font-black text-stone-800 tracking-tight">謝謝你今天來到我們當中！🌿</h2>
+        <h2 id="successTitle" class="text-2xl font-black text-stone-800 tracking-tight">謝謝你今天來到我們當中！🌿</h2>
         <p class="text-xs text-stone-600 leading-relaxed pt-1">
           親愛的 <span id="successName" class="font-black text-orange-600 text-sm"></span>，<br>
-          生命中的每一次相遇都是珍貴的祝福。<br>
-          願今天成為你這週最充實、放鬆的充電時光！
+          <span id="successMessage">生命中的每一次相遇都是珍貴的祝福。<br>願今天成為你這週最充實、放鬆的充電時光！</span>
         </p>
       </div>
-      <div class="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/70 text-xs text-stone-700 leading-relaxed">
+      <div id="successVerseBox" class="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/70 text-xs text-stone-700 leading-relaxed">
         「願你出也蒙福，入也蒙福；心中的一切憂慮，都在這裡化為滿滿的平安與力量。」
       </div>
       <div class="pt-2">
@@ -298,7 +334,9 @@
   </div>
 
   <script>
-    let isExistingMember = false; // 智慧判斷：預設為新朋友，若輸入既有名字會自動切換為更新模式
+    let isExistingMember = false;
+    let existingMemberRecord = null;
+
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -324,6 +362,7 @@
     let selectedFaithStatus = '';
     let selectedFeelings = new Set(['🌿 讓心靈放鬆充電', '🎶 聽聽溫暖的音樂']);
     let selectedInterests = new Set(['🎸 音樂欣賞與彈唱']);
+    let selectedMinistries = new Set();
     let capturedPhotoFile = null;
 
     function renderDistrictPills() {
@@ -355,7 +394,7 @@
           const nameInput = document.getElementById('guestName');
           if (!nameInput.value && profile.displayName) {
             nameInput.value = profile.displayName;
-            autoFillExistingMember(); // 若自動帶入 LINE 名字，順便在背景檢索
+            autoFillExistingMember();
           }
 
           if (profile.pictureUrl && !capturedPhotoFile) {
@@ -426,6 +465,17 @@
       }
     }
 
+    function toggleMinistryPill(element) {
+      const text = element.innerText.trim();
+      if (selectedMinistries.has(text)) {
+        selectedMinistries.delete(text);
+        element.classList.remove('active');
+      } else {
+        selectedMinistries.add(text);
+        element.classList.add('active');
+      }
+    }
+
     function triggerCameraCapture() { document.getElementById('cameraInput').click(); }
     function triggerFilePicker() { document.getElementById('galleryInput').click(); }
 
@@ -444,13 +494,13 @@
         preview.classList.remove('hidden');
         placeholder.classList.add('hidden');
 
-        sourceBadge.innerText = "✨ 已拍攝今日照片";
+        sourceBadge.innerText = "✨ 已拍攝個人照片";
         sourceBadge.classList.remove('hidden');
       };
       reader.readAsDataURL(file);
     }
 
-    // 當名字輸入完成並離開輸入框時，自動查詢既有會友名冊並切換為更新模式
+    // 核心切換：名字輸入完畢後比對名冊
     async function autoFillExistingMember() {
       const nameInput = document.getElementById('guestName');
       const name = nameInput.value.trim();
@@ -465,59 +515,93 @@
           .maybeSingle();
 
         if (error || !data) {
-          isExistingMember = false; // 找不到就是新朋友模式
+          // 找不到：維持新朋友表單
+          isExistingMember = false;
+          existingMemberRecord = null;
+          switchToNewcomerMode();
           return; 
         }
 
-        // 🌟 識別為既有會友！切換為「資料更新」模式
+        // 找到既有會友：切換為會友更新模式
         isExistingMember = true;
-
-        // 優雅切換表單標題與提示
-        const mainTitle = document.querySelector('h1');
-        if (mainTitle) mainTitle.innerText = "平安！更新個人檔案 🌿";
-        
-        const subTitle = mainTitle.nextElementSibling;
-        if (subTitle) subTitle.innerText = `哈囉 ${data.name}！系統已自動帶入您的既有檔案，若有異動可以直接修改更新。`;
-
-        // 自動帶入各既有欄位
-        if (data.phone) document.getElementById('guestPhone').value = data.phone;
-        if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
-
-        if (data.gender) {
-          selectedGender = data.gender;
-          const genderParent = nameInput.parentElement.nextElementSibling;
-          if (genderParent) {
-            genderParent.querySelectorAll('.pill-btn').forEach(btn => {
-              if (btn.innerText.includes(data.gender)) btn.classList.add('active');
-              else btn.classList.remove('active');
-            });
-          }
-        }
-
-        if (data.district) {
-          selectedDistrict = data.district;
-          renderDistrictPills();
-        }
-
-        const notice = document.getElementById('autoFillNotice');
-        if (notice) {
-          notice.classList.remove('hidden');
-          setTimeout(() => { notice.classList.add('hidden'); }, 4000);
-        }
+        existingMemberRecord = data;
+        switchToExistingMemberMode(data);
 
       } catch (err) {
         console.warn("Auto fill check error:", err);
       }
     }
 
+    function switchToExistingMemberMode(data) {
+      // 1. 調整標題與歡迎語
+      document.getElementById('pageMainTitle').innerText = "平安回家！更新會友檔案 🌿";
+      document.getElementById('pageSubTitle').innerText = `哈囉 ${data.name}！已自動帶入你的名冊紀錄，可更新聯絡方式與服事負擔。`;
+      document.getElementById('headerIcon').className = "fa-solid fa-house-chimney-user";
+      document.getElementById('btnSubmitText').innerText = "✨ 確認更新個人資料與服事恩賜";
+      
+      // 2. 顯示綠色提示標籤
+      const notice = document.getElementById('autoFillNotice');
+      if (notice) {
+        notice.classList.remove('hidden');
+        setTimeout(() => { notice.classList.add('hidden'); }, 4000);
+      }
+
+      // 3. 自動填入基本資料
+      if (data.phone) document.getElementById('guestPhone').value = data.phone;
+      if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
+      if (data.baptism_date) document.getElementById('memberBaptismDate').value = data.baptism_date;
+
+      if (data.gender) {
+        selectedGender = data.gender;
+        const genderBox = document.getElementById('guestName').parentElement.nextElementSibling;
+        if (genderBox) {
+          genderBox.querySelectorAll('.pill-btn').forEach(btn => {
+            if (btn.innerText.includes(data.gender)) btn.classList.add('active');
+            else btn.classList.remove('active');
+          });
+        }
+      }
+
+      if (data.district) {
+        selectedDistrict = data.district;
+        renderDistrictPills();
+      }
+
+      // 4. 帶入既有服事恩賜 (若有)
+      selectedMinistries.clear();
+      if (data.ministry) {
+        const arr = Array.isArray(data.ministry) ? data.ministry : data.ministry.split('、');
+        arr.forEach(m => selectedMinistries.add(m.trim()));
+      }
+      document.querySelectorAll('#groupMinistries .pill-btn').forEach(btn => {
+        const text = btn.innerText.trim();
+        if (selectedMinistries.has(text)) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      // 5. 隱藏新朋友專屬 6, 7, 8, 9 項，顯示會友專屬項目
+      document.getElementById('newcomerFieldsWrapper').classList.add('hidden');
+      document.getElementById('existingMemberFieldsWrapper').classList.remove('hidden');
+    }
+
+    function switchToNewcomerMode() {
+      document.getElementById('pageMainTitle').innerText = "遇見你真好 · 歡迎回家";
+      document.getElementById('pageSubTitle').innerText = "很高興今天有你在我們當中！希望這裡能成為你放鬆心情、充飽電的溫暖角落 🌿";
+      document.getElementById('headerIcon').className = "fa-solid fa-heart";
+      document.getElementById('btnSubmitText').innerText = "✨ 很高興認識你 · 留下今日印記";
+      
+      document.getElementById('autoFillNotice').classList.add('hidden');
+      document.getElementById('newcomerFieldsWrapper').classList.remove('hidden');
+      document.getElementById('existingMemberFieldsWrapper').classList.add('hidden');
+    }
+
     async function submitWelcomeCard() {
       const name = document.getElementById('guestName').value.trim();
       const phone = document.getElementById('guestPhone').value.trim();
       const birthday = document.getElementById('guestBirthday').value.trim();
-      const inviter = document.getElementById('inviterName').value.trim();
 
       if (!name) return alert('請填寫你的名字或暱稱喔！');
-      if (!phone) return alert('請留下一組手機號碼，方便我們為你寄送問候！');
+      if (!phone) return alert('請留下一組手機號碼，方便我們聯繫與問候！');
 
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true;
@@ -528,7 +612,8 @@
       if (capturedPhotoFile) {
         try {
           const fileExt = capturedPhotoFile.name.split('.').pop() || 'jpg';
-          const fileName = `newcomers/${targetChurch}_${Date.now()}.${fileExt}`;
+          const folder = isExistingMember ? 'members' : 'newcomers';
+          const fileName = `${folder}/${targetChurch}_${Date.now()}.${fileExt}`;
           const { data, error } = await db.storage.from('church-media').upload(fileName, capturedPhotoFile, {
             cacheControl: '3600',
             upsert: true
@@ -542,60 +627,78 @@
         }
       }
 
-      let finalKnowFrom = selectedKnowFrom;
-      if (selectedKnowFrom === '朋友家人邀請' && inviter) {
-        finalKnowFrom = `朋友家人邀請 (${inviter})`;
-      }
-
-      let finalFaithDesc = selectedFaithStatus;
-      if (finalFaithDesc.includes('火樂教會')) {
-        const org = document.getElementById('churchOrigin1').value.trim();
-        if (org) finalFaithDesc += ` (原屬：${org})`;
-      } else if (finalFaithDesc.includes('尋找合適的教會')) {
-        const org = document.getElementById('churchOrigin2').value.trim();
-        if (org) finalFaithDesc += ` (原屬：${org})`;
-      }
-
-      const feelingsList = Array.from(selectedFeelings);
-      const interestsList = Array.from(selectedInterests);
-      
-      let memoText = "";
-      if (isExistingMember) {
-        memoText = `【既有會友檔案更新】電話：${phone}，生日：${birthday || '未填'}。更新時間：${new Date().toLocaleDateString()}`;
-      } else {
-        memoText = `【新朋友初次見面】來源：${finalKnowFrom}。期待：${feelingsList.join('、')}。興趣：${interestsList.join('、')}`;
-        if (finalFaithDesc) memoText += `。信仰背景：${finalFaithDesc}`;
-      }
-
-      const payload = {
-        church_id: targetChurch,
-        line_id: lineProfile.userId || null,
-        name: name,
-        gender: selectedGender,
-        phone: phone,
-        birthday: birthday || null,
-        age_group: selectedAge,
-        district: selectedDistrict,
-        know_us_from: finalKnowFrom,
-        desired_feelings: feelingsList,
-        interest_tags: interestsList,
-        group_name: '未編組',
-        ministry: null,
-        photo_url: uploadedPhotoUrl,
-        memo: memoText
-      };
-
-      // 🌟 關鍵保護：若是既有會友，絕不覆蓋他原本在名冊中的 faith_status 職級；全新朋友才貼上新朋友標籤
-      if (!isExistingMember) {
-        payload.faith_status = '新朋友（初次聚會）';
-        payload.welcome_status = '新朋友';
-      }
-
-      // 🌟 智慧分流：既有會友執行 update 更新，新朋友執行 insert 新增
+      let payload = {};
       let query;
+
       if (isExistingMember) {
+        // ================= 既有會友更新流程 =================
+        const baptismDate = document.getElementById('memberBaptismDate').value.trim();
+        const prayerNote = document.getElementById('memberPrayerNote').value.trim();
+        const ministriesList = Array.from(selectedMinistries);
+
+        let updateMemo = existingMemberRecord?.memo || "";
+        if (prayerNote) {
+          const timeStr = new Date().toLocaleDateString();
+          updateMemo += `\n【${timeStr} 會友填寫代禱/近況】：${prayerNote}`;
+        }
+
+        payload = {
+          line_id: lineProfile.userId || existingMemberRecord.line_id || null,
+          phone: phone,
+          birthday: birthday || existingMemberRecord.birthday || null,
+          gender: selectedGender,
+          age_group: selectedAge,
+          district: selectedDistrict,
+          ministry: ministriesList.length ? ministriesList.join('、') : existingMemberRecord.ministry,
+          memo: updateMemo
+        };
+        if (baptismDate) payload.baptism_date = baptismDate;
+        if (uploadedPhotoUrl) payload.photo_url = uploadedPhotoUrl;
+
         query = db.from('members').update(payload).eq('church_id', targetChurch).eq('name', name);
+
       } else {
+        // ================= 全新朋友新增流程 =================
+        const inviter = document.getElementById('inviterName').value.trim();
+        let finalKnowFrom = selectedKnowFrom;
+        if (selectedKnowFrom === '朋友家人邀請' && inviter) {
+          finalKnowFrom = `朋友家人邀請 (${inviter})`;
+        }
+
+        let finalFaithDesc = selectedFaithStatus;
+        if (finalFaithDesc.includes('火樂教會')) {
+          const org = document.getElementById('churchOrigin1').value.trim();
+          if (org) finalFaithDesc += ` (原屬：${org})`;
+        } else if (finalFaithDesc.includes('尋找合適的教會')) {
+          const org = document.getElementById('churchOrigin2').value.trim();
+          if (org) finalFaithDesc += ` (原屬：${org})`;
+        }
+
+        const feelingsList = Array.from(selectedFeelings);
+        const interestsList = Array.from(selectedInterests);
+        let memoText = `【新朋友初次見面】來源：${finalKnowFrom}。期待：${feelingsList.join('、')}。興趣：${interestsList.join('、')}`;
+        if (finalFaithDesc) memoText += `。信仰背景：${finalFaithDesc}`;
+
+        payload = {
+          church_id: targetChurch,
+          line_id: lineProfile.userId || null,
+          name: name,
+          gender: selectedGender,
+          phone: phone,
+          birthday: birthday || null,
+          age_group: selectedAge,
+          district: selectedDistrict,
+          know_us_from: finalKnowFrom,
+          desired_feelings: feelingsList,
+          interest_tags: interestsList,
+          faith_status: '新朋友（初次聚會）',
+          welcome_status: '新朋友',
+          group_name: '未編組',
+          ministry: null,
+          photo_url: uploadedPhotoUrl,
+          memo: memoText
+        };
+
         query = db.from('members').insert([payload]);
       }
 
@@ -603,11 +706,11 @@
 
       if (saveErr) {
         btn.disabled = false;
-        btn.innerHTML = `<span>✨ 很高興認識你 · 留下今日印記</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+        btn.innerHTML = `<span id="btnSubmitText">${isExistingMember ? '✨ 確認更新個人資料與服事恩賜' : '✨ 很高興認識你 · 留下今日印記'}</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
         return alert('儲存失敗：' + saveErr.message);
       }
 
-      // 🌟 智慧推播：只有全新朋友填寫時，才即時推播通知給牧者；既有會友更新個資則安靜存檔，不打擾牧者
+      // 只有新朋友初次填寫時才發送即時推播通知給同工
       if (!isExistingMember) {
         try {
           await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_newcomer&church=${encodeURIComponent(targetChurch)}`, {
@@ -616,13 +719,21 @@
             body: JSON.stringify({
               church: targetChurch,
               name, phone, birthday, district: selectedDistrict, ageGroup: selectedAge,
-              feelings: feelingsList, interests: interestsList, knowFrom: finalKnowFrom,
-              faithDesc: finalFaithDesc, photoUrl: uploadedPhotoUrl
+              feelings: Array.from(selectedFeelings), interests: Array.from(selectedInterests),
+              knowFrom: payload.know_us_from, faithDesc: selectedFaithStatus, photoUrl: uploadedPhotoUrl
             })
           });
         } catch (pushErr) {
-          console.warn("LINE 新朋友通知推播請求完成");
+          console.warn("LINE 新朋友通知推播完成");
         }
+      }
+
+      // 感謝卡畫面內容切換
+      if (isExistingMember) {
+        document.getElementById('successIcon').className = "fa-solid fa-shield-heart";
+        document.getElementById('successTitle').innerText = "檔案與服事負擔已成功更新！";
+        document.getElementById('successMessage').innerHTML = "謝謝你一直以來的委身與同行。<br>深願神在你的服事與生命中持續傾倒祂豐盛的恩典！";
+        document.getElementById('successVerseBox').innerText = "「各人要照所得的恩賜彼此服事，作神百般恩賜的好管家。」(彼得前書 4:10)";
       }
 
       document.getElementById('formSection').classList.add('hidden');
