@@ -357,6 +357,7 @@
         <div class="flex flex-wrap gap-1.5 p-1 bg-white/80 rounded-2xl border border-stone-200">
           <button onclick="switchBotSubTab('templates')" id="btn-sub-templates" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold btn-warm">祝禱範本</button>
           <button onclick="switchBotSubTab('cards')" id="btn-sub-cards" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">金句卡庫</button>
+          <button onclick="switchBotSubTab('todays')" id="btn-sub-todays" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">✨ 給今天的你</button>
           <button onclick="switchBotSubTab('journey')" id="btn-sub-journey" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">🌱 新朋友旅程</button>
           <button onclick="switchBotSubTab('images')" id="btn-sub-images" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">🖼️ 祝福圖卡庫 (多圖)</button>
           <button onclick="switchBotSubTab('newcomer-notify')" id="btn-sub-newcomer-notify" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-stone-600">🔔 新朋友推播設定</button>
@@ -431,6 +432,31 @@
           </div>
           <div class="flex justify-end pt-3">
             <button onclick="saveNewcomerNotifySettings()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold shadow-sm">儲存推播接收設定</button>
+          </div>
+        </div>
+      </div>
+      <!-- 子分頁：給今天的你 (每日靈糧設定) -->
+      <div id="sub-todays" class="space-y-4 hidden">
+        <div class="lux-card p-6 sm:p-8 space-y-4">
+          <h3 class="font-black text-stone-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-sun text-orange-600"></i>
+            <span>設定 LINE 官方帳號「給今天的你」每日經文與祝福短語</span>
+          </h3>
+          <p class="text-xs text-stone-500 leading-relaxed">
+            當會友或朋友在 LINE 點擊「給今天的你」關鍵字或圖文選單時，系統將隨機或依序發送以下精選的靈糧祝禱。
+          </p>
+          <div class="space-y-3 pt-2 text-xs">
+            <div>
+              <label class="font-bold text-stone-600 block mb-1">今日金句經文出處與內容</label>
+              <textarea id="todaysVerseContent" rows="3" placeholder="例如：耶和華是我的牧者，我必不至缺乏..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none leading-relaxed"></textarea>
+            </div>
+            <div>
+              <label class="font-bold text-stone-600 block mb-1">牧者同理祝福短語</label>
+              <textarea id="todaysPrayerContent" rows="3" placeholder="願這段經文在今天成為你隨時的幫助與力量..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none leading-relaxed"></textarea>
+            </div>
+          </div>
+          <div class="flex justify-end pt-3">
+            <button onclick="saveTodaysVerseSettings()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold shadow-sm">儲存「給今天的你」內容</button>
           </div>
         </div>
       </div>
