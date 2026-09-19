@@ -185,9 +185,9 @@
                 <span>我尚未受洗，希望更進一步認識基督信仰。</span>
               </label>
               <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200/80 cursor-pointer text-xs text-stone-800 font-bold hover:bg-orange-50/50 transition">
-                <input type="radio" name="faithRadio" value="我是基督徒，因臨時需要來到火樂教會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
+                <input type="radio" name="faithRadio" value="我是基督徒，因臨時需要來到教會。" onchange="handleFaithRadioChange(this)" class="mt-0.5 accent-orange-600 w-4 h-4">
                 <div class="flex-1 space-y-1.5">
-                  <span>我是基督徒，因臨時需要來到火樂教會。</span>
+                  <span id="faithOptionChurchLabel">我是基督徒，因臨時需要來到教會。</span>
                   <input type="text" id="churchOrigin1" placeholder="請填寫原屬教會名稱..." class="w-full bg-white border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none hidden">
                 </div>
               </label>
@@ -232,14 +232,14 @@
         <!-- ======================= 分支 B：既有會友專屬欄位 ======================= -->
         <div id="existingMemberFieldsWrapper" class="space-y-5 hidden pt-2 border-t border-orange-200/60">
           
-          <!-- 所屬小家展示條 (保護既有編組不被改動) -->
+          <!-- 所屬小組/小家展示條 (動態對應堂會術語) -->
           <div class="p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200 flex items-center justify-between">
             <div>
-              <span class="text-[11px] text-stone-500 font-bold block">目前所屬小家 / 小組</span>
+              <span class="text-[11px] text-stone-500 font-bold block">目前所屬<span class="group-term-label">小組</span></span>
               <strong id="displayCurrentGroupName" class="text-sm font-black text-orange-900">未編組</strong>
             </div>
             <span class="text-[10px] px-2.5 py-1 rounded-full bg-white text-orange-800 font-bold border border-orange-200">
-              <i class="fa-solid fa-lock text-[9px] mr-1"></i>小家編組維持不變
+              <i class="fa-solid fa-lock text-[9px] mr-1"></i><span class="group-term-label">小組</span>編組維持不變
             </span>
           </div>
 
@@ -276,7 +276,7 @@
           </div>
         </div>
 
-        <!-- 10. 微笑印記照片 (通用) -->
+        <!-- 10. 今日照片 (通用) -->
         <div class="space-y-2.5 pt-2 border-t border-stone-200/80">
           <div class="flex justify-between items-center">
             <label id="photoLabelText" class="font-black text-stone-700 block text-xs">今日照片留念 📸 (選填)</label>
@@ -335,10 +335,14 @@
       <div id="successVerseBox" class="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/70 text-xs text-stone-700 leading-relaxed">
         「願你出也蒙福，入也蒙福；心中的一切憂慮，都在這裡化為滿滿的平安與力量。」
       </div>
-      <div class="pt-2">
-        <button onclick="closeLiffOrWindow()" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-extrabold transition">
-          完成，關閉頁面
+      
+      <!-- 關閉按鈕與提示 -->
+      <div class="pt-2 space-y-2">
+        <button onclick="closeLiffOrWindow()" id="btnClosePage" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-extrabold transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-xmark text-stone-400"></i>
+          <span>完成，關閉頁面</span>
         </button>
+        <p id="closeTipText" class="text-[11px] text-stone-400 hidden">若視窗未自動關閉，請直接點擊手機右上角關閉或返回 LINE 即可。</p>
       </div>
     </div>
 
@@ -358,6 +362,8 @@
     else targetChurch = 'M+';
 
     const isShine = (targetChurch === 'SHiNE');
+    // 動態設定小組 / 小家詞彙：Ｍ＋為「小組」，火樂為「小家」
+    const groupTerm = isShine ? '小家' : '小組';
     const DEFAULT_LIFF_ID = urlParams.get('liffId') || "";
 
     let lineProfile = {
@@ -376,6 +382,20 @@
     let selectedMinistries = new Set();
     let capturedPhotoFile = null;
 
+    function applyChurchTerminology() {
+      // 動態替換畫面上的「小組 / 小家」標籤
+      document.querySelectorAll('.group-term-label').forEach(el => {
+        el.innerText = groupTerm;
+      });
+
+      const faithOptLabel = document.getElementById('faithOptionChurchLabel');
+      if (faithOptLabel) {
+        faithOptLabel.innerText = isShine 
+          ? '我是基督徒，因臨時需要來到火樂教會。'
+          : '我是基督徒，因臨時需要來到Ｍ＋大雅教會。';
+      }
+    }
+
     function renderDistrictPills() {
       const container = document.getElementById('groupDistrict');
       const shineDistricts = ['西屯區', '南屯區', '北屯區', '西區', '北區', '大雅區', '沙鹿區', '東區', '南區', '其他'];
@@ -388,6 +408,7 @@
     }
 
     async function initLiff() {
+      applyChurchTerminology();
       renderDistrictPills();
 
       if (!DEFAULT_LIFF_ID) return;
@@ -420,7 +441,10 @@
             sourceBadge.classList.remove('hidden');
           }
         } else {
-          liff.login();
+          // LIFF 環境未登入時才要求登入
+          if (liff.isInClient()) {
+            liff.login();
+          }
         }
       } catch (err) {
         console.warn("LIFF init warning:", err);
@@ -457,7 +481,7 @@
       box1.classList.add('hidden');
       box2.classList.add('hidden');
 
-      if (radio.value.includes('火樂教會')) {
+      if (radio.value.includes('因臨時需要來到')) {
         box1.classList.remove('hidden');
       } else if (radio.value.includes('尋找合適的教會')) {
         box2.classList.remove('hidden');
@@ -511,7 +535,7 @@
       reader.readAsDataURL(file);
     }
 
-    // 核心切換：名字輸入完畢後比對名冊
+    // 核心比對與切換
     async function autoFillExistingMember() {
       const nameInput = document.getElementById('guestName');
       const name = nameInput.value.trim();
@@ -526,7 +550,6 @@
           .maybeSingle();
 
         if (error || !data) {
-          // 找不到：維持新朋友表單
           isExistingMember = false;
           existingMemberRecord = null;
           switchToNewcomerMode();
@@ -544,26 +567,23 @@
     }
 
     function switchToExistingMemberMode(data) {
-      // 1. 調整標題與歡迎語
       document.getElementById('pageMainTitle').innerText = "平安回家！更新會友檔案 🌿";
       document.getElementById('pageSubTitle').innerText = `哈囉 ${data.name}！已自動帶入你的名冊紀錄，可更新聯絡方式與服事負擔。`;
       document.getElementById('headerIcon').className = "fa-solid fa-house-chimney-user";
       document.getElementById('btnSubmitText').innerText = "✨ 確認更新個人資料與服事恩賜";
       
-      // 2. 顯示綠色提示標籤
       const notice = document.getElementById('autoFillNotice');
       if (notice) {
         notice.classList.remove('hidden');
         setTimeout(() => { notice.classList.add('hidden'); }, 4000);
       }
 
-      // 3. 顯示目前小家名稱（保護不被改掉）
+      // 顯示目前小組/小家名稱（嚴格保護）
       const groupDisplay = document.getElementById('displayCurrentGroupName');
       if (groupDisplay) {
         groupDisplay.innerText = data.group_name || '未編組';
       }
 
-      // 4. 自動填入基本資料
       if (data.phone) document.getElementById('guestPhone').value = data.phone;
       if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
       if (data.baptism_date) document.getElementById('memberBaptismDate').value = data.baptism_date;
@@ -584,7 +604,6 @@
         renderDistrictPills();
       }
 
-      // 5. 帶入既有服事恩賜 (若有)
       selectedMinistries.clear();
       if (data.ministry) {
         const arr = Array.isArray(data.ministry) ? data.ministry : data.ministry.split('、');
@@ -596,7 +615,6 @@
         else btn.classList.remove('active');
       });
 
-      // 6. 隱藏新朋友專屬 6, 7, 8, 9 項，顯示會友專屬項目
       document.getElementById('newcomerFieldsWrapper').classList.add('hidden');
       document.getElementById('existingMemberFieldsWrapper').classList.remove('hidden');
     }
@@ -648,7 +666,7 @@
       let query;
 
       if (isExistingMember) {
-        // ================= 既有會友更新流程 (嚴格保護小家、成熟度不被動搖) =================
+        // ================= 既有會友更新流程 (嚴格保護小組/小家、信仰身分不被改動) =================
         const baptismDate = document.getElementById('memberBaptismDate').value.trim();
         const prayerNote = document.getElementById('memberPrayerNote').value.trim();
         const ministriesList = Array.from(selectedMinistries);
@@ -668,18 +686,12 @@
           district: selectedDistrict,
           ministry: ministriesList.length ? ministriesList.join('、') : existingMemberRecord.ministry,
           memo: updateMemo
-          // 💡 關鍵：絕不把 group_name 設為未編組！完全保留原有的 group_name
         };
         
-        if (existingMemberRecord.group_name) {
-          payload.group_name = existingMemberRecord.group_name;
-        }
-        if (existingMemberRecord.faith_status) {
-          payload.faith_status = existingMemberRecord.faith_status;
-        }
-        if (existingMemberRecord.welcome_status) {
-          payload.welcome_status = existingMemberRecord.welcome_status;
-        }
+        // 🔒 嚴格維持原有名冊小組與信仰成熟度
+        if (existingMemberRecord.group_name) payload.group_name = existingMemberRecord.group_name;
+        if (existingMemberRecord.faith_status) payload.faith_status = existingMemberRecord.faith_status;
+        if (existingMemberRecord.welcome_status) payload.welcome_status = existingMemberRecord.welcome_status;
         if (baptismDate) payload.baptism_date = baptismDate;
         if (uploadedPhotoUrl) payload.photo_url = uploadedPhotoUrl;
 
@@ -694,7 +706,7 @@
         }
 
         let finalFaithDesc = selectedFaithStatus;
-        if (finalFaithDesc.includes('火樂教會')) {
+        if (finalFaithDesc.includes('因臨時需要來到')) {
           const org = document.getElementById('churchOrigin1').value.trim();
           if (org) finalFaithDesc += ` (原屬：${org})`;
         } else if (finalFaithDesc.includes('尋找合適的教會')) {
@@ -738,7 +750,7 @@
         return alert('儲存失敗：' + saveErr.message);
       }
 
-      // 只有新朋友初次填寫時才發送即時推播通知給同工
+      // 只有新朋友初次填寫時才推播給同工
       if (!isExistingMember) {
         try {
           await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_newcomer&church=${encodeURIComponent(targetChurch)}`, {
@@ -770,12 +782,31 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // 關閉視窗核心函式 (支援 LIFF 內部關閉與瀏覽器智慧處理)
     function closeLiffOrWindow() {
-      if (window.liff && liff.isInClient && liff.isInClient()) {
-        liff.closeWindow();
-      } else {
-        window.close();
+      // 1. 如果在 LINE LIFF 環境中，呼叫 LIFF 原生關閉視窗指令
+      if (window.liff && typeof liff.closeWindow === 'function') {
+        try {
+          liff.closeWindow();
+          return;
+        } catch (err) {
+          console.warn("LIFF closeWindow error:", err);
+        }
       }
+
+      // 2. 如果是一般網頁開啟，嘗試原生 window.close()
+      window.close();
+
+      // 3. 若瀏覽器因安全限制阻擋關閉，給予明顯提示引導使用者
+      setTimeout(() => {
+        const tip = document.getElementById('closeTipText');
+        const btn = document.getElementById('btnClosePage');
+        if (tip) tip.classList.remove('hidden');
+        if (btn) {
+          btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i><span>填寫完畢，請關閉分頁或返回 LINE</span>`;
+          btn.className = "w-full py-3.5 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200 flex items-center justify-center gap-1.5";
+        }
+      }, 300);
     }
   </script>
 </body>
