@@ -7,6 +7,14 @@ export async function loadPastoralBotSettings() {
     if (churchInfo) {
       document.getElementById('notifyPastorName').value = churchInfo.notify_pastor_name || '';
       document.getElementById('notifyPastorLineId').value = churchInfo.notify_pastor_line_id || '';
+      
+      // 載入「給今天的你」設定
+      if (document.getElementById('todaysVerseContent')) {
+        document.getElementById('todaysVerseContent').value = churchInfo.todays_verse || '';
+      }
+      if (document.getElementById('todaysPrayerContent')) {
+        document.getElementById('todaysPrayerContent').value = churchInfo.todays_prayer || '';
+      }
     }
 
     const { data: tpls } = await db.from('pastoral_templates').select('*').eq('church_id', state.activeChurch);
@@ -37,6 +45,23 @@ window.switchBotSubTab = function(tab) {
   if (tab === 'cards') renderCardsList();
   if (tab === 'journey') renderJourneyList();
   if (tab === 'images') filterGreetingCards(state.currentGreetingFilter);
+}
+
+// 儲存「給今天的你」設定
+window.saveTodaysVerseSettings = async function() {
+  const verse = document.getElementById('todaysVerseContent').value.trim();
+  const prayer = document.getElementById('todaysPrayerContent').value.trim();
+
+  const { error } = await db.from('churches').update({
+    todays_verse: verse,
+    todays_prayer: prayer
+  }).eq('id', state.activeChurch);
+
+  if (error) {
+    alert('儲存失敗：' + error.message);
+  } else {
+    alert('✨ 「給今天的你」每日靈糧內容已成功儲存！');
+  }
 }
 
 function renderTemplatesList() {
@@ -195,10 +220,10 @@ window.saveNewcomerNotifySettings = async function() {
 window.filterGreetingCards = function(cat) {
   state.currentGreetingFilter = cat;
   const list = (cat === 'ALL') ? state.cachedGreetingCards : state.cachedGreetingCards.filter(c => c.category === cat);
-  document.getElementById('count-gc-ALL').innerText = state.cachedGreetingCards.length;
-  document.getElementById('count-gc-同事打拼').innerText = state.cachedGreetingCards.filter(c => c.category === '同事打拼').length;
-  document.getElementById('count-gc-低潮陪伴').innerText = state.cachedGreetingCards.filter(c => c.category === '低潮陪伴').length;
-  document.getElementById('count-gc-家人問候').innerText = state.cachedGreetingCards.filter(c => c.category === '家人問候').length;
+  if (document.getElementById('count-gc-ALL')) document.getElementById('count-gc-ALL').innerText = state.cachedGreetingCards.length;
+  if (document.getElementById('count-gc-同事打拼')) document.getElementById('count-gc-同事打拼').innerText = state.cachedGreetingCards.filter(c => c.category === '同事打拼').length;
+  if (document.getElementById('count-gc-低潮陪伴')) document.getElementById('count-gc-低潮陪伴').innerText = state.cachedGreetingCards.filter(c => c.category === '低潮陪伴').length;
+  if (document.getElementById('count-gc-家人問候')) document.getElementById('count-gc-家人問候').innerText = state.cachedGreetingCards.filter(c => c.category === '家人問候').length;
 
   ['ALL', '同事打拼', '低潮陪伴', '家人問候'].forEach(k => {
     const btn = document.getElementById(`tab-gc-${k}`);
