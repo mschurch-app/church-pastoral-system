@@ -332,7 +332,7 @@
   </nav>
 
  <!-- 引入主控導航與各模組 JS -->
-  <!-- 引入主控導航與各模組 JS -->
+ <!-- 引入主控導航與各模組 JS -->
   <script type="module">
     import { state, db } from './js/state.js';
     import { loadMembers } from './js/members.js';
@@ -362,10 +362,30 @@
       loadChurchData();
     }
 
+    // 核心修復：先從資料庫載入堂會設定，確保標題與 Logo 正常顯示
+    async function loadChurchesConfig() {
+      const { data } = await db.from('churches').select('*');
+      if (data) data.forEach(c => state.cachedChurches[c.id] = c);
+    }
+
+    function applyChurchTheme(churchId) {
+      const c = state.cachedChurches[churchId];
+      if (!c) return;
+      const label = document.getElementById('currentChurchLabel');
+      if (label) label.innerText = c.name;
+      
+      const logoImg = document.getElementById('churchLogoImg');
+      const logoIcon = document.getElementById('churchLogoIcon');
+      if (c.logo_url && logoImg && logoIcon) {
+        logoImg.src = c.logo_url;
+        logoImg.classList.remove('hidden');
+        logoIcon.classList.add('hidden');
+      }
+    }
+
     async function loadChurchData() {
-      const churchName = (state.activeChurch === 'SHiNE') ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
-      const churchLabel = document.getElementById('currentChurchLabel');
-      if (churchLabel) churchLabel.innerText = churchName;
+      await loadChurchesConfig();
+      applyChurchTheme(state.activeChurch);
 
       await loadMembers();
       await loadGroups();
@@ -400,7 +420,6 @@
       const userLabel = document.getElementById('currentUserLabel');
       if (userLabel) userLabel.innerText = `目前同工：${state.currentUser.name}`;
 
-      // 檢查超級管理員身分並顯示對應介面
       const roleBadge = document.getElementById('adminRoleBadge');
       if (state.currentUser.role === 'SUPER_ADMIN') {
         document.getElementById('superChurchSelectorWrapper').classList.remove('hidden');
