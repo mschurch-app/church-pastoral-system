@@ -113,7 +113,12 @@
         <!-- 1. 姓名與性別 -->
         <div class="space-y-2">
           <label class="font-black text-stone-700 block text-xs">1. 怎麼稱呼你？ *</label>
-          <input type="text" id="guestName" placeholder="你的名字或平時大家叫你的暱稱" class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
+          <div class="relative">
+            <input type="text" id="guestName" onblur="autoFillExistingMember()" placeholder="輸入名字，若已在名冊中會自動帶入..." class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
+            <span id="autoFillNotice" class="absolute right-3.5 top-3.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full hidden">
+              <i class="fa-solid fa-check mr-1"></i>已自動帶入既有資料
+            </span>
+          </div>
           
           <div class="flex gap-2 pt-1">
             <div onclick="selectSinglePill('gender', '弟兄', this)" class="pill-btn flex-1 justify-center active">弟兄 / 帥哥</div>
@@ -546,6 +551,62 @@
         liff.closeWindow();
       } else {
         window.close();
+      }
+    }
+    // 當名字輸入完成並離開輸入框時，自動查詢名冊並帶入既有資料
+    async function autoFillExistingMember() {
+      const nameInput = document.getElementById('guestName');
+      const name = nameInput.value.trim();
+      if (!name || name.length < 2) return;
+
+      try {
+        // 從 Supabase 查詢該堂會是否有同名會友
+        const { data, error } = await db
+          .from('members')
+          .select('*')
+          .eq('church_id', targetChurch)
+          .eq('name', name)
+          .maybeSingle();
+
+        if (error || !data) return; // 找不到或發生錯誤就靜默不處理
+
+        // 1. 自動帶入手機
+        if (data.phone) {
+          document.getElementById('guestPhone').value = data.phone;
+        }
+
+        // 2. 自動帶入生日
+        if (data.birthday) {
+          document.getElementById('guestBirthday').value = data.birthday;
+        }
+
+        // 3. 自動帶入性別按鈕狀態
+        if (data.gender) {
+          selectedGender = data.gender;
+          const genderParent = document.getElementById('guestName').parentElement.nextElementSibling;
+          if (genderParent) {
+            genderParent.querySelectorAll('.pill-btn').forEach(btn => {
+              if (btn.innerText.includes(data.gender)) btn.classList.add('active');
+              else btn.classList.remove('active');
+            });
+          }
+        }
+
+        // 4. 自動帶入居住區域按鈕狀態
+        if (data.district) {
+          selectedDistrict = data.district;
+          renderDistrictPills(); // 重新渲染並點亮對應區域
+        }
+
+        // 5. 顯示「已自動帶入」的小綠標提示，3秒後淡出
+        const notice = document.getElementById('autoFillNotice');
+        if (notice) {
+          notice.classList.remove('hidden');
+          setTimeout(() => { notice.classList.add('hidden'); }, 3500);
+        }
+
+      } catch (err) {
+        console.warn("Auto fill check error:", err);
       }
     }
   </script>
