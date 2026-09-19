@@ -332,8 +332,9 @@
   </nav>
 
  <!-- 引入主控導航與各模組 JS -->
+  <!-- 引入主控導航與各模組 JS -->
   <script type="module">
-    import { state, db, getChurchTerms } from './js/state.js';
+    import { state, db } from './js/state.js';
     import { loadMembers } from './js/members.js';
     import { loadGroups } from './js/groups.js';
     import { loadServices } from './js/services.js';
@@ -342,7 +343,6 @@
     import { loadPastoralBotSettings } from './js/pastoral-bot.js';
     import { loadAdminUsersList } from './js/superadmin.js';
 
-    // 1. 將核心控制函式明確掛載到 window，供 HTML 的 onclick 呼叫
     window.switchTab = function(tabId) {
       ['members', 'services', 'groups', 'spaces', 'prayers', 'pastoral-bot', 'superadmin'].forEach(t => {
         const el = document.getElementById(`mod-${t}`);
@@ -363,7 +363,6 @@
     }
 
     async function loadChurchData() {
-      // 確保畫面標籤更新
       const churchName = (state.activeChurch === 'SHiNE') ? '火樂教會 (SHiNE)' : 'Ｍ＋大雅教會';
       const churchLabel = document.getElementById('currentChurchLabel');
       if (churchLabel) churchLabel.innerText = churchName;
@@ -374,6 +373,9 @@
       await loadServices();
       await loadPrayers();
       await loadPastoralBotSettings();
+      if (state.currentUser?.role === 'SUPER_ADMIN') {
+        loadAdminUsersList();
+      }
       switchTab('members');
     }
 
@@ -395,12 +397,31 @@
       localStorage.setItem('church_os_current_user', JSON.stringify(state.currentUser));
       document.getElementById('loginModal').classList.add('hidden');
       
-      state.activeChurch = state.currentUser.assigned_church || 'SHiNE';
-      localStorage.setItem('church_os_active_church', state.activeChurch);
-      
       const userLabel = document.getElementById('currentUserLabel');
       if (userLabel) userLabel.innerText = `目前同工：${state.currentUser.name}`;
 
+      // 檢查超級管理員身分並顯示對應介面
+      const roleBadge = document.getElementById('adminRoleBadge');
+      if (state.currentUser.role === 'SUPER_ADMIN') {
+        document.getElementById('superChurchSelectorWrapper').classList.remove('hidden');
+        document.getElementById('nav-superadmin').classList.remove('hidden');
+        if (roleBadge) {
+          roleBadge.innerText = "SUPER ADMIN";
+          roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 font-bold border border-orange-200";
+        }
+        state.activeChurch = localStorage.getItem('church_os_active_church') || "SHiNE";
+        document.getElementById('superChurchSelector').value = state.activeChurch;
+      } else {
+        document.getElementById('superChurchSelectorWrapper').classList.add('hidden');
+        document.getElementById('nav-superadmin').classList.add('hidden');
+        if (roleBadge) {
+          roleBadge.innerText = "CHURCH ADMIN";
+          roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-200";
+        }
+        state.activeChurch = state.currentUser.assigned_church || "SHiNE";
+      }
+
+      localStorage.setItem('church_os_active_church', state.activeChurch);
       loadChurchData();
     }
 
@@ -409,7 +430,6 @@
       location.reload();
     }
 
-    // 2. 頁面載入自動檢查登入狀態
     window.addEventListener('DOMContentLoaded', async () => {
       const savedUserStr = localStorage.getItem('church_os_current_user');
       const savedChurch = localStorage.getItem('church_os_active_church');
@@ -421,7 +441,26 @@
           const userLabel = document.getElementById('currentUserLabel');
           if (userLabel) userLabel.innerText = `目前同工：${state.currentUser.name}`;
 
-          state.activeChurch = savedChurch || state.currentUser.assigned_church || 'SHiNE';
+          const roleBadge = document.getElementById('adminRoleBadge');
+          if (state.currentUser.role === 'SUPER_ADMIN') {
+            document.getElementById('superChurchSelectorWrapper').classList.remove('hidden');
+            document.getElementById('nav-superadmin').classList.remove('hidden');
+            if (roleBadge) {
+              roleBadge.innerText = "SUPER ADMIN";
+              roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 font-bold border border-orange-200";
+            }
+            state.activeChurch = savedChurch || "SHiNE";
+            document.getElementById('superChurchSelector').value = state.activeChurch;
+          } else {
+            document.getElementById('superChurchSelectorWrapper').classList.add('hidden');
+            document.getElementById('nav-superadmin').classList.add('hidden');
+            if (roleBadge) {
+              roleBadge.innerText = "CHURCH ADMIN";
+              roleBadge.className = "text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-200";
+            }
+            state.activeChurch = state.currentUser.assigned_church || "SHiNE";
+          }
+
           loadChurchData();
         } catch (e) {
           localStorage.clear();
