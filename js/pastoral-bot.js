@@ -28,7 +28,7 @@ export async function loadPastoralBotSettings() {
 }
 
 window.switchBotSubTab = function(tab) {
-  ['templates', 'cards', 'journey', 'images', 'newcomer-notify'].forEach(t => {
+  ['templates', 'cards', 'todays', 'journey', 'images', 'newcomer-notify'].forEach(t => {
     const el = document.getElementById(`sub-${t}`);
     const btn = document.getElementById(`btn-sub-${t}`);
     if (el) el.classList.toggle('hidden', t !== tab);
