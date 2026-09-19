@@ -110,13 +110,13 @@
       <!-- 快速填寫內容 -->
       <div class="space-y-5 text-xs">
         
-        <!-- 1. 姓名與性別 -->
+        <!-- 1. 姓名與性別 (輸入名字後會自動觸發 autoFillExistingMember 檢查是否為既有會友) -->
         <div class="space-y-2">
           <label class="font-black text-stone-700 block text-xs">1. 怎麼稱呼你？ *</label>
           <div class="relative">
             <input type="text" id="guestName" onblur="autoFillExistingMember()" placeholder="輸入名字，若已在名冊中會自動帶入..." class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-stone-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm">
-            <span id="autoFillNotice" class="absolute right-3.5 top-3.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full hidden">
-              <i class="fa-solid fa-check mr-1"></i>已自動帶入既有資料
+            <span id="autoFillNotice" class="absolute right-3.5 top-3.5 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-full hidden shadow-sm">
+              <i class="fa-solid fa-check mr-1"></i>已帶入既有檔案
             </span>
           </div>
           
@@ -298,7 +298,7 @@
   </div>
 
   <script>
-    let isExistingMember = false; // 預設為新朋友
+    let isExistingMember = false; // 智慧判斷：預設為新朋友，若輸入既有名字會自動切換為更新模式
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
     const SUPABASE_KEY = "sb_publishable_6Uhqw7j8vLSuI9nOqsFVzA_YYRXfrjL";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -353,7 +353,10 @@
           document.getElementById('lineUserDisplayName').innerText = profile.displayName;
 
           const nameInput = document.getElementById('guestName');
-          if (!nameInput.value && profile.displayName) nameInput.value = profile.displayName;
+          if (!nameInput.value && profile.displayName) {
+            nameInput.value = profile.displayName;
+            autoFillExistingMember(); // 若自動帶入 LINE 名字，順便在背景檢索
+          }
 
           if (profile.pictureUrl && !capturedPhotoFile) {
             const preview = document.getElementById('photoPreview');
@@ -447,6 +450,66 @@
       reader.readAsDataURL(file);
     }
 
+    // 當名字輸入完成並離開輸入框時，自動查詢既有會友名冊並切換為更新模式
+    async function autoFillExistingMember() {
+      const nameInput = document.getElementById('guestName');
+      const name = nameInput.value.trim();
+      if (!name || name.length < 2) return;
+
+      try {
+        const { data, error } = await db
+          .from('members')
+          .select('*')
+          .eq('church_id', targetChurch)
+          .eq('name', name)
+          .maybeSingle();
+
+        if (error || !data) {
+          isExistingMember = false; // 找不到就是新朋友模式
+          return; 
+        }
+
+        // 🌟 識別為既有會友！切換為「資料更新」模式
+        isExistingMember = true;
+
+        // 優雅切換表單標題與提示
+        const mainTitle = document.querySelector('h1');
+        if (mainTitle) mainTitle.innerText = "平安！更新個人檔案 🌿";
+        
+        const subTitle = mainTitle.nextElementSibling;
+        if (subTitle) subTitle.innerText = `哈囉 ${data.name}！系統已自動帶入您的既有檔案，若有異動可以直接修改更新。`;
+
+        // 自動帶入各既有欄位
+        if (data.phone) document.getElementById('guestPhone').value = data.phone;
+        if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
+
+        if (data.gender) {
+          selectedGender = data.gender;
+          const genderParent = nameInput.parentElement.nextElementSibling;
+          if (genderParent) {
+            genderParent.querySelectorAll('.pill-btn').forEach(btn => {
+              if (btn.innerText.includes(data.gender)) btn.classList.add('active');
+              else btn.classList.remove('active');
+            });
+          }
+        }
+
+        if (data.district) {
+          selectedDistrict = data.district;
+          renderDistrictPills();
+        }
+
+        const notice = document.getElementById('autoFillNotice');
+        if (notice) {
+          notice.classList.remove('hidden');
+          setTimeout(() => { notice.classList.add('hidden'); }, 4000);
+        }
+
+      } catch (err) {
+        console.warn("Auto fill check error:", err);
+      }
+    }
+
     async function submitWelcomeCard() {
       const name = document.getElementById('guestName').value.trim();
       const phone = document.getElementById('guestPhone').value.trim();
@@ -485,18 +548,24 @@
       }
 
       let finalFaithDesc = selectedFaithStatus;
-      if (selectedFaithDesc.includes('火樂教會')) {
+      if (finalFaithDesc.includes('火樂教會')) {
         const org = document.getElementById('churchOrigin1').value.trim();
         if (org) finalFaithDesc += ` (原屬：${org})`;
-      } else if (selectedFaithDesc.includes('尋找合適的教會')) {
+      } else if (finalFaithDesc.includes('尋找合適的教會')) {
         const org = document.getElementById('churchOrigin2').value.trim();
         if (org) finalFaithDesc += ` (原屬：${org})`;
       }
 
       const feelingsList = Array.from(selectedFeelings);
       const interestsList = Array.from(selectedInterests);
-      let memoText = `【新朋友初次見面】來源：${finalKnowFrom}。期待：${feelingsList.join('、')}。興趣：${interestsList.join('、')}`;
-      if (finalFaithDesc) memoText += `。信仰背景：${finalFaithDesc}`;
+      
+      let memoText = "";
+      if (isExistingMember) {
+        memoText = `【既有會友檔案更新】電話：${phone}，生日：${birthday || '未填'}。更新時間：${new Date().toLocaleDateString()}`;
+      } else {
+        memoText = `【新朋友初次見面】來源：${finalKnowFrom}。期待：${feelingsList.join('、')}。興趣：${interestsList.join('、')}`;
+        if (finalFaithDesc) memoText += `。信仰背景：${finalFaithDesc}`;
+      }
 
       const payload = {
         church_id: targetChurch,
@@ -510,35 +579,50 @@
         know_us_from: finalKnowFrom,
         desired_feelings: feelingsList,
         interest_tags: interestsList,
-        faith_status: '新朋友（初次聚會）',
-        welcome_status: '新朋友',
         group_name: '未編組',
         ministry: null,
         photo_url: uploadedPhotoUrl,
         memo: memoText
       };
 
-      const { data: insertedData, error: insertErr } = await db.from('members').insert([payload]).select();
-
-      if (insertErr) {
-        btn.disabled = false;
-        btn.innerHTML = `<span>✨ 很高興認識你 · 留下今日印記</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
-        return alert('送出失敗：' + insertErr.message);
+      // 🌟 關鍵保護：若是既有會友，絕不覆蓋他原本在名冊中的 faith_status 職級；全新朋友才貼上新朋友標籤
+      if (!isExistingMember) {
+        payload.faith_status = '新朋友（初次聚會）';
+        payload.welcome_status = '新朋友';
       }
 
-      try {
-        await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_newcomer&church=${encodeURIComponent(targetChurch)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
-          body: JSON.stringify({
-            church: targetChurch,
-            name, phone, birthday, district: selectedDistrict, ageGroup: selectedAge,
-            feelings: feelingsList, interests: interestsList, knowFrom: finalKnowFrom,
-            faithDesc: finalFaithDesc, photoUrl: uploadedPhotoUrl
-          })
-        });
-      } catch (pushErr) {
-        console.warn("LINE 新朋友通知推播請求完成");
+      // 🌟 智慧分流：既有會友執行 update 更新，新朋友執行 insert 新增
+      let query;
+      if (isExistingMember) {
+        query = db.from('members').update(payload).eq('church_id', targetChurch).eq('name', name);
+      } else {
+        query = db.from('members').insert([payload]);
+      }
+
+      const { error: saveErr } = await query;
+
+      if (saveErr) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨ 很高興認識你 · 留下今日印記</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+        return alert('儲存失敗：' + saveErr.message);
+      }
+
+      // 🌟 智慧推播：只有全新朋友填寫時，才即時推播通知給牧者；既有會友更新個資則安靜存檔，不打擾牧者
+      if (!isExistingMember) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/line-bot?action=notify_newcomer&church=${encodeURIComponent(targetChurch)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+            body: JSON.stringify({
+              church: targetChurch,
+              name, phone, birthday, district: selectedDistrict, ageGroup: selectedAge,
+              feelings: feelingsList, interests: interestsList, knowFrom: finalKnowFrom,
+              faithDesc: finalFaithDesc, photoUrl: uploadedPhotoUrl
+            })
+          });
+        } catch (pushErr) {
+          console.warn("LINE 新朋友通知推播請求完成");
+        }
       }
 
       document.getElementById('formSection').classList.add('hidden');
@@ -552,84 +636,6 @@
         liff.closeWindow();
       } else {
         window.close();
-      }
-    }
-    // 當名字輸入完成並離開輸入框時，自動查詢名冊並帶入既有資料
-    async function autoFillExistingMember() {
-      const nameInput = document.getElementById('guestName');
-      const name = nameInput.value.trim();
-      if (!name || name.length < 2) return;
-
-      try {
-        const { data, error } = await db
-          .from('members')
-          .select('*')
-          .eq('church_id', targetChurch)
-          .eq('name', name)
-          .maybeSingle();
-
-        if (error || !data) {
-          isExistingMember = false; // 找不到就是新朋友
-          return; 
-        }
-
-        // 🌟 找到了！這是既有會友，切換為「資料更新」模式
-        isExistingMember = true;
-
-        // 變更頁面標題提示
-        const mainTitle = document.querySelector('h1');
-        if (mainTitle) mainTitle.innerText = "平安！更新個人檔案 🌿";
-        
-        const subTitle = mainTitle.nextElementSibling;
-        if (subTitle) subTitle.innerText = `哈囉 ${data.name}！系統已自動帶入您的既有檔案，若有異動可以直接修改更新。`;
-
-        // 自動帶入各欄位...
-        if (data.phone) document.getElementById('guestPhone').value = data.phone;
-        if (data.birthday) document.getElementById('guestBirthday').value = data.birthday;
-
-        if (data.gender) {
-          selectedGender = data.gender;
-          const genderParent = nameInput.parentElement.nextElementSibling;
-          if (genderParent) {
-            genderParent.querySelectorAll('.pill-btn').forEach(btn => {
-              if (btn.innerText.includes(data.gender)) btn.classList.add('active');
-              else btn.classList.remove('active');
-            });
-          }
-        }
-
-        if (data.district) {
-          selectedDistrict = data.district;
-          renderDistrictPills();
-        }
-
-        const notice = document.getElementById('autoFillNotice');
-        if (notice) {
-          notice.innerHTML = `<i class="fa-solid fa-check mr-1"></i>已識別為既有會友 (更新模式)`;
-          notice.classList.remove('hidden');
-          setTimeout(() => { notice.classList.add('hidden'); }, 4000);
-        }
-
-      } catch (err) {
-        console.warn("Auto fill check error:", err);
-      }
-    }
-
-        // 4. 自動帶入居住區域按鈕狀態
-        if (data.district) {
-          selectedDistrict = data.district;
-          renderDistrictPills(); // 重新渲染並點亮對應區域
-        }
-
-        // 5. 顯示「已自動帶入」的小綠標提示，3秒後淡出
-        const notice = document.getElementById('autoFillNotice');
-        if (notice) {
-          notice.classList.remove('hidden');
-          setTimeout(() => { notice.classList.add('hidden'); }, 3500);
-        }
-
-      } catch (err) {
-        console.warn("Auto fill check error:", err);
       }
     }
   </script>
