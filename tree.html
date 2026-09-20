@@ -1,618 +1,130 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>生命之樹 · 365天讀經漫遊</title>
+<!-- ================= 今日活水經文與語音伴讀專區 ================= -->
+<div class="card-glass p-5 space-y-4">
   
-  <!-- Tailwind CSS & FontAwesome -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- 1. 頂部標題與語音總控台 -->
+  <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+    <div>
+      <span class="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-full">
+        TODAY'S BIBLE & AUDIO
+      </span>
+      <h3 class="text-sm font-black text-stone-800 pt-1" id="curriculumPassageTitle">
+        創世記 1-3 章 · 馬太福音 1 章 · 詩篇 1 篇
+      </h3>
+    </div>
+    
+    <!-- 全局語音播放快捷鈕 -->
+    <button onclick="toggleAudioGlobal()" id="btnGlobalAudio" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200/80 transition text-xs font-bold">
+      <i id="globalAudioIcon" class="fa-solid fa-circle-play text-orange-600 text-sm"></i>
+      <span id="globalAudioText">聽語音讀經</span>
+    </button>
+  </div>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'sans-serif'],
-            serif: ['"Noto Serif TC"', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <!-- 2. 核心扎根金句 (微光聚焦卡) -->
+  <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/70 space-y-1">
+    <div class="flex items-center justify-between">
+      <span class="text-[10px] font-black text-amber-900" id="keyVerseRef">【今日核心金句 · 詩篇 1:3】</span>
+      <span class="text-[10px] text-amber-700 font-bold"><i class="fa-solid fa-quote-left mr-1"></i>默想沉澱</span>
+    </div>
+    <p class="font-serif font-black text-stone-800 text-xs leading-relaxed" id="keyVerseContent">
+      「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。凡他所做的盡都順利。」
+    </p>
+  </div>
 
-  <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      background: radial-gradient(120% 90% at 50% -10%, #FFF8F0 0%, #FAF5ED 50%, #F2E8DB 100%);
-      color: #1c1917;
-      min-height: 100vh;
-      overflow-x: hidden;
-      user-select: none;
-    }
-
-    .card-glass {
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1.5px solid rgba(240, 222, 202, 0.9);
-      box-shadow: 0 16px 36px -10px rgba(194, 140, 80, 0.1);
-      border-radius: 28px;
-    }
-
-    /* 嫩芽/小樹 Q 彈果凍呼吸 */
-    @keyframes jellyBreeze {
-      0%, 100% { transform: scale(1, 1) rotate(0deg); }
-      30% { transform: scale(1.04, 0.96) rotate(-1.5deg); }
-      60% { transform: scale(0.97, 1.03) rotate(1.5deg); }
-    }
-    .jelly-plant {
-      transform-origin: 150px 250px;
-      animation: jellyBreeze 4.5s ease-in-out infinite;
-      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    /* 點擊時像布丁一樣彈動 */
-    .bounce-tap {
-      animation: tapBounce 0.5s ease;
-    }
-    @keyframes tapBounce {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.18, 0.85); }
-      70% { transform: scale(0.92, 1.08); }
-      100% { transform: scale(1); }
-    }
-
-    /* 水波紋光圈 */
-    @keyframes waterRipple {
-      0% { transform: scale(0.5); opacity: 0.9; }
-      100% { transform: scale(2.2); opacity: 0; }
-    }
-    .ripple-ring {
-      animation: waterRipple 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-    }
-
-    .btn-water {
-      background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
-      box-shadow: 0 10px 24px -4px rgba(234, 88, 12, 0.35);
-      transition: all 0.2s ease;
-    }
-    .btn-water:active { transform: scale(0.96); }
-  </style>
-</head>
-<body class="p-3 sm:p-6 flex justify-center items-start min-h-screen">
-
-  <div class="w-full max-w-md space-y-3.5 my-1">
-
-    <!-- 頂部堂會與日曆天資訊條 -->
-    <header class="card-glass p-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div id="churchBadgeIcon" class="w-10 h-10 rounded-2xl flex items-center justify-center text-white text-lg shadow-md" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
-          <i class="fa-solid fa-seedling"></i>
+  <!-- 3. 今日經文條列 (分卷展開 + 單章語音點播) -->
+  <div class="space-y-2" id="scriptureSectionContainer">
+    
+    <!-- 第一段：舊約進度 -->
+    <div class="rounded-2xl border border-stone-200/80 bg-white/70 overflow-hidden">
+      <div class="p-3 bg-stone-50/80 flex items-center justify-between cursor-pointer" onclick="togglePassageCollapse('otPassage')">
+        <div class="flex items-center gap-2">
+          <span class="w-5 h-5 rounded-lg bg-orange-500/10 text-orange-700 text-[10px] font-black flex items-center justify-center">舊</span>
+          <span class="text-xs font-black text-stone-800">創世記 1 - 3 章</span>
         </div>
-        <div>
-          <h2 id="churchTitle" class="text-sm font-black text-stone-800 tracking-tight">Ｍ＋大雅教會 · 生命樹</h2>
-          <p id="userGroupBadge" class="text-[11px] text-stone-500 font-bold">
-            <span id="userNameDisplay">俊璋 牧師</span> · 所屬<span class="group-term-label">小組</span>：<span id="userGroupName" class="text-orange-700">大雅一組</span>
-          </p>
+        <div class="flex items-center gap-2.5">
+          <!-- 獨立單卷音檔播放鈕 -->
+          <button onclick="playPassageAudio(event, 'ot')" class="text-stone-400 hover:text-orange-600 transition" title="單獨聆聽這卷">
+            <i class="fa-regular fa-circle-play text-sm"></i>
+          </button>
+          <i id="otPassageIcon" class="fa-solid fa-chevron-down text-stone-400 text-xs transition-transform duration-200"></i>
         </div>
       </div>
-      <div class="text-right">
-        <span class="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-full">全教會同步</span>
-        <div class="text-xs font-black text-stone-700 pt-0.5" id="dayCalendarDisplay">Day 5 / 365</div>
-      </div>
-    </header>
-
-    <!-- 核心視覺舞台：Q 版可愛生命樹與微生態 -->
-    <div class="card-glass p-5 relative overflow-hidden flex flex-col items-center">
-      
-      <!-- 天空環境與晝夜微標記 -->
-      <div class="w-full flex justify-between items-center text-[11px] text-stone-400 font-bold z-10 px-1">
-        <span id="timeOfDayNotice"><i class="fa-solid fa-cloud-sun text-amber-500 mr-1"></i>晨露初醒 · 溪水長流</span>
-        <span class="bg-stone-100/90 px-2.5 py-1 rounded-full text-stone-600 cursor-pointer hover:bg-stone-200 transition" onclick="openGraceWellModal()">
-          <i class="fa-solid fa-bucket text-sky-500 mr-1"></i>恩典水井 <strong id="graceWaterPill">0</strong>
-        </span>
-      </div>
-
-      <!-- 樹木 SVG 主舞台 (點擊可觸發 Q 彈互動) -->
-      <div class="relative w-72 h-72 my-1 flex items-center justify-center cursor-pointer" onclick="pokePlant()">
-        
-        <!-- 澆水漣漪 -->
-        <div id="waterRipples" class="absolute bottom-10 w-32 h-10 rounded-full border-2 border-sky-400/50 ripple-ring hidden"></div>
-        
-        <!-- 可愛 SVG 植物舞台 -->
-        <svg id="treeSvg" class="w-full h-full jelly-plant" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-          
-          <!-- 溪流潺潺 (底層) -->
-          <path d="M0 265 C90 248, 190 282, 300 265 L300 300 L0 300 Z" fill="#DDEBFA" />
-          <path d="M30 278 C120 262, 180 290, 270 276" stroke="#B8D7F5" stroke-width="3" stroke-linecap="round"/>
-          
-          <!-- 圓潤可愛的小草坡土堆 -->
-          <ellipse cx="150" cy="254" rx="86" ry="22" fill="#E6D1BA"/>
-          <ellipse cx="150" cy="250" rx="76" ry="17" fill="#CDB194"/>
-          <ellipse cx="150" cy="247" rx="66" ry="12" fill="#75A862"/> <!-- 綠草皮頂面 -->
-
-          <!-- 溪畔小白花與蘑菇裝飾 -->
-          <g id="groundDeco">
-            <circle cx="105" cy="245" r="4" fill="#FFFFFF"/>
-            <circle cx="105" cy="245" r="1.8" fill="#F59E0B"/>
-            <circle cx="198" cy="246" r="3.5" fill="#FFFFFF"/>
-            <circle cx="198" cy="246" r="1.5" fill="#F59E0B"/>
-          </g>
-
-          <!-- 🌟 動態植物本體容器（隨天數動態渲染） -->
-          <g id="dynamicPlantGroup">
-            <!-- 初始預設：超萌雙葉幼苗 (Day 1~30) -->
-          </g>
-
-          <!-- 負面小蟲 (點擊擊退) -->
-          <g id="pestGroup" class="cursor-pointer" onclick="handlePestClick(event)">
-            <!-- 動態插入小蟲 -->
-          </g>
-
-          <!-- 待修剪泛黃小枝 -->
-          <g id="pruneGroup" class="cursor-pointer" onclick="handlePruneClick(event)">
-            <!-- 動態插入修剪枝條 -->
-          </g>
-        </svg>
-
-        <!-- 澆水噴灑動畫 -->
-        <div id="waterDropAnimation" class="absolute inset-0 pointer-events-none hidden flex items-center justify-center">
-          <div class="text-center">
-            <i class="fa-solid fa-droplet text-4xl text-sky-400 -translate-y-8 animate-bounce block"></i>
-            <span class="text-xs font-black text-sky-600 bg-white/90 px-2 py-0.5 rounded-full shadow">恩雨降下</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🎮 預覽成長滑桿 (讓牧師隨時直觀測試看幼苗到大樹的蛻變) -->
-      <div class="w-full bg-stone-100/70 p-2.5 rounded-2xl mb-2 flex items-center gap-2 border border-stone-200/60">
-        <span class="text-[10px] font-black text-stone-500 whitespace-nowrap"><i class="fa-solid fa-sliders text-orange-500 mr-1"></i>成長預覽:</span>
-        <input type="range" min="1" max="365" value="5" id="sliderDaysPreview" oninput="previewGrowth(this.value)" class="w-full accent-orange-500 cursor-pointer">
-        <span class="text-[11px] font-black text-orange-600 w-16 text-right" id="sliderDaysLabel">Day 5</span>
-      </div>
-
-      <!-- 樹木屬靈狀態即時小結 -->
-      <div class="w-full grid grid-cols-3 gap-2 text-center pt-2 border-t border-stone-200/70">
-        <div class="p-2 rounded-2xl bg-stone-50">
-          <div class="text-[10px] text-stone-500 font-bold">累積澆灌</div>
-          <div class="text-sm font-black text-stone-800" id="totalDaysText">5 天</div>
-        </div>
-        <div class="p-2 rounded-2xl bg-stone-50">
-          <div class="text-[10px] text-stone-500 font-bold">成長形態</div>
-          <div class="text-sm font-black text-emerald-600" id="treeStageText">🌱 萌芽破土</div>
-        </div>
-        <div class="p-2 rounded-2xl bg-stone-50">
-          <div class="text-[10px] text-stone-500 font-bold">今日狀態</div>
-          <div class="text-sm font-black text-orange-600" id="todayStatusText">尚未澆灌</div>
-        </div>
+      <!-- 經文文字摘要與閱讀區 -->
+      <div id="otPassageContent" class="p-3 text-xs text-stone-600 leading-relaxed font-serif space-y-2 border-t border-stone-100 bg-white">
+        <p><strong>第 1 章：</strong>起初，神創造天地。地是空虛混沌，淵面黑暗；神的靈運行在水面上。神說：「要有光」，就有了光...</p>
+        <p><strong>第 2 章：</strong>天地萬物都造齊了。到第七日，神造物的工已經完畢，就在第七日歇了他一切的工，安息了...</p>
+        <p><strong>第 3 章：</strong>耶和華神所造的，惟有蛇比田野一切的活物更狡猾...</p>
       </div>
     </div>
 
-    <!-- 今日活水經文卡 -->
-    <div class="card-glass p-5 space-y-3.5">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2.5">
-        <div>
-          <span class="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-full">TODAY'S WATER</span>
-          <h3 class="text-sm font-black text-stone-800 pt-1" id="curriculumPassageTitle">創世記 13-15 章 · 馬太福音 5 章 · 詩篇 5 篇</h3>
+    <!-- 第二段：新約進度 -->
+    <div class="rounded-2xl border border-stone-200/80 bg-white/70 overflow-hidden">
+      <div class="p-3 bg-stone-50/80 flex items-center justify-between cursor-pointer" onclick="togglePassageCollapse('ntPassage')">
+        <div class="flex items-center gap-2">
+          <span class="w-5 h-5 rounded-lg bg-emerald-500/10 text-emerald-700 text-[10px] font-black flex items-center justify-center">新</span>
+          <span class="text-xs font-black text-stone-800">馬太福音 第 1 章</span>
         </div>
-        <button onclick="readScriptureFull()" class="text-xs text-orange-700 font-bold hover:underline flex items-center gap-1">
-          <span>經文全文</span>
-          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-        </button>
+        <div class="flex items-center gap-2.5">
+          <button onclick="playPassageAudio(event, 'nt')" class="text-stone-400 hover:text-emerald-600 transition" title="單獨聆聽這卷">
+            <i class="fa-regular fa-circle-play text-sm"></i>
+          </button>
+          <i id="ntPassageIcon" class="fa-solid fa-chevron-right text-stone-400 text-xs transition-transform duration-200"></i>
+        </div>
       </div>
-
-      <!-- 今日核心生命金句 -->
-      <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/70 text-xs leading-relaxed space-y-1">
-        <span class="text-[10px] font-black text-amber-900 block" id="keyVerseRef">【今日扎根金句 · 詩篇 1:3】</span>
-        <p class="font-serif font-black text-stone-800" id="keyVerseContent">
-          「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。凡他所做的盡都順利。」
-        </p>
+      <div id="ntPassageContent" class="p-3 text-xs text-stone-600 leading-relaxed font-serif space-y-2 border-t border-stone-100 bg-white hidden">
+        <p>亞伯拉罕的後裔、大衛的子孫、耶穌基督的家譜：亞伯拉罕生以撒，以撒生雅各...</p>
       </div>
-
-      <!-- 今日感動一句話筆記 -->
-      <div class="space-y-1">
-        <label class="text-[11px] font-black text-stone-600 block">留下今日扎根金葉 (心得/一句禱告)：</label>
-        <input type="text" id="dailyNoteInput" placeholder="寫下一句感動，這句話將化為樹梢金葉..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
-      </div>
-
-      <!-- 澆灌主按鈕 -->
-      <button onclick="waterMyTree()" id="btnWaterAction" class="w-full py-4 rounded-2xl btn-water font-black text-sm text-white flex items-center justify-center gap-2">
-        <i class="fa-solid fa-droplet text-xs"></i>
-        <span id="btnWaterText">💧 注入今日活水 · 滋養小樹苗</span>
-      </button>
     </div>
 
-    <!-- 底部功能列 -->
-    <div class="grid grid-cols-3 gap-2 pt-1">
-      <button onclick="openForestView()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
-        <i class="fa-solid fa-tree text-emerald-600 text-lg block mb-1"></i>
-        <span class="text-[11px] font-black text-stone-700 block"><span class="group-term-label">小組</span>即時林</span>
-      </button>
-      <button onclick="openCareInteractions()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
-        <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-lg block mb-1"></i>
-        <span class="text-[11px] font-black text-stone-700 block">修剪與除蟲</span>
-      </button>
-      <button onclick="generateShareCard()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
-        <i class="fa-solid fa-share-nodes text-orange-500 text-lg block mb-1"></i>
-        <span class="text-[11px] font-black text-stone-700 block">秀出我的樹</span>
-      </button>
+    <!-- 第三段：詩篇 / 箴言 -->
+    <div class="rounded-2xl border border-stone-200/80 bg-white/70 overflow-hidden">
+      <div class="p-3 bg-stone-50/80 flex items-center justify-between cursor-pointer" onclick="togglePassageCollapse('psPassage')">
+        <div class="flex items-center gap-2">
+          <span class="w-5 h-5 rounded-lg bg-sky-500/10 text-sky-700 text-[10px] font-black flex items-center justify-center">詩</span>
+          <span class="text-xs font-black text-stone-800">詩篇 第 1 篇</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button onclick="playPassageAudio(event, 'ps')" class="text-stone-400 hover:text-sky-600 transition" title="單獨聆聽這卷">
+            <i class="fa-regular fa-circle-play text-sm"></i>
+          </button>
+          <i id="psPassageIcon" class="fa-solid fa-chevron-right text-stone-400 text-xs transition-transform duration-200"></i>
+        </div>
+      </div>
+      <div id="psPassageContent" class="p-3 text-xs text-stone-600 leading-relaxed font-serif space-y-2 border-t border-stone-100 bg-white hidden">
+        <p>不從惡人的計謀，不站罪人的道路，不坐褻慢人的座位，惟喜愛耶和華的律法，晝夜思想，這人便為有福！</p>
+      </div>
     </div>
 
   </div>
 
-  <!-- 彈窗：恩典水井 -->
-  <div id="graceWellModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="card-glass w-full max-w-sm p-6 space-y-4 text-center">
-      <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%)">
-        <i class="fa-solid fa-bucket"></i>
+  <!-- 4. 浮動語音播放控制條 (當點擊播放時自動滑出) -->
+  <div id="floatingAudioPlayer" class="hidden p-3 rounded-2xl bg-stone-900 text-white flex items-center justify-between shadow-lg">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center text-xs animate-pulse">
+        <i class="fa-solid fa-headphones"></i>
       </div>
       <div>
-        <h3 class="text-base font-black text-stone-800">恩典水井 · 隨時補足活水</h3>
-        <p class="text-xs text-stone-500 leading-relaxed pt-1">
-          走得慢沒關係，神總在溪水旁等候！利用空檔補讀，小樹苗立刻挺拔精神！
-        </p>
+        <div class="text-[11px] font-black" id="playingAudioTitle">正在播放：創世記 1-3 章</div>
+        <div class="text-[9px] text-stone-400">有聲聖經朗讀伴讀中...</div>
       </div>
-
-      <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between text-xs text-left">
-        <div>
-          <strong class="text-sky-900 block">Day 4 · 創世記 10-12 章</strong>
-          <span class="text-[10px] text-sky-700">落後 1 天 · 尚未灌溉</span>
-        </div>
-        <button onclick="makeupReading(4)" class="px-3 py-1.5 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700">補讀補水</button>
-      </div>
-
-      <button onclick="closeGraceWellModal()" class="w-full py-2.5 rounded-xl bg-stone-100 text-stone-700 text-xs font-black">返回我的生命樹</button>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="pauseAudio()" class="text-white hover:text-orange-400 text-sm">
+        <i class="fa-solid fa-pause"></i>
+      </button>
+      <button onclick="closeAudioPlayer()" class="text-stone-500 hover:text-white text-xs">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
   </div>
 
-  <!-- 彈窗：即時樹林 -->
-  <div id="forestModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="card-glass w-full max-w-md p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-stone-200 pb-3">
-        <div>
-          <h3 class="text-base font-black text-stone-800" id="forestModalTitle">大雅一組 · 溪畔生命林</h3>
-          <p class="text-[11px] text-stone-500">今日全組澆灌率：<strong class="text-orange-600">80%</strong> (8/10 人)</p>
-        </div>
-        <button onclick="closeForestModal()" class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 text-sm">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="p-4 rounded-2xl bg-gradient-to-b from-amber-50/50 to-emerald-50/60 border border-emerald-100 space-y-3">
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="p-2.5 rounded-xl bg-white/90 border border-emerald-200 space-y-1">
-            <div class="text-2xl">🌱</div>
-            <div class="text-[11px] font-black text-stone-800">俊璋 牧師</div>
-            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">已澆灌</span>
-          </div>
-          <div class="p-2.5 rounded-xl bg-white/90 border border-amber-200 space-y-1">
-            <div class="text-2xl opacity-75">🌱</div>
-            <div class="text-[11px] font-black text-stone-800">碧鳳 師母</div>
-            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">💧 口渴中</span>
-          </div>
-          <div class="p-2.5 rounded-xl bg-white/90 border border-emerald-200 space-y-1">
-            <div class="text-2xl">🌱</div>
-            <div class="text-[11px] font-black text-stone-800">頌恩 傳道</div>
-            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">已澆灌</span>
-          </div>
-        </div>
-      </div>
-
-      <p class="text-[11px] text-stone-500 text-center">點擊同伴的小芽，可為他代禱澆水送上今日活水！</p>
-    </div>
+  <!-- 5. 扎根心得留言框與澆水主按鈕 -->
+  <div class="space-y-1.5 pt-1">
+    <label class="text-[11px] font-black text-stone-600 block">留下今日扎根金葉 (心得/一句禱告)：</label>
+    <input type="text" id="dailyNoteInput" placeholder="寫下一句感動，這句話將化為樹梢金葉..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    let targetChurch = urlParams.get('church') || 'M+';
-    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
-    else targetChurch = 'M+';
-
-    const isShine = (targetChurch === 'SHiNE');
-    const groupTerm = isShine ? '小家' : '小組';
-
-    let currentDays = 5;
-    let todayWatered = false;
-
-    // 🎨 五階段 Q 版動態繪本樹生成演算法
-    function renderCutePlant(day) {
-      const container = document.getElementById('dynamicPlantGroup');
-      const stageText = document.getElementById('treeStageText');
-      const pestGroup = document.getElementById('pestGroup');
-      const pruneGroup = document.getElementById('pruneGroup');
-
-      let svgHtml = '';
-
-      if (day <= 30) {
-        // ========== 階段 1：萌芽破土 (Day 1~30) ==========
-        // 超萌小綠芽，頂著小露珠
-        stageText.innerText = '🌱 階段 1 · 萌芽破土';
-        svgHtml = `
-          <!-- 幼嫩綠莖 -->
-          <path d="M150 248 Q150 215 148 195" stroke="#7BAE52" stroke-width="6" stroke-linecap="round" fill="none"/>
-          
-          <!-- 左片圓潤小葉 (帶微風弧度) -->
-          <path d="M148 200 C125 190 115 170 128 155 C145 155 150 185 148 200 Z" fill="#8AC959"/>
-          <path d="M136 170 Q142 185 148 195" stroke="#689E40" stroke-width="1.5" fill="none"/>
-
-          <!-- 右片圓潤小葉 -->
-          <path d="M148 198 C170 188 182 168 168 152 C152 152 146 182 148 198 Z" fill="#9CD869"/>
-          <path d="M160 168 Q154 184 148 195" stroke="#689E40" stroke-width="1.5" fill="none"/>
-
-          <!-- 葉尖發光露珠 -->
-          <circle cx="127" cy="156" r="3.5" fill="#E0F2FE" stroke="#38BDF8" stroke-width="1"/>
-          <circle cx="128" cy="155" r="1" fill="#FFFFFF"/>
-        `;
-
-        // 幼苗期的小蟲 (圓滾滾小毛蟲)
-        pestGroup.innerHTML = `
-          <g transform="translate(162, 162)">
-            <ellipse cx="0" cy="0" rx="6" ry="4" fill="#EF4444" />
-            <circle cx="5" cy="-2" r="3.5" fill="#DC2626" />
-            <circle cx="6" cy="-3" r="1" fill="#FFFFFF" />
-            <path d="M6 -5 L8 -8 M5 -5 L5 -8" stroke="#991B1B" stroke-width="1" />
-          </g>
-        `;
-
-        // 幼苗期修剪：小嫩黃枯葉
-        pruneGroup.innerHTML = `
-          <g transform="translate(138, 222)">
-            <path d="M0 0 Q-12 5 -16 14 Q-5 12 0 0" fill="#FBBF24" />
-            <circle cx="-16" cy="14" r="5" fill="#F59E0B" />
-            <text x="-19" y="17" font-size="8" fill="white">✂️</text>
-          </g>
-        `;
-
-      } else if (day <= 90) {
-        // ========== 階段 2：清泉小樹苗 (Day 31~90) ==========
-        stageText.innerText = '🌿 階段 2 · 青翠幼苗';
-        svgHtml = `
-          <!-- 圓柱形溫潤小樹幹 -->
-          <path d="M146 248 Q144 200 148 165 C152 200 154 248 154 248 Z" fill="#966138"/>
-          
-          <!-- 左枝枒與小雲朵葉叢 -->
-          <path d="M146 195 Q125 185 110 188" stroke="#84532B" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="102" cy="184" r="22" fill="#75BA58"/>
-          <circle cx="118" cy="174" r="18" fill="#88CF68"/>
-
-          <!-- 右枝枒與小雲朵葉叢 -->
-          <path d="M152 185 Q175 175 190 178" stroke="#84532B" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="196" cy="172" r="22" fill="#88CF68"/>
-          <circle cx="180" cy="162" r="18" fill="#6FB253"/>
-
-          <!-- 頂端可愛主葉冠 -->
-          <circle cx="148" cy="140" r="30" fill="#88CF68"/>
-          <circle cx="132" cy="130" r="22" fill="#9DE27C"/>
-          <circle cx="162" cy="132" r="20" fill="#6EB152"/>
-        `;
-
-        pestGroup.innerHTML = `
-          <g transform="translate(100, 172)">
-            <circle cx="0" cy="0" r="7" fill="#EF4444" />
-            <text x="-4" y="3" font-size="8" fill="white">🐛</text>
-          </g>
-        `;
-        pruneGroup.innerHTML = `
-          <g transform="translate(186, 185)">
-            <circle cx="0" cy="0" r="7" fill="#F59E0B" />
-            <text x="-4" y="3" font-size="8" fill="white">✂️</text>
-          </g>
-        `;
-
-      } else if (day <= 180) {
-        // ========== 階段 3：繁茂常青小樹 (Day 91~180) ==========
-        stageText.innerText = '🌳 階段 3 · 枝繁葉茂';
-        svgHtml = `
-          <!-- 壯實可愛小樹幹 -->
-          <path d="M140 248 C140 190 135 150 150 130 C165 150 160 190 160 248 Z" fill="#8B572A"/>
-          
-          <!-- 像棉花糖般蓬鬆的多重圓形樹冠 -->
-          <circle cx="150" cy="115" r="48" fill="#5EAA4F"/>
-          <circle cx="115" cy="125" r="38" fill="#75C264"/>
-          <circle cx="185" cy="125" r="38" fill="#529944"/>
-          <circle cx="135" cy="85" r="35" fill="#88D678"/>
-          <circle cx="165" cy="88" r="34" fill="#75C264"/>
-
-          <!-- 枝頭停駐的圓滾滾可愛小藍鳥 -->
-          <g transform="translate(185, 88)">
-            <ellipse cx="0" cy="0" rx="9" ry="7" fill="#38BDF8"/>
-            <circle cx="6" cy="-2" r="5" fill="#38BDF8"/>
-            <circle cx="8" cy="-3" r="1.2" fill="#1E293B"/>
-            <polygon points="10,-2 15,-1 10,1" fill="#F59E0B"/>
-            <path d="M-6 2 Q-10 6 -4 6" stroke="#0284C7" stroke-width="1.5" fill="none"/>
-          </g>
-        `;
-
-        pestGroup.innerHTML = `
-          <g transform="translate(125, 120)">
-            <circle cx="0" cy="0" r="8" fill="#EF4444" />
-            <text x="-5" y="4" font-size="9" fill="white">🐛</text>
-          </g>
-        `;
-        pruneGroup.innerHTML = `
-          <g transform="translate(185, 140)">
-            <circle cx="0" cy="0" r="8" fill="#F59E0B" />
-            <text x="-5" y="4" font-size="9" fill="white">✂️</text>
-          </g>
-        `;
-
-      } else if (day <= 270) {
-        // ========== 階段 4：百花盛開 (Day 181~270) ==========
-        stageText.innerText = '🌸 階段 4 · 繁花似錦';
-        svgHtml = `
-          <path d="M138 248 C138 185 132 140 150 120 C168 140 162 185 162 248 Z" fill="#7A4B24"/>
-          <circle cx="150" cy="110" r="54" fill="#58A249"/>
-          <circle cx="110" cy="120" r="42" fill="#6EBA5D"/>
-          <circle cx="190" cy="120" r="42" fill="#4B8C3E"/>
-          <circle cx="132" cy="76" r="38" fill="#80D06E"/>
-          <circle cx="168" cy="78" r="36" fill="#6EBA5D"/>
-
-          <!-- 綻放的粉白可愛小花叢 -->
-          <g transform="translate(120, 100)">
-            <circle cx="-4" cy="0" r="3.5" fill="#FDE2E4"/><circle cx="4" cy="0" r="3.5" fill="#FDE2E4"/>
-            <circle cx="0" cy="-4" r="3.5" fill="#FDE2E4"/><circle cx="0" cy="4" r="3.5" fill="#FDE2E4"/>
-            <circle cx="0" cy="0" r="2.5" fill="#F59E0B"/>
-          </g>
-          <g transform="translate(170, 90)">
-            <circle cx="-4" cy="0" r="3.5" fill="#FDE2E4"/><circle cx="4" cy="0" r="3.5" fill="#FDE2E4"/>
-            <circle cx="0" cy="-4" r="3.5" fill="#FDE2E4"/><circle cx="0" cy="4" r="3.5" fill="#FDE2E4"/>
-            <circle cx="0" cy="0" r="2.5" fill="#F59E0B"/>
-          </g>
-          <g transform="translate(145, 60)">
-            <circle cx="-4" cy="0" r="3.5" fill="#FDE2E4"/><circle cx="4" cy="0" r="3.5" fill="#FDE2E4"/>
-            <circle cx="0" cy="-4" r="3.5" fill="#FDE2E4"/><circle cx="0" cy="4" r="3.5" fill="#FDE2E4"/>
-            <circle cx="0" cy="0" r="2.5" fill="#F59E0B"/>
-          </g>
-        `;
-        pestGroup.innerHTML = '';
-        pruneGroup.innerHTML = '';
-
-      } else {
-        // ========== 階段 5：十二樣果子參天黃金樹 (Day 271~365) ==========
-        stageText.innerText = '👑 階段 5 · 豐碩生命果';
-        svgHtml = `
-          <!-- 茁壯的大樹幹 -->
-          <path d="M134 248 C134 175 125 130 150 105 C175 130 166 175 166 248 Z" fill="#6A3D18"/>
-          <circle cx="150" cy="100" r="62" fill="#468F38"/>
-          <circle cx="102" cy="112" r="48" fill="#5EB04D"/>
-          <circle cx="198" cy="112" r="48" fill="#3D7E30"/>
-          <circle cx="128" cy="62" r="44" fill="#71C75F"/>
-          <circle cx="172" cy="64" r="42" fill="#5EB04D"/>
-
-          <!-- 發光聖靈黃金果實 -->
-          <circle cx="110" cy="95" r="7" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
-          <circle cx="185" cy="100" r="7" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
-          <circle cx="150" cy="65" r="7.5" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
-          <circle cx="135" cy="125" r="6.5" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
-          <circle cx="168" cy="128" r="6.5" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
-        `;
-        pestGroup.innerHTML = '';
-        pruneGroup.innerHTML = '';
-      }
-
-      container.innerHTML = svgHtml;
-    }
-
-    // 戳戳小樹 Q 彈互動
-    function pokePlant() {
-      const svg = document.getElementById('treeSvg');
-      svg.classList.remove('bounce-tap');
-      void svg.offsetWidth; // 強制重繪
-      svg.classList.add('bounce-tap');
-    }
-
-    // 滑桿即時預覽不同天數的樹
-    function previewGrowth(val) {
-      currentDays = parseInt(val);
-      document.getElementById('sliderDaysLabel').innerText = `Day ${val}`;
-      document.getElementById('totalDaysText').innerText = `${val} 天`;
-      document.getElementById('dayCalendarDisplay').innerText = `Day ${val} / 365`;
-      renderCutePlant(currentDays);
-    }
-
-    // 澆水動畫
-    function waterMyTree() {
-      if (todayWatered) {
-        alert('你今天已經為小樹苗澆過水囉！明天再來一起在溪水旁同行！🌱');
-        return;
-      }
-
-      const dropAnim = document.getElementById('waterDropAnimation');
-      const ripples = document.getElementById('waterRipples');
-      const btn = document.getElementById('btnWaterAction');
-
-      dropAnim.classList.remove('hidden');
-      ripples.classList.remove('hidden');
-      pokePlant();
-
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在吸飽恩典活水...`;
-
-      setTimeout(() => {
-        dropAnim.classList.add('hidden');
-        todayWatered = true;
-        currentDays += 1;
-
-        document.getElementById('sliderDaysPreview').value = currentDays;
-        previewGrowth(currentDays);
-
-        document.getElementById('todayStatusText').innerText = '已澆灌 (充滿精神)';
-        document.getElementById('todayStatusText').className = 'text-sm font-black text-emerald-600';
-
-        btn.className = 'w-full py-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-sm flex items-center justify-center gap-2';
-        btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span>今日已扎根灌溉 · 小樹長大中！</span>`;
-      }, 1000);
-    }
-
-    function handlePestClick(e) {
-      if (e) e.stopPropagation();
-      if (confirm('【除蟲作戰 · 剛強校正】\n發現「憂慮毛蟲」！要用今日金句宣告擊退嗎？\n\n「應當一無掛慮，只要凡事藉著禱告祈求，將你們所要的告訴神。」')) {
-        document.getElementById('pestGroup').innerHTML = '';
-        pokePlant();
-        alert('⚔️ 宣告得勝！負面小蟲消散，小葉片重拾翠綠！');
-      }
-    }
-
-    function handlePruneClick(e) {
-      if (e) e.stopPropagation();
-      if (confirm('【心靈淨化 · 溫柔修剪】\n輕輕滑動修剪枯黃嫩葉，卸下煩躁與老我嗎？')) {
-        document.getElementById('pruneGroup').innerHTML = '';
-        pokePlant();
-        alert('✂️ 修剪完成！小樹重新清爽挺拔！');
-      }
-    }
-
-    function openGraceWellModal() { document.getElementById('graceWellModal').classList.remove('hidden'); }
-    function closeGraceWellModal() { document.getElementById('graceWellModal').classList.add('hidden'); }
-    function makeupReading(d) {
-      alert(`已成功補讀 Day ${d}！小樹苗補足水份！`);
-      closeGraceWellModal();
-    }
-
-    function openForestView() { document.getElementById('forestModal').classList.remove('hidden'); }
-    function closeForestModal() { document.getElementById('forestModal').classList.add('hidden'); }
-
-    function openCareInteractions() {
-      alert('已開啟修剪與除蟲模式！請直接在畫面上點擊紅色小毛蟲或小剪刀！');
-    }
-
-    function generateShareCard() {
-      alert('📸 已產生超萌 Q 版分享卡！可儲存分享至 IG 限時動態或 LINE 群組！');
-    }
-
-    function readScriptureFull() {
-      alert('【今日完整章節】\n1. 創世記 13-15 章\n2. 馬太福音 5 章\n3. 詩篇 5 篇');
-    }
-
-    // 初始化堂會設定
-    window.onload = () => {
-      document.querySelectorAll('.group-term-label').forEach(el => el.innerText = groupTerm);
-      const titleEl = document.getElementById('churchTitle');
-      const iconEl = document.getElementById('churchBadgeIcon');
-      const forestTitle = document.getElementById('forestModalTitle');
-
-      if (isShine) {
-        titleEl.innerText = '火樂教會 SHiNE · 生命樹';
-        iconEl.style.background = 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)';
-        forestTitle.innerText = '敬拜小家 · 火熱生命林';
-        document.getElementById('userGroupName').innerText = '敬拜小家';
-      } else {
-        titleEl.innerText = 'Ｍ＋大雅教會 · 生命樹';
-        iconEl.style.background = 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)';
-        forestTitle.innerText = '大雅一組 · 溪畔生命林';
-        document.getElementById('userGroupName').innerText = '大雅一組';
-      }
-
-      renderCutePlant(currentDays);
-    };
-  </script>
-</body>
-</html>
+  <button onclick="waterMyTree()" id="btnWaterAction" class="w-full py-4 rounded-2xl btn-water font-black text-sm text-white flex items-center justify-center gap-2">
+    <i class="fa-solid fa-droplet text-xs"></i>
+    <span id="btnWaterText">💧 注入今日活水 · 滋養小樹苗</span>
+  </button>
+</div>
