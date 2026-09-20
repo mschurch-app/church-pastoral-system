@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>同心微光 · 動態漂浮代禱牆</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,9 +19,10 @@
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+    /* 晨曦暖金與琉璃乳白的天空幕景 */
     body {
-      background: radial-gradient(ellipse at 50% 30%, #1c1917 0%, #0c0a09 60%, #000000 100%);
-      color: #fafaf9;
+      background: radial-gradient(135% 100% at 50% 0%, #FFFDF9 0%, #FAF5EE 45%, #F2E8DC 100%);
+      color: #292524;
       height: 100vh;
       width: 100vw;
       overflow: hidden;
@@ -29,7 +30,31 @@
       user-select: none;
     }
 
-    /* 縮小後的光球容器 */
+    /* 晨光背景裝飾微暈動態 */
+    .bg-aurora {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: 0.6;
+      animation: auroraBreeze 12s ease-in-out infinite alternate;
+    }
+    @keyframes auroraBreeze {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 40px) scale(1.15); }
+    }
+
+    /* 高級磨砂玻璃卡片 */
+    .card-glass {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(240, 222, 202, 0.85);
+      box-shadow: 0 16px 36px -10px rgba(194, 140, 80, 0.14);
+      border-radius: 26px;
+    }
+
+    /* 漂浮琉璃水晶光球容器 */
     .floating-orb {
       position: absolute;
       border-radius: 9999px;
@@ -38,31 +63,31 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
       will-change: transform;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
 
-    /* 精巧光暈 */
+    /* 琉璃金芒水晶球 */
     .orb-glow {
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.28) 0%, rgba(217, 119, 6, 0.15) 60%, rgba(0,0,0,0.5) 100%);
-      border: 1.5px solid rgba(251, 191, 36, 0.5);
-      box-shadow: 0 0 20px rgba(245, 158, 11, 0.25), inset 0 0 10px rgba(251, 191, 36, 0.2);
+      background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.85) 55%, rgba(251, 191, 36, 0.28) 100%);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(245, 158, 11, 0.45);
+      box-shadow: 0 10px 25px -4px rgba(217, 119, 6, 0.18), inset 0 2px 6px rgba(255, 255, 255, 0.9);
     }
 
     .orb-glow:hover {
-      border-color: rgba(251, 191, 36, 0.9);
-      box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.35);
+      border-color: rgba(234, 88, 12, 0.7);
+      box-shadow: 0 14px 32px -4px rgba(234, 88, 12, 0.28), inset 0 2px 8px rgba(255, 255, 255, 1);
     }
 
     .orb-answered {
-      background: radial-gradient(circle, rgba(234, 88, 12, 0.35) 0%, rgba(245, 158, 11, 0.2) 60%, rgba(0,0,0,0.6) 100%);
-      border: 2px solid #F59E0B;
-      box-shadow: 0 0 35px rgba(245, 158, 11, 0.6);
+      background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.98) 0%, rgba(254, 240, 138, 0.9) 55%, rgba(234, 88, 12, 0.35) 100%);
+      border: 2px solid #ea580c;
+      box-shadow: 0 12px 30px -4px rgba(234, 88, 12, 0.35);
     }
 
-    /* 環繞衛星外圈容器 */
+    /* 環繞公轉軌道容器 */
     .satellite-wrap {
       position: absolute;
       top: 50%;
@@ -72,14 +97,15 @@
       pointer-events: none;
     }
 
-    /* 代禱文發光小星點 */
+    /* 代禱文金色小星塵 */
     .satellite-dot {
       position: absolute;
-      width: 9px;
-      height: 9px;
+      width: 10px;
+      height: 10px;
       border-radius: 9999px;
-      background: #FEF08A;
-      box-shadow: 0 0 8px #F59E0B, 0 0 14px #D97706;
+      background: #F59E0B;
+      border: 1.5px solid #FFFFFF;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.45);
       pointer-events: auto;
       cursor: pointer;
       transform: translate(-50%, -50%);
@@ -87,13 +113,14 @@
     }
     .satellite-dot:hover {
       transform: translate(-50%, -50%) scale(1.6);
+      background: #D97706;
     }
 
     /* 升起發光的禱告手動畫 */
     @keyframes risePrayHand {
       0% { transform: translate(-50%, 15px) scale(0.6); opacity: 0; }
-      30% { transform: translate(-50%, -10px) scale(1.3); opacity: 1; filter: drop-shadow(0 0 14px #F59E0B); }
-      70% { transform: translate(-50%, -20px) scale(1.1); opacity: 1; filter: drop-shadow(0 0 20px #F59E0B); }
+      30% { transform: translate(-50%, -10px) scale(1.3); opacity: 1; filter: drop-shadow(0 4px 10px rgba(234, 88, 12, 0.4)); }
+      70% { transform: translate(-50%, -20px) scale(1.1); opacity: 1; filter: drop-shadow(0 6px 14px rgba(234, 88, 12, 0.5)); }
       100% { transform: translate(-50%, -45px) scale(1.4); opacity: 0; }
     }
     .pray-hand-anim {
@@ -107,7 +134,7 @@
 
     /* 禱告震波 */
     @keyframes prayerShockwave {
-      0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.9; }
+      0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.85; }
       100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
     }
     .shockwave-anim {
@@ -115,7 +142,7 @@
       top: 50%;
       left: 50%;
       border-radius: 9999px;
-      border: 2px solid rgba(251, 191, 36, 0.85);
+      border: 2px solid rgba(234, 88, 12, 0.6);
       animation: prayerShockwave 1s ease-out forwards;
       pointer-events: none;
       z-index: 40;
@@ -124,148 +151,171 @@
 </head>
 <body>
 
+  <!-- 背景流動柔光球 -->
+  <div class="bg-aurora w-96 h-96 -top-20 -left-20 bg-amber-200/50"></div>
+  <div class="bg-aurora w-96 h-96 bottom-0 -right-20 bg-orange-200/40"></div>
+
   <!-- 頂部輕量導覽條 -->
   <header class="fixed top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-auto">
-    <div class="flex items-center gap-2.5 bg-stone-900/85 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-stone-800 shadow-xl">
-      <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+    <div class="card-glass px-4 py-2 flex items-center gap-2.5">
+      <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping"></span>
       <div>
-        <h1 class="text-xs font-black tracking-wider text-amber-200" id="wallTitle">Ｍ＋大雅教會 · 祭壇代禱牆</h1>
-        <p class="text-[9px] text-stone-400">點擊光球看代禱清單 · 舉手同心托住</p>
+        <h1 class="text-xs font-black tracking-wider text-stone-800" id="wallTitle">Ｍ＋大雅教會 · 晨曦代禱牆</h1>
+        <p class="text-[9px] text-stone-500 font-bold">點擊浮動琉璃球 · 同心舉手托住</p>
       </div>
     </div>
 
     <!-- 點火發起代禱按鈕 -->
-    <button onclick="openCreatePrayerModal()" class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-stone-950 font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition active:scale-95">
-      <i class="fa-solid fa-fire text-white text-xs"></i>
+    <button onclick="openCreatePrayerModal()" class="px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs shadow-md flex items-center gap-1.5 hover:opacity-95 transition active:scale-95">
+      <i class="fa-solid fa-fire text-amber-200 text-xs"></i>
       <span>提送代禱</span>
     </button>
   </header>
 
   <!-- 🌟 全螢幕漂浮畫布舞台 🌟 -->
   <main id="prayerSpaceCanvas" class="w-full h-full relative overflow-hidden">
-    <!-- 空狀態提示 (無代禱時顯示) -->
+    <!-- 空狀態提示 -->
     <div id="emptyStateNotice" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-6 space-y-2">
-      <i class="fa-solid fa-fire-burner text-amber-500/40 text-4xl mb-1 animate-pulse"></i>
-      <div class="text-sm font-black text-stone-400">祭壇之火預備中</div>
-      <p class="text-xs text-stone-600">目前尚無代禱事項，點擊右上角「提送代禱」點燃第一盞燭光！</p>
+      <div class="w-14 h-14 rounded-3xl bg-orange-100 flex items-center justify-center text-orange-600 text-2xl shadow-sm mb-1 animate-pulse">
+        <i class="fa-solid fa-seedling"></i>
+      </div>
+      <div class="text-sm font-black text-stone-700">晨光初醒 · 祭壇預備中</div>
+      <p class="text-xs text-stone-500">目前尚無公開代禱，點擊右上角「提送代禱」點燃第一盞祈禱微光！</p>
     </div>
   </main>
 
   <!-- 底部微引導與統計 -->
   <footer class="fixed bottom-4 inset-x-0 flex justify-center z-30 pointer-events-none">
-    <div class="bg-stone-900/75 backdrop-blur-md px-4 py-1.5 rounded-full border border-stone-800 text-[10px] text-stone-400 font-bold flex items-center gap-3 pointer-events-auto">
-      <span><i class="fa-solid fa-hands-praying text-amber-400 mr-1"></i>今日同心代禱：<strong class="text-amber-300" id="totalPrayersCount">0</strong> 次</span>
-      <span class="text-stone-600">|</span>
-      <span><i class="fa-regular fa-clock text-orange-400 mr-1"></i>7 天常駐生命祭壇</span>
+    <div class="card-glass px-4 py-1.5 text-[10px] text-stone-600 font-bold flex items-center gap-3 pointer-events-auto">
+      <span><i class="fa-solid fa-hands-praying text-orange-500 mr-1"></i>今日公開代禱：<strong class="text-orange-600" id="totalPrayersCount">0</strong> 次</span>
+      <span class="text-stone-300">|</span>
+      <span><i class="fa-regular fa-clock text-amber-500 mr-1"></i>7 天常駐生命祭壇</span>
     </div>
   </footer>
 
   <!-- ================= 彈窗 A：代禱詳情、誰禱告了、代禱文與同心按手 ================= -->
-  <div id="prayerDetailModal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-sm bg-stone-900/95 border border-amber-500/40 rounded-3xl p-5 space-y-3.5 text-stone-100 shadow-2xl relative max-h-[90vh] flex flex-col">
+  <div id="prayerDetailModal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="card-glass w-full max-w-sm p-5 space-y-3.5 text-stone-800 shadow-2xl relative max-h-[90vh] flex flex-col">
       
-      <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-600">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
 
       <!-- 標題與提請人 -->
       <div class="space-y-1 pr-6 flex-shrink-0">
         <div class="flex items-center gap-1.5">
-          <span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-[10px] font-black text-amber-300" id="modalAuthorTag">-</span>
-          <span class="text-[10px] text-stone-400" id="modalDaysTag">-</span>
+          <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-[10px] font-black text-orange-800" id="modalAuthorTag">-</span>
+          <span class="text-[10px] text-stone-400 font-bold" id="modalDaysTag">-</span>
         </div>
-        <h3 class="text-sm font-black text-amber-100 leading-snug" id="modalTitle">-</h3>
+        <h3 class="text-sm font-black text-stone-900 leading-snug" id="modalTitle">-</h3>
       </div>
 
       <!-- 代禱主內文 -->
-      <div class="bg-stone-950/70 p-3 rounded-2xl border border-stone-800 text-xs text-stone-300 font-serif leading-relaxed flex-shrink-0" id="modalContent">
+      <div class="bg-stone-50/80 p-3 rounded-2xl border border-stone-200/80 text-xs text-stone-700 font-serif leading-relaxed flex-shrink-0" id="modalContent">
         -
       </div>
 
-      <!-- 📜 誰禱告了與代禱文歷史列表 (可垂直滾動) -->
+      <!-- 📜 誰禱告了與代禱文歷史列表 -->
       <div class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[120px]">
-        <div class="text-[11px] font-black text-amber-300 flex items-center justify-between sticky top-0 bg-stone-900/95 py-1 z-10 border-b border-stone-800">
+        <div class="text-[11px] font-black text-orange-700 flex items-center justify-between sticky top-0 bg-white/95 py-1 z-10 border-b border-stone-100">
           <span class="flex items-center gap-1">
-            <i class="fa-solid fa-cloud-moon text-amber-400"></i>
-            <span>守望禱告歷程 (<span id="modalCommentsCount">0</span>)</span>
+            <i class="fa-solid fa-sparkles text-amber-500"></i>
+            <span>守望代禱歷程 (<span id="modalCommentsCount">0</span>)</span>
           </span>
           <span class="text-[10px] text-stone-400 font-normal">依時間排序</span>
         </div>
         
-        <div class="space-y-2" id="modalCommentsList">
-          <!-- 動態插入代禱文與作者 -->
-        </div>
+        <div class="space-y-2" id="modalCommentsList"></div>
       </div>
 
       <!-- 留下代禱文輸入框 -->
-      <div class="space-y-1 flex-shrink-0 pt-1 border-t border-stone-800">
+      <div class="space-y-1 flex-shrink-0 pt-1 border-t border-stone-100">
         <div class="flex gap-1.5">
-          <input type="text" id="inputCommentAuthor" placeholder="你的名字" class="w-24 bg-stone-950 border border-stone-700 rounded-xl px-2.5 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-400">
-          <input type="text" id="inputCommentPrayer" placeholder="寫下一句禱告祝福，將化為光點圍繞..." class="flex-1 bg-stone-950 border border-stone-700 rounded-xl px-2.5 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-400">
+          <input type="text" id="inputCommentAuthor" placeholder="你的名字" class="w-24 bg-stone-50 border border-stone-200 rounded-xl px-2.5 py-2 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold">
+          <input type="text" id="inputCommentPrayer" placeholder="寫下一句禱告祝福，化為金光環繞..." class="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-2.5 py-2 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
         </div>
       </div>
 
       <!-- 核心互動按鈕 -->
       <div class="grid grid-cols-2 gap-2 pt-1 flex-shrink-0">
-        <button onclick="triggerPrayFromModal()" class="py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition">
+        <button onclick="triggerPrayFromModal()" class="py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition">
           <span class="text-sm">🙏</span>
           <span>按手同心禱告</span>
         </button>
-        <button onclick="submitCommentFromModal()" class="py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-200 border border-amber-400/30 font-bold text-xs flex items-center justify-center gap-1">
-          <i class="fa-solid fa-sparkles text-xs"></i>
-          <span>送出環繞禱告文</span>
+        <button onclick="submitCommentFromModal()" class="py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200/80 font-bold text-xs flex items-center justify-center gap-1">
+          <i class="fa-solid fa-sparkles text-xs text-orange-600"></i>
+          <span>送出環繞代禱文</span>
         </button>
       </div>
 
     </div>
   </div>
 
-  <!-- ================= 彈窗 B：點燃新代禱 (加入姓名自動關聯小組) ================= -->
-  <div id="createPrayerModal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-sm bg-stone-900 border border-amber-500/40 rounded-3xl p-5 space-y-3 text-stone-100 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-stone-800 pb-2">
-        <h3 class="text-sm font-black text-amber-300 flex items-center gap-1.5">
+  <!-- ================= 彈窗 B：點燃新代禱 (加入【公開 / 隱私】選項) ================= -->
+  <div id="createPrayerModal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="card-glass w-full max-w-sm p-5 space-y-3 text-stone-800 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+        <h3 class="text-sm font-black text-stone-900 flex items-center gap-1.5">
           <i class="fa-solid fa-fire text-orange-500"></i>
-          <span>提送代禱事項 (7天漂浮守望)</span>
+          <span>提送代禱事項</span>
         </h3>
-        <button onclick="closeCreatePrayerModal()" class="text-stone-400 hover:text-white">
+        <button onclick="closeCreatePrayerModal()" class="text-stone-400 hover:text-stone-600">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
       <div class="space-y-2 text-xs">
+        
+        <!-- 🌟 核心升級：公開 / 私密教牧代禱 切換膠囊 -->
+        <div>
+          <label class="text-stone-500 font-bold block mb-1.5">守望公開範圍：</label>
+          <div class="grid grid-cols-2 gap-1.5 bg-stone-100/90 p-1 rounded-2xl border border-stone-200/70">
+            <button type="button" onclick="setPrayerPrivacy(false)" id="btnScopePublic" class="py-2 rounded-xl bg-white text-orange-700 font-black shadow-xs transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-earth-americas text-xs"></i>
+              <span>公開代禱牆</span>
+            </button>
+            <button type="button" onclick="setPrayerPrivacy(true)" id="btnScopePrivate" class="py-2 rounded-xl text-stone-500 font-bold hover:bg-white/60 transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-lock text-xs"></i>
+              <span>私密 (僅同工)</span>
+            </button>
+          </div>
+          <p id="privacyNoticeText" class="text-[10px] text-stone-400 pt-1 leading-tight">
+            ✨ 將以琉璃光球公開在代禱牆，讓全教會弟兄姊妹一同按手守望。
+          </p>
+        </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-stone-400 font-bold block mb-1">提請人姓名：</label>
+            <label class="text-stone-500 font-bold block mb-1">提請人姓名：</label>
             <div class="relative">
-              <input type="text" id="newPrayerAuthor" oninput="debounceLookupMember(this.value)" placeholder="輸入你的姓名" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400">
-              <span id="authorLookupSpinner" class="absolute right-2.5 top-2.5 text-[10px] text-amber-400 hidden">
+              <input type="text" id="newPrayerAuthor" oninput="debounceLookupMember(this.value)" placeholder="輸入你的姓名" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold">
+              <span id="authorLookupSpinner" class="absolute right-2.5 top-2.5 text-[10px] text-orange-500 hidden">
                 <i class="fa-solid fa-spinner fa-spin"></i>
               </span>
             </div>
           </div>
           <div>
-            <label class="text-stone-400 font-bold block mb-1">所屬<span class="group-term-label">小組</span>：</label>
+            <label class="text-stone-500 font-bold block mb-1">所屬<span class="group-term-label">小組</span>：</label>
             <div class="relative">
-              <input type="text" id="newPrayerGroup" placeholder="輸入姓名自動帶出" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400 font-bold">
-              <span id="groupAutoBadge" class="absolute right-2 top-2 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-black hidden">名冊關聯</span>
+              <input type="text" id="newPrayerGroup" placeholder="輸入姓名自動帶出" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold">
+              <span id="groupAutoBadge" class="absolute right-2 top-2 text-[9px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-black hidden">名冊關聯</span>
             </div>
           </div>
         </div>
 
         <div>
-          <label class="text-stone-400 font-bold block mb-1">代禱主題：</label>
-          <input type="text" id="newPrayerTitle" placeholder="例如：母親手術順利、工作突破、心靈平安..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400">
+          <label class="text-stone-500 font-bold block mb-1">代禱主題：</label>
+          <input type="text" id="newPrayerTitle" placeholder="例如：母親手術順利、工作突破、心靈平安..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
         </div>
         
         <div>
-          <label class="text-stone-400 font-bold block mb-1">具體代禱細節：</label>
-          <textarea id="newPrayerContent" rows="3" placeholder="具體寫下需要，讓大家的禱告手一起托住你..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400"></textarea>
+          <label class="text-stone-500 font-bold block mb-1">具體代禱細節：</label>
+          <textarea id="newPrayerContent" rows="3" placeholder="具體寫下需要，讓禱告的手托住你..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></textarea>
         </div>
       </div>
 
-      <button onclick="submitNewFloatingPrayer()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-black text-xs shadow-lg active:scale-95 transition">
-        送上祭壇 · 點燃禱告之火
+      <button onclick="submitNewFloatingPrayer()" id="btnSubmitPrayer" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs shadow-md active:scale-95 transition">
+        送上祭壇 · 點燃微光
       </button>
     </div>
   </div>
@@ -285,10 +335,33 @@
     let orbs = [];
     let currentSelectedOrb = null;
     let lookupTimer = null;
+    let isPrivatePrayer = false; // 預設為公開
+
     const spaceCanvas = document.getElementById('prayerSpaceCanvas');
     const emptyNotice = document.getElementById('emptyStateNotice');
 
-    // 0. 自動依姓名查詢名冊小組/小家
+    // 0. 公開 / 隱私切換控制
+    window.setPrayerPrivacy = function(isPrivate) {
+      isPrivatePrayer = isPrivate;
+      const btnPublic = document.getElementById('btnScopePublic');
+      const btnPrivate = document.getElementById('btnScopePrivate');
+      const notice = document.getElementById('privacyNoticeText');
+      const btnSubmit = document.getElementById('btnSubmitPrayer');
+
+      if (isPrivate) {
+        btnPrivate.className = "py-2 rounded-xl bg-stone-800 text-white font-black shadow-xs transition flex items-center justify-center gap-1";
+        btnPublic.className = "py-2 rounded-xl text-stone-500 font-bold hover:bg-white/60 transition flex items-center justify-center gap-1";
+        notice.innerHTML = `<span class="text-amber-700 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i>此事項將保密，不會出現在公開禱告牆，僅傳送給牧師與教牧同工私下關懷守望。</span>`;
+        btnSubmit.innerHTML = `<span>🔒 送交教牧同工私密代禱</span>`;
+      } else {
+        btnPublic.className = "py-2 rounded-xl bg-white text-orange-700 font-black shadow-xs transition flex items-center justify-center gap-1";
+        btnPrivate.className = "py-2 rounded-xl text-stone-500 font-bold hover:bg-white/60 transition flex items-center justify-center gap-1";
+        notice.innerText = "✨ 將以琉璃光球公開在代禱牆，讓全教會弟兄姊妹一同按手守望。";
+        btnSubmit.innerHTML = `<span>送上祭壇 · 點燃微光</span>`;
+      }
+    };
+
+    // 0-1. 自動依姓名查詢名冊小組/小家
     window.debounceLookupMember = function(name) {
       clearTimeout(lookupTimer);
       const trimmed = name.trim();
@@ -329,16 +402,17 @@
       }, 350);
     };
 
-    // 1. 從 Supabase 載入真實上線代禱事項與環繞留言
+    // 1. 從 Supabase 載入真實上線代禱事項（重要：過濾掉 is_private = true）
     async function loadPrayersFromDb() {
       try {
         const { data: prayers, error } = await db
           .from('prayers')
           .select(`
-            id, church_id, author_name, group_name, title, content, hands_count, is_answered, created_at, expires_at,
+            id, church_id, author_name, group_name, title, content, hands_count, is_answered, created_at, expires_at, is_private,
             prayer_comments ( id, author_name, comment_text, created_at )
           `)
           .eq('church_id', targetChurch)
+          .eq('is_private', false) // 🔒 嚴格保護：只載入公開事項！
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false });
 
@@ -346,7 +420,7 @@
 
         let totalHands = 0;
 
-        orbs = (prayers || []).map((p, idx) => {
+        orbs = (prayers || []).map((p) => {
           totalHands += (p.hands_count || 1);
           
           const now = new Date();
@@ -381,7 +455,7 @@
       }
     }
 
-    // 2. 初始化 DOM 光球
+    // 2. 初始化 DOM 琉璃光球
     function initOrbsDOM() {
       spaceCanvas.querySelectorAll('.floating-orb').forEach(el => el.remove());
 
@@ -400,7 +474,7 @@
       });
     }
 
-    // 3. 物理漂浮碰撞演算法 (加入柔和互斥，防止重疊)
+    // 3. 物理漂浮碰撞演算法
     function animateFloat() {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -449,7 +523,7 @@
       requestAnimationFrame(animateFloat);
     }
 
-    // 4. 繪製縮小版球體內部與圍繞衛星
+    // 4. 繪製精緻琉璃球內部與環繞小金星
     function renderOrbInner(el, orb) {
       let satellitesHtml = '';
       const commentCount = orb.comments.length;
@@ -472,12 +546,12 @@
         </div>
 
         <div class="text-center p-1.5 z-10 pointer-events-none">
-          <span class="text-[8.5px] text-amber-300/80 font-bold block truncate max-w-[65px] mx-auto">${orb.author}</span>
-          <h4 class="text-[10.5px] font-black text-amber-100 tracking-tight line-clamp-1 max-w-[70px] mx-auto leading-tight">${orb.title}</h4>
+          <span class="text-[8.5px] text-stone-500 font-bold block truncate max-w-[65px] mx-auto">${orb.author}</span>
+          <h4 class="text-[10.5px] font-black text-stone-900 tracking-tight line-clamp-1 max-w-[70px] mx-auto leading-tight">${orb.title}</h4>
           
-          <div class="mt-0.5 inline-flex items-center gap-1 text-[9px] font-black text-amber-300 bg-black/40 px-1.5 py-0.2 rounded-full border border-amber-400/30">
+          <div class="mt-0.5 inline-flex items-center gap-1 text-[9px] font-black text-orange-700 bg-white/70 px-1.5 py-0.2 rounded-full border border-orange-200/60 shadow-xs">
             <span>🙏 ${orb.hands}</span>
-            ${commentCount > 0 ? `<span class="text-amber-400/80">💬 ${commentCount}</span>` : ''}
+            ${commentCount > 0 ? `<span class="text-amber-700">💬 ${commentCount}</span>` : ''}
           </div>
         </div>
       `;
@@ -519,15 +593,15 @@
 
       const listContainer = document.getElementById('modalCommentsList');
       if (!orb.comments.length) {
-        listContainer.innerHTML = '<div class="text-[11px] text-stone-500 italic p-3 text-center bg-stone-950/40 rounded-xl">尚未有留下的代禱文，留下第一句代禱祝福吧！</div>';
+        listContainer.innerHTML = '<div class="text-[11px] text-stone-400 italic p-3 text-center bg-stone-50 rounded-xl">尚未有留下的代禱文，留下第一句祝福吧！</div>';
       } else {
         listContainer.innerHTML = orb.comments.map(c => `
-          <div class="p-2.5 rounded-xl bg-stone-950/90 border border-amber-500/20 text-xs space-y-1">
+          <div class="p-2.5 rounded-xl bg-white border border-stone-200/80 text-xs space-y-1 shadow-xs">
             <div class="flex items-center justify-between">
-              <span class="font-black text-amber-300 text-[11px]"><i class="fa-solid fa-hands-praying mr-1 text-[10px]"></i>${c.author_name}</span>
-              <span class="text-[9px] text-stone-500">${c.created_at ? new Date(c.created_at).toLocaleDateString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '剛剛'}</span>
+              <span class="font-black text-orange-700 text-[11px]"><i class="fa-solid fa-hands-praying mr-1 text-[10px] text-amber-500"></i>${c.author_name}</span>
+              <span class="text-[9px] text-stone-400">${c.created_at ? new Date(c.created_at).toLocaleDateString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '剛剛'}</span>
             </div>
-            <p class="text-stone-300 font-serif leading-relaxed text-[11px]">${c.comment_text}</p>
+            <p class="text-stone-700 font-serif leading-relaxed text-[11px]">${c.comment_text}</p>
           </div>
         `).join('');
       }
@@ -580,12 +654,13 @@
       closeDetailModal();
     };
 
-    // 7. 提送全新代禱
+    // 7. 提送全新代禱 (支援公開與私密分流)
     window.openCreatePrayerModal = function() { document.getElementById('createPrayerModal').classList.remove('hidden'); };
     window.closeCreatePrayerModal = function() { 
       document.getElementById('createPrayerModal').classList.add('hidden'); 
       const badgeEl = document.getElementById('groupAutoBadge');
       if (badgeEl) badgeEl.classList.add('hidden');
+      setPrayerPrivacy(false); // 關閉時重置回公開
     };
 
     window.submitNewFloatingPrayer = async function() {
@@ -602,7 +677,8 @@
         group_name: group || '未編組',
         title: title,
         content: content,
-        hands_count: 1
+        hands_count: 1,
+        is_private: isPrivatePrayer
       };
 
       const { data, error } = await db.from('prayers').insert([payload]).select().single();
@@ -617,8 +693,14 @@
       document.getElementById('newPrayerTitle').value = '';
       document.getElementById('newPrayerContent').value = '';
 
-      await loadPrayersFromDb();
-      if (data) triggerPrayVisual(data.id);
+      if (isPrivatePrayer) {
+        // 🔒 私密代禱：不浮上牆，給予安心反饋
+        alert('🕊️【已送達教牧關懷團隊】\n\n感謝您的信任，此代禱事項已保密送交牧長團隊，我們將在私下迫切為您守望、同心同行！');
+      } else {
+        // 🌐 公開代禱：重新加載並點燃視覺
+        await loadPrayersFromDb();
+        if (data) triggerPrayVisual(data.id);
+      }
     };
 
     // 初始化運行
@@ -626,9 +708,9 @@
       document.querySelectorAll('.group-term-label').forEach(el => el.innerText = groupTerm);
       const titleEl = document.getElementById('wallTitle');
       if (isShine) {
-        titleEl.innerText = '火樂教會 SHiNE · 守望金香爐';
+        titleEl.innerText = '火樂教會 SHiNE · 晨曦金香爐';
       } else {
-        titleEl.innerText = 'Ｍ＋大雅教會 · 祭壇代禱牆';
+        titleEl.innerText = 'Ｍ＋大雅教會 · 晨曦代禱牆';
       }
 
       loadPrayersFromDb();
