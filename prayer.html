@@ -2,517 +2,517 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>同心微光 · 動態即時禱告牆</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>同心微光 · 動態漂浮代禱牆</title>
   
-  <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'sans-serif'],
-            serif: ['"Noto Serif TC"', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+    /* 深邃神聖的夜空金香爐祭壇背景 */
     body {
-      background: radial-gradient(130% 100% at 50% -10%, #FFF9F2 0%, #FAF3EA 45%, #F0E4D4 100%);
-      color: #1c1917;
-      min-height: 100vh;
-      overflow-x: hidden;
+      background: radial-gradient(ellipse at 50% 30%, #1c1917 0%, #0c0a09 60%, #000000 100%);
+      color: #fafaf9;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
       user-select: none;
     }
 
-    /* 玻璃擬物卡片 */
-    .card-glass {
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1.5px solid rgba(240, 222, 202, 0.9);
-      box-shadow: 0 16px 36px -10px rgba(194, 140, 80, 0.12);
-      border-radius: 28px;
+    /* 漂浮光球/祈禱卡片樣式 */
+    .floating-orb {
+      position: absolute;
+      border-radius: 9999px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.4s ease, border-color 0.4s ease;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      will-change: transform;
     }
 
-    /* 懸浮呼吸動態 */
-    @keyframes cardFloat {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-4px); }
-    }
-    .floating-card {
-      animation: cardFloat 5s ease-in-out infinite;
+    /* 預設常態祈禱光球 (帶著柔和琥珀呼吸金光) */
+    .orb-glow {
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.12) 65%, rgba(0,0,0,0.4) 100%);
+      border: 1.5px solid rgba(251, 191, 36, 0.45);
+      box-shadow: 0 0 28px rgba(245, 158, 11, 0.25), inset 0 0 16px rgba(251, 191, 36, 0.15);
     }
 
-    /* 禱告手升起光芒動態 */
-    @keyframes prayHandBurst {
-      0% { transform: scale(0.3) translateY(20px); opacity: 0; }
-      40% { transform: scale(1.3) translateY(-10px); opacity: 1; }
-      70% { transform: scale(1.1) translateY(-15px); opacity: 1; }
-      100% { transform: scale(1.4) translateY(-35px); opacity: 0; }
-    }
-    .burst-hand {
-      animation: prayHandBurst 1s ease-out forwards;
+    .orb-glow:hover {
+      border-color: rgba(251, 191, 36, 0.85);
+      box-shadow: 0 0 45px rgba(245, 158, 11, 0.5), inset 0 0 24px rgba(251, 191, 36, 0.3);
     }
 
-    /* 光波漣漪擴散 */
-    @keyframes rippleExpand {
-      0% { transform: scale(0.6); opacity: 0.9; }
-      100% { transform: scale(2.2); opacity: 0; }
-    }
-    .ripple-glory {
-      animation: rippleExpand 1s cubic-bezier(0, 0.2, 0.8, 1) forwards;
-    }
-
-    /* 環繞微光球慢速自轉 */
-    @keyframes orbitSlow {
-      from { transform: rotate(0deg) translateX(42px) rotate(0deg); }
-      to { transform: rotate(360deg) translateX(42px) rotate(-360deg); }
-    }
-    .orbit-orb {
-      animation: orbitSlow 10s linear infinite;
-    }
-
-    /* 蒙應允金色翻轉卡 */
-    .answered-card {
-      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+    /* 蒙應允的金色喜樂球 */
+    .orb-answered {
+      background: radial-gradient(circle, rgba(234, 88, 12, 0.3) 0%, rgba(245, 158, 11, 0.2) 65%, rgba(0,0,0,0.5) 100%);
       border: 2px solid #F59E0B;
-      box-shadow: 0 18px 40px -10px rgba(245, 158, 11, 0.25);
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.6);
+    }
+
+    /* 環繞公轉的禱告小星點 */
+    .satellite-wrap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .satellite-dot {
+      position: absolute;
+      border-radius: 9999px;
+      background: #FDE68A;
+      box-shadow: 0 0 10px #F59E0B, 0 0 20px #D97706;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* 升起發光的禱告手動畫 */
+    @keyframes risePrayHand {
+      0% { transform: translate(-50%, 20px) scale(0.6); opacity: 0; }
+      30% { transform: translate(-50%, -10px) scale(1.4); opacity: 1; filter: drop-shadow(0 0 16px #F59E0B); }
+      70% { transform: translate(-50%, -25px) scale(1.2); opacity: 1; filter: drop-shadow(0 0 24px #F59E0B); }
+      100% { transform: translate(-50%, -60px) scale(1.5); opacity: 0; }
+    }
+
+    .pray-hand-anim {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      animation: risePrayHand 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* 禱告水波光環震波 */
+    @keyframes prayerShockwave {
+      0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.9; }
+      100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+    }
+    .shockwave-anim {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border-radius: 9999px;
+      border: 2.5px solid rgba(251, 191, 36, 0.8);
+      animation: prayerShockwave 1.1s ease-out forwards;
+      pointer-events: none;
+      z-index: 40;
     }
   </style>
 </head>
-<body class="p-3 sm:p-6 flex justify-center items-start min-h-screen">
+<body>
 
-  <div class="w-full max-w-md space-y-3.5 my-1">
-
-    <!-- 頂部堂會與在線守望資訊條 -->
-    <header class="card-glass p-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div id="churchBadgeIcon" class="w-10 h-10 rounded-2xl flex items-center justify-center text-white text-lg shadow-md" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
-          <i class="fa-solid fa-hands-praying"></i>
-        </div>
-        <div>
-          <h2 id="churchTitle" class="text-sm font-black text-stone-800 tracking-tight">Ｍ＋大雅教會 · 同心代禱牆</h2>
-          <p class="text-[11px] text-stone-500 font-bold">
-            <span id="userDisplayName">俊璋 牧師</span> · <span class="group-term-label">小組</span>：<span id="userGroupDisplay" class="text-orange-700">大雅一組</span>
-          </p>
-        </div>
-      </div>
-      
-      <!-- 即時在線微光信號 -->
-      <div class="text-right">
-        <div class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-          <span class="text-[10px] font-black text-emerald-700">即時同心守望中</span>
-        </div>
-        <div class="text-[10px] text-stone-400 font-bold pt-1">全教會 7 天動態祭壇</div>
-      </div>
-    </header>
-
-    <!-- 發起代禱按鈕 -->
-    <button onclick="openNewPrayerModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-sm shadow-md flex items-center justify-center gap-2 hover:opacity-95 transition active:scale-98">
-      <i class="fa-solid fa-fire text-amber-200"></i>
-      <span>點燃今日禱告燭光 · 提交代禱事項</span>
-    </button>
-
-    <!-- 篩選列：全部事項 / 我參與的 / 蒙應允見證 -->
-    <div class="flex bg-white/90 p-1 rounded-2xl border border-stone-200/80 text-xs font-bold text-stone-600">
-      <button onclick="filterPrayers('all')" id="tabAll" class="flex-1 py-1.5 rounded-xl bg-orange-500 text-white shadow-sm">所有守望</button>
-      <button onclick="filterPrayers('group')" id="tabGroup" class="flex-1 py-1.5 rounded-xl text-stone-600 hover:bg-stone-100">所屬<span class="group-term-label">小組</span></button>
-      <button onclick="filterPrayers('answered')" id="tabAnswered" class="flex-1 py-1.5 rounded-xl text-stone-600 hover:bg-stone-100">🎉 蒙應允見證</button>
-    </div>
-
-    <!-- 動態禱告牆清單容器 -->
-    <div id="prayersStreamContainer" class="space-y-3.5">
-      <!-- 禱告卡片由 JavaScript 動態渲染 -->
-    </div>
-
-  </div>
-
-  <!-- ================= 彈窗 A：填寫代禱事項 ================= -->
-  <div id="newPrayerModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="card-glass w-full max-w-sm p-5 space-y-3.5">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
-        <h3 class="text-sm font-black text-stone-800 flex items-center gap-1.5">
-          <i class="fa-solid fa-candle-holder text-orange-500"></i>
-          <span>點燃祈禱燭光 (7天動態守望)</span>
-        </h3>
-        <button onclick="closeNewPrayerModal()" class="text-stone-400 hover:text-stone-600">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="space-y-2">
-        <div>
-          <label class="text-[11px] font-black text-stone-600 block">代禱主題 / 尋求方向：</label>
-          <input type="text" id="inputPrayerTitle" placeholder="例如：家人身體醫治、工作突破、心靈平安..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
-        </div>
-
-        <div>
-          <label class="text-[11px] font-black text-stone-600 block">具體代禱細節：</label>
-          <textarea id="inputPrayerContent" rows="3" placeholder="寫下具體需要，讓肢體以同心合意的禱告托住你..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></textarea>
-        </div>
-
-        <div>
-          <label class="text-[11px] font-black text-stone-600 block">守望範圍：</label>
-          <select id="inputPrayerScope" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold">
-            <option value="PUBLIC">🌐 全教會公開代禱牆</option>
-            <option value="GROUP">👥 僅限我所屬的小組/小家</option>
-            <option value="ANON">🎭 匿名代禱 (隱藏姓名)</option>
-          </select>
-        </div>
-      </div>
-
-      <button onclick="submitNewPrayer()" class="w-full py-3 rounded-xl bg-orange-500 text-white font-black text-xs shadow-md hover:bg-orange-600 transition">
-        送上祭壇 · 啟動 7 天守望
-      </button>
-    </div>
-  </div>
-
-  <!-- ================= 彈窗 B：寫下代禱文 (周邊環繞光點) ================= -->
-  <div id="addCommentModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="card-glass w-full max-w-sm p-5 space-y-3.5">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
-        <h3 class="text-sm font-black text-stone-800 flex items-center gap-1.5">
-          <i class="fa-solid fa-comment-dots text-amber-500"></i>
-          <span>留下環繞代禱文</span>
-        </h3>
-        <button onclick="closeCommentModal()" class="text-stone-400 hover:text-stone-600">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <input type="hidden" id="targetPrayerId">
+  <!-- 頂部輕量導覽條 (浮動在星空上) -->
+  <header class="fixed top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-auto">
+    <div class="flex items-center gap-3 bg-stone-900/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-stone-800 shadow-xl">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
       <div>
-        <label class="text-[11px] font-black text-stone-600 block">為這件事宣告一句禱告或經文：</label>
-        <textarea id="inputCommentText" rows="3" placeholder="例如：宣告耶和華拉法的醫治大能臨到！神必擦去一切眼淚..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></textarea>
+        <h1 class="text-xs font-black tracking-wider text-amber-200" id="wallTitle">Ｍ＋大雅教會 · 祭壇代禱牆</h1>
+        <p class="text-[9px] text-stone-400">點擊漂浮光球 · 為肢體舉手托住</p>
+      </div>
+    </div>
+
+    <!-- 點火發起代禱按鈕 -->
+    <button onclick="openCreatePrayerModal()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-stone-950 font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition active:scale-95">
+      <i class="fa-solid fa-fire text-white"></i>
+      <span>提送代禱</span>
+    </button>
+  </header>
+
+  <!-- 🌟 全螢幕漂浮畫布舞台 🌟 -->
+  <main id="prayerSpaceCanvas" class="w-full h-full relative overflow-hidden">
+    <!-- 各個祈禱光球由 JS 渲染與動態位移計算 -->
+  </main>
+
+  <!-- 底部微引導與統計 -->
+  <footer class="fixed bottom-4 inset-x-0 flex justify-center z-30 pointer-events-none">
+    <div class="bg-stone-900/70 backdrop-blur-md px-4 py-2 rounded-full border border-stone-800 text-[11px] text-stone-400 font-bold flex items-center gap-4 pointer-events-auto">
+      <span><i class="fa-solid fa-hands-praying text-amber-400 mr-1"></i>今日已獻上 <strong class="text-amber-300" id="totalPrayersCount">78</strong> 次同心代禱</span>
+      <span class="text-stone-600">|</span>
+      <span><i class="fa-regular fa-clock text-orange-400 mr-1"></i>7 天常駐生命祭壇</span>
+    </div>
+  </footer>
+
+  <!-- ================= 彈窗 A：點擊光球看詳情、按手禱告與寫代禱文 ================= -->
+  <div id="prayerDetailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-sm bg-stone-900/95 border border-amber-500/40 rounded-3xl p-6 space-y-4 text-stone-100 shadow-2xl relative">
+      
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- 標題與提請人 -->
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-[10px] font-black text-amber-300" id="modalAuthorTag">張姊妹 · 大雅一組</span>
+          <span class="text-[10px] text-stone-400" id="modalDaysTag">倒數 5 天</span>
+        </div>
+        <h3 class="text-base font-black text-amber-100" id="modalTitle">母親心導管手術平安</h3>
       </div>
 
-      <button onclick="submitCommentPrayer()" class="w-full py-3 rounded-xl bg-amber-500 text-white font-black text-xs shadow-md hover:bg-amber-600 transition">
-        化為守望微光 · 環繞托住
+      <!-- 代禱主內文 -->
+      <p class="text-xs text-stone-300 font-serif leading-relaxed bg-stone-950/60 p-3.5 rounded-2xl border border-stone-800" id="modalContent">
+        下週二上午要在台中榮總進行心導管檢查與支架手術，求神親自帶領執刀醫師的手，賜下出人意外的平安給全家人。
+      </p>
+
+      <!-- 周邊圍繞的代禱文清單 -->
+      <div class="space-y-1.5">
+        <div class="text-[11px] font-black text-amber-300 flex items-center gap-1">
+          <i class="fa-solid fa-sparkles"></i>
+          <span>環繞守望的禱告文 (<span id="modalCommentsCount">2</span>)：</span>
+        </div>
+        <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1" id="modalCommentsList">
+          <!-- 動態插入禱告文 -->
+        </div>
+      </div>
+
+      <!-- 留言輸入框 -->
+      <div class="space-y-1">
+        <input type="text" id="inputCommentPrayer" placeholder="留下你的禱告文，將化為光點圍繞在四周..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 text-xs text-stone-200 focus:outline-none focus:border-amber-400">
+      </div>
+
+      <!-- 核心互動雙按鈕 -->
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="triggerPrayFromModal()" class="py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition">
+          <span class="text-base">🙏</span>
+          <span>按手同心禱告</span>
+        </button>
+        <button onclick="submitCommentFromModal()" class="py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-200 border border-amber-400/30 font-bold text-xs flex items-center justify-center gap-1">
+          <i class="fa-solid fa-plus"></i>
+          <span>化為環繞光點</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 B：點燃新代禱 (加入牆面漂浮) ================= -->
+  <div id="createPrayerModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-sm bg-stone-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 text-stone-100 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-stone-800 pb-2">
+        <h3 class="text-sm font-black text-amber-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-fire text-orange-500"></i>
+          <span>點燃祈禱燭光 · 送上漂浮祭壇</span>
+        </h3>
+        <button onclick="closeCreatePrayerModal()" class="text-stone-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-stone-400 font-bold block mb-1">代禱主題：</label>
+          <input type="text" id="newPrayerTitle" placeholder="例如：新工作考驗、家庭和睦、身體康復..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 text-stone-200 focus:outline-none focus:border-amber-400">
+        </div>
+        <div>
+          <label class="text-stone-400 font-bold block mb-1">具體代禱內容：</label>
+          <textarea id="newPrayerContent" rows="3" placeholder="具體寫下需要，讓大家的禱告手一起托住你..." class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2.5 text-stone-200 focus:outline-none focus:border-amber-400"></textarea>
+        </div>
+      </div>
+
+      <button onclick="submitNewFloatingPrayer()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-black text-xs shadow-lg active:scale-95 transition">
+        送入夜空 · 展開 7 天漂浮守望
       </button>
     </div>
   </div>
 
   <script>
-    // 1. 堂會參數硬隔離
-    const urlParams = new URLSearchParams(window.location.search);
-    let targetChurch = urlParams.get('church') || 'M+';
-    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
-    else targetChurch = 'M+';
-
-    const isShine = (targetChurch === 'SHiNE');
-    const groupTerm = isShine ? '小家' : '小組';
-
-    // 模擬當前使用者
-    const currentUser = {
-      name: '俊璋 牧師',
-      church: targetChurch,
-      group: isShine ? '敬拜小家' : '大雅一組'
-    };
-
-    // 模擬動態代禱資料集 (具備 7 天倒數、按手數、環繞代禱文)
-    let prayersData = [
+    // 1. 代禱光球資料集 (包含 2D 物理座標、漂浮速度向量、按手數、環繞代禱語)
+    let orbs = [
       {
-        id: 101,
-        author_name: '張姊妹',
-        group_name: isShine ? '敬拜小家' : '大雅一組',
-        title: '母親心導管手術平安與術後康復',
-        content: '媽媽下週二上午要在台中榮總進行心導管檢查與支架手術，求神親自帶領執刀醫師的手，賜下出人意外的平安給全家人。',
-        days_left: 5,
-        hands_count: 16,
-        is_answered: false,
+        id: 1,
+        author: '張姊妹',
+        group: '大雅一組',
+        title: '母親心導管手術',
+        content: '下週二上午要在台中榮總進行心導管檢查與支架手術，求神親自帶領執刀醫師的手，賜下出人意外的平安給全家人。',
+        hands: 18,
+        daysLeft: 5,
         comments: [
-          { name: '俊璋 牧師', text: '耶和華是我們的醫治者！宣告手術全程在神的看顧保守中順利！' },
-          { name: '碧鳳 師母', text: '神是應當稱頌的，必賜下超自然平安托住張媽媽！' }
-        ]
+          { name: '俊璋 牧師', text: '耶和華是醫治者，大能親自覆庇！' },
+          { name: '碧鳳 師母', text: '神必賜下出人意外的平安！' }
+        ],
+        // 畫布物理運動參數
+        x: window.innerWidth * 0.25,
+        y: window.innerHeight * 0.35,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        radius: 65, // 隨按手次數動態擴大
+        orbitAngle: 0
       },
       {
-        id: 102,
-        author_name: '李弟兄',
-        group_name: isShine ? '青年小家' : '社青小組',
-        title: '新工作面試與心靈剛強',
-        content: '轉換跑道進入最後一輪主管面試，求主賜下智慧對答，也求神顯明祂所喜悅的道路與呼召。',
-        days_left: 3,
-        hands_count: 9,
-        is_answered: false,
+        id: 2,
+        author: '李弟兄',
+        group: '青年小組',
+        title: '主管最後一輪面試',
+        content: '轉換跑道進入最後面試階段，求神賜下智慧與平穩心境對答，引導前面合祂心意的道路。',
+        hands: 9,
+        daysLeft: 3,
         comments: [
-          { name: '頌恩 傳道', text: '行公義好憐憫，主必親自為你開前面的門，剛強壯膽！' }
-        ]
+          { name: '頌恩 傳道', text: '剛強壯膽，祂必為你開道路！' }
+        ],
+        x: window.innerWidth * 0.65,
+        y: window.innerHeight * 0.45,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        radius: 56,
+        orbitAngle: 0
       },
       {
-        id: 103,
-        author_name: '王弟兄',
-        group_name: isShine ? '敬拜小家' : '大雅一組',
-        title: '【蒙應允】孩子高燒退去，平安出院！',
-        content: '感謝全教會家人的迫切同心禱告！弟弟今天抽血指數已完全正常，醫生准許出院休養！榮耀歸給天父！',
-        days_left: 7,
-        hands_count: 32,
-        is_answered: true,
+        id: 3,
+        author: '王弟兄',
+        group: '大雅一組',
+        title: '孩子退燒出院見證',
+        content: '感謝全教會家人的迫切禱告！高燒已退、抽血指數一切正常，今天出院休養！榮耀歸給神！',
+        hands: 32,
+        daysLeft: 7,
+        isAnswered: true,
         comments: [
-          { name: '俊璋 牧師', text: '哈利路亞！感謝讚美神的大能拯救！' }
-        ]
+          { name: '俊璋 牧師', text: '哈利路亞！榮耀歸主！' },
+          { name: '全體', text: '感謝天父垂聽同心禱告！' }
+        ],
+        x: window.innerWidth * 0.45,
+        y: window.innerHeight * 0.7,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius: 75,
+        orbitAngle: 0
       }
     ];
 
-    let currentFilter = 'all';
+    let currentSelectedOrb = null;
+    const spaceCanvas = document.getElementById('prayerSpaceCanvas');
 
-    // 2. 渲染禱告牆列表
-    function renderPrayers() {
-      const container = document.getElementById('prayersStreamContainer');
-      if (!container) return;
+    // 2. 初始化並建立 DOM 元素
+    function initOrbsDOM() {
+      spaceCanvas.innerHTML = '';
+      orbs.forEach(orb => {
+        const el = document.createElement('div');
+        el.id = `orb_${orb.id}`;
+        el.className = `floating-orb ${orb.isAnswered ? 'orb-answered' : 'orb-glow'}`;
+        
+        // 點擊光球打開詳情視窗
+        el.onclick = () => openDetailModal(orb.id);
 
-      let list = prayersData.filter(p => {
-        if (currentFilter === 'group') return p.group_name === currentUser.group;
-        if (currentFilter === 'answered') return p.is_answered === true;
-        return true;
+        spaceCanvas.appendChild(el);
+      });
+      updateOrbsDOM();
+    }
+
+    // 3. 漂浮物理引擎 (RequestAnimationFrame 每秒 60 幀平滑演算)
+    function animateFloat() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      orbs.forEach(orb => {
+        // 碰撞邊界反彈
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+
+        if (orb.x - orb.radius < 20) { orb.x = orb.radius + 20; orb.vx *= -1; }
+        if (orb.x + orb.radius > width - 20) { orb.x = width - orb.radius - 20; orb.vx *= -1; }
+        if (orb.y - orb.radius < 80) { orb.y = orb.radius + 80; orb.vy *= -1; }
+        if (orb.y + orb.radius > height - 80) { orb.y = height - orb.radius - 80; orb.vy *= -1; }
+
+        // 環繞衛星角度推進
+        orb.orbitAngle += 0.02;
+
+        const el = document.getElementById(`orb_${orb.id}`);
+        if (el) {
+          // 動態計算大小：禱告人數越多，光球體積越大
+          const currentSize = (orb.radius * 2);
+          el.style.width = `${currentSize}px`;
+          el.style.height = `${currentSize}px`;
+          el.style.transform = `translate3d(${orb.x - orb.radius}px, ${orb.y - orb.radius}px, 0)`;
+
+          // 內部內容與環繞衛星繪製
+          renderOrbInner(el, orb);
+        }
       });
 
-      if (!list.length) {
-        container.innerHTML = `<div class="card-glass p-12 text-center text-stone-400 font-bold text-xs">目前暫無代禱事項</div>`;
-        return;
-      }
+      requestAnimationFrame(animateFloat);
+    }
 
-      container.innerHTML = list.map(p => {
-        const isAnswered = p.is_answered;
-        const cardStyle = isAnswered ? 'answered-card' : 'card-glass floating-card';
-        
-        // 環繞微光球 HTML
-        const orbHtml = p.comments.map((c, i) => `
-          <div onclick="viewCommentDetail('${c.name}', '${c.text}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-[10px] text-amber-900 font-bold cursor-pointer hover:scale-105 transition shadow-sm">
-            <i class="fa-solid fa-sparkles text-amber-500"></i>
-            <span>${c.name}：${c.text.slice(0, 10)}...</span>
-          </div>
-        `).join('');
+    // 4. 渲染光球內部資訊與周邊環繞小光點
+    function renderOrbInner(el, orb) {
+      // 周圍圍繞的代禱小光點 (公轉幾何計算)
+      let satellitesHtml = '';
+      const commentCount = orb.comments.length;
 
-        return `
-          <div id="prayerCard_${p.id}" class="${cardStyle} p-5 relative overflow-hidden space-y-3.5 transition-all duration-300">
-            
-            <!-- 水波光圈容器 (按手時觸發) -->
-            <div id="rippleLayer_${p.id}" class="absolute inset-0 pointer-events-none flex items-center justify-center hidden">
-              <div class="w-48 h-48 rounded-full border-4 border-amber-400/60 ripple-glory"></div>
-            </div>
+      orb.comments.forEach((c, idx) => {
+        const step = (Math.PI * 2) / Math.max(commentCount, 1);
+        const currentAngle = orb.orbitAngle + (step * idx);
+        const orbitDist = orb.radius + 28; // 公轉軌道距離
+        const satX = Math.cos(currentAngle) * orbitDist;
+        const satY = Math.sin(currentAngle) * orbitDist;
 
-            <!-- 飛出的禱告手動態容器 -->
-            <div id="handLayer_${p.id}" class="absolute inset-0 pointer-events-none flex items-center justify-center hidden">
-              <div class="text-6xl text-amber-500 burst-hand">🙏</div>
-            </div>
-
-            <!-- 頂部：提請人資訊與 7 天刻度 -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full ${isAnswered ? 'bg-amber-400 text-white' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-black text-xs shadow-sm">
-                  ${p.author_name.slice(0, 1)}
-                </div>
-                <div>
-                  <div class="text-xs font-black text-stone-800">${p.author_name}</div>
-                  <div class="text-[10px] text-stone-400">${p.group_name}</div>
-                </div>
-              </div>
-
-              ${isAnswered ? `
-                <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white font-black text-[10px] shadow-sm flex items-center gap-1">
-                  <i class="fa-solid fa-crown text-[9px]"></i> 蒙神應允
-                </span>
-              ` : `
-                <span class="text-[10px] font-bold text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-full">
-                  <i class="fa-regular fa-clock mr-1"></i>剩餘 ${p.days_left} 天
-                </span>
-              `}
-            </div>
-
-            <!-- 代禱主內容 -->
-            <div class="space-y-1">
-              <h4 class="text-sm font-black text-stone-800 leading-snug">${p.title}</h4>
-              <p class="text-xs text-stone-600 font-serif leading-relaxed">${p.content}</p>
-            </div>
-
-            <!-- 周邊環繞的代禱小光點/禱告文 -->
-            ${p.comments.length ? `
-              <div class="pt-1">
-                <div class="text-[10px] font-black text-stone-400 mb-1 flex items-center gap-1">
-                  <i class="fa-solid fa-circle-nodes text-amber-500"></i>
-                  <span>如雲彩環繞的代禱微光 (${p.comments.length})：</span>
-                </div>
-                <div class="flex flex-wrap gap-1.5">
-                  ${orbHtml}
-                </div>
-              </div>
-            ` : ''}
-
-            <!-- 底部互動按鈕區 -->
-            <div class="pt-2 border-t border-stone-200/60 flex items-center justify-between">
-              
-              <!-- 核心按鈕：點擊發光禱告手 -->
-              <button onclick="prayForThis(${p.id})" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-orange-200/80 flex items-center gap-2 transition active:scale-95">
-                <span class="text-base">🙏</span>
-                <span class="text-xs font-black text-orange-800">同心阿們 (<span id="handCount_${p.id}">${p.hands_count}</span>)</span>
-              </button>
-
-              <div class="flex items-center gap-1.5">
-                <!-- 寫下代禱文按鈕 -->
-                <button onclick="openCommentModal(${p.id})" class="px-2.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition" title="留下代禱文">
-                  <i class="fa-solid fa-pen-nib mr-1 text-stone-500"></i>寫禱告
-                </button>
-
-                <!-- 若是作者本人，可點擊蒙應允 -->
-                ${!isAnswered ? `
-                  <button onclick="markAsAnswered(${p.id})" class="px-2.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-xs transition" title="事情成就，見證榮耀">
-                    🎉 蒙應允
-                  </button>
-                ` : ''}
-              </div>
-
-            </div>
-
+        satellitesHtml += `
+          <div class="satellite-dot" style="width: 13px; height: 13px; transform: translate(${satX}px, ${satY}px);" title="${c.name}：${c.text}">
           </div>
         `;
-      }).join('');
+      });
+
+      el.innerHTML = `
+        <!-- 環繞公轉光點容器 -->
+        <div class="satellite-wrap">
+          ${satellitesHtml}
+        </div>
+
+        <!-- 球心核心資訊 -->
+        <div class="text-center p-2 z-10 pointer-events-none">
+          <span class="text-[9px] text-amber-300/80 font-bold block">${orb.author}</span>
+          <h4 class="text-xs font-black text-amber-100 tracking-tight line-clamp-1">${orb.title}</h4>
+          <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-[10px] font-black text-amber-300 border border-amber-400/40">
+            <span>🙏</span>
+            <span>${orb.hands}</span>
+          </div>
+        </div>
+      `;
     }
 
-    // 3. 點擊「🙏 禱告手」動態爆發 (Web 端即時視覺反饋)
-    function prayForThis(prayerId) {
-      const item = prayersData.find(x => x.id === prayerId);
-      if (!item) return;
+    function updateOrbsDOM() {
+      // 輔助函式
+    }
 
-      item.hands_count += 1;
-      const countEl = document.getElementById(`handCount_${prayerId}`);
-      if (countEl) countEl.innerText = item.hands_count;
+    // 5. 觸發「🙏 發光禱告手升起與震波」動畫
+    function triggerPrayVisual(orbId) {
+      const el = document.getElementById(`orb_${orbId}`);
+      if (!el) return;
 
-      // 觸發禱告手與波紋動畫
-      const handLayer = document.getElementById(`handLayer_${prayerId}`);
-      const rippleLayer = document.getElementById(`rippleLayer_${prayerId}`);
+      // 產生禱告手動畫 DOM
+      const handEl = document.createElement('div');
+      handEl.className = 'pray-hand-anim text-4xl';
+      handEl.innerText = '🙏';
+      el.appendChild(handEl);
 
-      if (handLayer && rippleLayer) {
-        handLayer.classList.remove('hidden');
-        rippleLayer.classList.remove('hidden');
+      // 產生光波震撼 DOM
+      const shockwave = document.createElement('div');
+      shockwave.className = 'shockwave-anim';
+      shockwave.style.width = `${el.offsetWidth}px`;
+      shockwave.style.height = `${el.offsetHeight}px`;
+      el.appendChild(shockwave);
 
-        setTimeout(() => {
-          handLayer.classList.add('hidden');
-          rippleLayer.classList.add('hidden');
-        }, 1000);
+      // 動畫結束清除
+      setTimeout(() => {
+        handEl.remove();
+        shockwave.remove();
+      }, 1200);
+    }
+
+    // 6. 彈窗詳情與互動
+    function openDetailModal(id) {
+      const orb = orbs.find(x => x.id === id);
+      if (!orb) return;
+      currentSelectedOrb = orb;
+
+      document.getElementById('modalAuthorTag').innerText = `${orb.author} · ${orb.group}`;
+      document.getElementById('modalDaysTag').innerText = `倒數 ${orb.daysLeft} 天`;
+      document.getElementById('modalTitle').innerText = orb.title;
+      document.getElementById('modalContent').innerText = orb.content;
+      document.getElementById('modalCommentsCount').innerText = orb.comments.length;
+
+      const listContainer = document.getElementById('modalCommentsList');
+      if (orb.comments.length === 0) {
+        listContainer.innerHTML = '<div class="text-[10px] text-stone-500 italic">尚無環繞代禱文，成為第一個留下祝福的人吧！</div>';
+      } else {
+        listContainer.innerHTML = orb.comments.map(c => `
+          <div class="p-2 rounded-xl bg-stone-950 border border-amber-500/20 text-[11px] text-amber-200">
+            <strong class="text-amber-400">${c.name}：</strong> ${c.text}
+          </div>
+        `).join('');
       }
 
-      // 模擬廣播給其他在線會友 (Supabase Realtime 行為)
-      console.log(`[即時廣播] 俊璋 牧師 為代禱事項 #${prayerId} 舉起了發光禱告手！`);
+      document.getElementById('prayerDetailModal').classList.remove('hidden');
     }
 
-    // 4. 提交新代禱事項
-    function openNewPrayerModal() { document.getElementById('newPrayerModal').classList.remove('hidden'); }
-    function closeNewPrayerModal() { document.getElementById('newPrayerModal').classList.add('hidden'); }
+    function closeDetailModal() {
+      document.getElementById('prayerDetailModal').classList.add('hidden');
+    }
 
-    function submitNewPrayer() {
-      const title = document.getElementById('inputPrayerTitle').value.trim();
-      const content = document.getElementById('inputPrayerContent').value.trim();
-      if (!title || !content) return alert('請完整填寫代禱主題與內容！');
+    // 從彈窗按手禱告
+    function triggerPrayFromModal() {
+      if (!currentSelectedOrb) return;
+      currentSelectedOrb.hands += 1;
+      currentSelectedOrb.radius = Math.min(100, currentSelectedOrb.radius + 2); // 禱告越多，體積長大
 
-      const newId = Date.now();
-      prayersData.unshift({
-        id: newId,
-        author_name: currentUser.name,
-        group_name: currentUser.group,
+      triggerPrayVisual(currentSelectedOrb.id);
+      closeDetailModal();
+
+      // 更新全站計數
+      const totalEl = document.getElementById('totalPrayersCount');
+      totalEl.innerText = parseInt(totalEl.innerText) + 1;
+    }
+
+    // 提交環繞代禱文
+    function submitCommentFromModal() {
+      if (!currentSelectedOrb) return;
+      const text = document.getElementById('inputCommentPrayer').value.trim();
+      if (!text) return alert('請輸入禱告祝福話語！');
+
+      currentSelectedOrb.comments.push({
+        name: '俊璋 牧師',
+        text: text
+      });
+      currentSelectedOrb.hands += 1; // 留言也算按手一次
+      currentSelectedOrb.radius = Math.min(100, currentSelectedOrb.radius + 2);
+
+      triggerPrayVisual(currentSelectedOrb.id);
+      document.getElementById('inputCommentPrayer').value = '';
+      closeDetailModal();
+    }
+
+    // 7. 提送全新漂浮代禱
+    function openCreatePrayerModal() { document.getElementById('createPrayerModal').classList.remove('hidden'); }
+    function closeCreatePrayerModal() { document.getElementById('createPrayerModal').classList.add('hidden'); }
+
+    function submitNewFloatingPrayer() {
+      const title = document.getElementById('newPrayerTitle').value.trim();
+      const content = document.getElementById('newPrayerContent').value.trim();
+      if (!title || !content) return alert('請完整填寫主題與細節！');
+
+      const newOrb = {
+        id: Date.now(),
+        author: '俊璋 牧師',
+        group: '大雅一組',
         title: title,
         content: content,
-        days_left: 7,
-        hands_count: 1,
-        is_answered: false,
-        comments: []
-      });
+        hands: 1,
+        daysLeft: 7,
+        comments: [],
+        x: window.innerWidth * 0.5,
+        y: window.innerHeight * 0.5,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        radius: 58,
+        orbitAngle: 0
+      };
 
-      closeNewPrayerModal();
-      document.getElementById('inputPrayerTitle').value = '';
-      document.getElementById('inputPrayerContent').value = '';
-      renderPrayers();
+      orbs.push(newOrb);
+      initOrbsDOM();
+      triggerPrayVisual(newOrb.id);
 
-      alert('✨ 代禱燭光已點燃！事項將在動態禱告牆守望 7 天！');
+      closeCreatePrayerModal();
+      document.getElementById('newPrayerTitle').value = '';
+      document.getElementById('newPrayerContent').value = '';
     }
 
-    // 5. 留下代禱文
-    function openCommentModal(id) {
-      document.getElementById('targetPrayerId').value = id;
-      document.getElementById('inputCommentText').value = '';
-      document.getElementById('addCommentModal').classList.remove('hidden');
-    }
-    function closeCommentModal() { document.getElementById('addCommentModal').classList.add('hidden'); }
-
-    function submitCommentPrayer() {
-      const id = parseInt(document.getElementById('targetPrayerId').value);
-      const text = document.getElementById('inputCommentText').value.trim();
-      if (!text) return alert('請填寫禱告話語！');
-
-      const item = prayersData.find(x => x.id === id);
-      if (item) {
-        item.comments.push({ name: currentUser.name, text: text });
-        item.hands_count += 1; // 留言同時自動按手一次
-        renderPrayers();
-      }
-
-      closeCommentModal();
-      alert('🌟 禱告文已化為守望微光，圍繞在代禱事項周邊！');
-    }
-
-    function viewCommentDetail(name, text) {
-      alert(`【${name} 的守望禱告文】\n\n「${text}」`);
-    }
-
-    // 6. 一鍵翻轉成蒙應允金色見證卡
-    function markAsAnswered(id) {
-      if (confirm('🎉 感謝讚美神！確定要將此事項轉為「蒙神應允見證」嗎？全體會友將一同歡呼榮耀！')) {
-        const item = prayersData.find(x => x.id === id);
-        if (item) {
-          item.is_answered = true;
-          renderPrayers();
-          alert('👑 見證已成就！卡片已翻轉為金色榮耀卡！');
-        }
-      }
-    }
-
-    function filterPrayers(type) {
-      currentFilter = type;
-      ['tabAll', 'tabGroup', 'tabAnswered'].forEach(t => {
-        document.getElementById(t).className = 'flex-1 py-1.5 rounded-xl text-stone-600 hover:bg-stone-100';
-      });
-
-      if (type === 'all') document.getElementById('tabAll').className = 'flex-1 py-1.5 rounded-xl bg-orange-500 text-white shadow-sm';
-      if (type === 'group') document.getElementById('tabGroup').className = 'flex-1 py-1.5 rounded-xl bg-orange-500 text-white shadow-sm';
-      if (type === 'answered') document.getElementById('tabAnswered').className = 'flex-1 py-1.5 rounded-xl bg-orange-500 text-white shadow-sm';
-
-      renderPrayers();
-    }
-
-    // 初始化堂會標記
+    // 初始化啟動引擎
     window.onload = () => {
-      document.querySelectorAll('.group-term-label').forEach(el => el.innerText = groupTerm);
-      const titleEl = document.getElementById('churchTitle');
-      const iconEl = document.getElementById('churchBadgeIcon');
-
-      if (isShine) {
-        titleEl.innerText = '火樂教會 SHiNE · 同心代禱牆';
-        iconEl.style.background = 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)';
-        document.getElementById('userGroupDisplay').innerText = '敬拜小家';
-      } else {
-        titleEl.innerText = 'Ｍ＋大雅教會 · 同心代禱牆';
-        iconEl.style.background = 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)';
-        document.getElementById('userGroupDisplay').innerText = '大雅一組';
-      }
-
-      renderPrayers();
+      initOrbsDOM();
+      animateFloat();
     };
   </script>
 </body>
