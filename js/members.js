@@ -22,6 +22,9 @@ export function setMemberViewMode(mode) {
   filterMembers();
 }
 
+// 掛載至全域 window，確保 HTML onclick="setMemberViewMode(...)" 正常呼叫
+window.setMemberViewMode = setMemberViewMode;
+
 export function filterMembers() {
   const searchInput = document.getElementById('memberSearch');
   const groupSelect = document.getElementById('memberFilterGroupSelect');
@@ -61,15 +64,22 @@ export function filterMembers() {
   renderMembersView(filtered);
 }
 
+// 掛載至全域 window
+window.filterMembers = filterMembers;
+
 function renderMembersView(list) {
   const container = document.getElementById('memberCardsStream');
   if (!container) return;
   if (!list.length) {
+    container.className = "w-full";
     container.innerHTML = `<div class="py-16 text-center text-stone-400 text-xs">查無名冊資料</div>`;
     return;
   }
 
+  const terms = getChurchTerms(state.activeChurch);
+
   if (state.memberViewMode === 'table') {
+    container.className = "w-full overflow-hidden";
     container.innerHTML = `
       <div class="lux-card overflow-hidden">
         <div class="overflow-x-auto">
@@ -78,7 +88,7 @@ function renderMembersView(list) {
               <tr class="bg-stone-100/80 border-b border-stone-200 text-stone-600 font-black">
                 <th class="p-3.5 whitespace-nowrap">姓名 / 性別</th>
                 <th class="p-3.5 whitespace-nowrap">電話號碼</th>
-                <th class="p-3.5 whitespace-nowrap">所屬小家</th>
+                <th class="p-3.5 whitespace-nowrap">所屬${terms.group}</th>
                 <th class="p-3.5 whitespace-nowrap">信仰成熟度</th>
                 <th class="p-3.5 whitespace-nowrap">居住區域</th>
                 <th class="p-3.5 whitespace-nowrap">服事恩賜</th>
@@ -108,8 +118,8 @@ function renderMembersView(list) {
                     <td class="p-3.5 text-stone-600 whitespace-nowrap">${m.district || '－'}</td>
                     <td class="p-3.5 text-stone-500 truncate max-w-[160px]">${m.ministry || '－'}</td>
                     <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
-                      <button onclick="editMember(${m.id})" class="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 font-bold hover:bg-orange-100"><i class="fa-solid fa-pen mr-1"></i>編輯</button>
-                      <button onclick="deleteMember(${m.id})" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 font-bold hover:bg-rose-100"><i class="fa-solid fa-trash mr-1"></i>刪除</button>
+                      <button onclick="editMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 font-bold hover:bg-orange-100"><i class="fa-solid fa-pen mr-1"></i>編輯</button>
+                      <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 font-bold hover:bg-rose-100"><i class="fa-solid fa-trash mr-1"></i>刪除</button>
                     </td>
                   </tr>
                 `;
@@ -177,10 +187,10 @@ function renderMembersView(list) {
 
           <div class="pt-3 border-t border-stone-200/80 flex items-center justify-end">
             <div class="flex gap-2">
-              <button onclick="editMember(${m.id})" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
+              <button onclick="editMember('${m.id}')" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
                 <i class="fa-solid fa-pen mr-1"></i>編輯
               </button>
-              <button onclick="deleteMember(${m.id})" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+              <button onclick="deleteMember('${m.id}')" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -228,7 +238,7 @@ window.toggleMinistryChip = function(name) {
   if (selectedMinistries.has(name)) selectedMinistries.delete(name);
   else selectedMinistries.add(name);
   renderMinistryChips();
-}
+};
 
 window.openMemberModal = function() {
   document.getElementById('editMemberId').value = '';
@@ -243,7 +253,7 @@ window.openMemberModal = function() {
   renderMinistryChips();
   document.getElementById('memberModalTitle').querySelector('span').innerText = '新增會友資料';
   document.getElementById('memberEditModal').classList.remove('hidden');
-}
+};
 
 function populateMemberModalGroupDropdown(currentGroup) {
   const select = document.getElementById('editGroupSelect');
@@ -253,7 +263,7 @@ function populateMemberModalGroupDropdown(currentGroup) {
 }
 
 window.editMember = function(id) {
-  const m = state.cachedMembers.find(x => x.id === id);
+  const m = state.cachedMembers.find(x => String(x.id) === String(id));
   if (!m) return;
   document.getElementById('editMemberId').value = m.id;
   document.getElementById('editName').value = m.name;
@@ -270,11 +280,11 @@ window.editMember = function(id) {
   renderMinistryChips();
   document.getElementById('memberModalTitle').querySelector('span').innerText = `編輯會友：${m.name}`;
   document.getElementById('memberEditModal').classList.remove('hidden');
-}
+};
 
 window.closeMemberModal = function() {
   document.getElementById('memberEditModal').classList.add('hidden');
-}
+};
 
 window.saveMemberFromModal = async function() {
   const id = document.getElementById('editMemberId').value;
@@ -301,10 +311,10 @@ window.saveMemberFromModal = async function() {
 
   closeMemberModal();
   await loadMembers();
-}
+};
 
 window.deleteMember = async function(id) {
   if (!confirm('確定刪除此會友？')) return;
   await db.from('members').delete().eq('id', id);
   await loadMembers();
-}
+};
