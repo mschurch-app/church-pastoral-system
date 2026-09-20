@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>生命之樹 · 365天讀經漫遊</title>
+  
+  <!-- LINE LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
+  <!-- Tailwind CSS & Supabase & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'sans-serif'],
+            serif: ['"Noto Serif TC"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: radial-gradient(120% 90% at 50% -10%, #FFF5EB 0%, #FAF6F0 45%, #F4ECE1 100%);
+      color: #1c1917;
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .card-glass {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(234, 218, 198, 0.8);
+      box-shadow: 0 16px 32px -8px rgba(184, 134, 76, 0.08);
+      border-radius: 28px;
+    }
+
+    /* 樹木微風呼吸動畫 */
+    @keyframes treeBreeze {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(1.2deg) scale(1.008); }
+    }
+    .tree-animate {
+      transform-origin: bottom center;
+      animation: treeBreeze 5.5s ease-in-out infinite;
+    }
+
+    /* 活水光環漣漪 */
+    @keyframes waterRipple {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    .ripple-effect {
+      animation: waterRipple 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    /* 澆水按鈕主色漸層 */
+    .btn-water {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #ffffff;
+      box-shadow: 0 10px 24px -4px rgba(234, 88, 12, 0.4);
+      transition: all 0.2s ease;
+    }
+    .btn-water:active { transform: scale(0.97); }
+
+    /* 修剪劃刀光芒 */
+    @keyframes slashGlory {
+      0% { opacity: 0; transform: scaleX(0); }
+      50% { opacity: 1; transform: scaleX(1); }
+      100% { opacity: 0; transform: scaleX(1.2); }
+    }
+    .slash-line {
+      animation: slashGlory 0.6s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="p-3 sm:p-6 flex justify-center items-start min-h-screen">
+
+  <div class="w-full max-w-md space-y-4 my-2">
+
+    <!-- 頂部堂會與日曆天資訊條 -->
+    <header class="card-glass p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="churchBadgeIcon" class="w-10 h-10 rounded-2xl flex items-center justify-center text-white text-lg shadow-md" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
+          <i class="fa-solid fa-seedling"></i>
+        </div>
+        <div>
+          <h2 id="churchTitle" class="text-sm font-black text-stone-800 tracking-tight">Ｍ＋大雅教會 · 生命樹</h2>
+          <p id="userGroupBadge" class="text-[11px] text-stone-500 font-bold">
+            <span id="userNameDisplay">訪客</span> · 所屬<span class="group-term-label">小組</span>：<span id="userGroupName" class="text-orange-700">大雅一組</span>
+          </p>
+        </div>
+      </div>
+      <div class="text-right">
+        <span class="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-100/70 px-2 py-0.5 rounded-full">全教會同步</span>
+        <div class="text-xs font-black text-stone-700 pt-0.5" id="dayCalendarDisplay">Day 88 / 365</div>
+      </div>
+    </header>
+
+    <!-- 核心視覺舞台：溪水旁的生命樹 -->
+    <div class="card-glass p-5 relative overflow-hidden flex flex-col items-center">
+      
+      <!-- 天空環境與晝夜微標記 -->
+      <div class="w-full flex justify-between items-center text-[11px] text-stone-400 font-bold z-10 px-2">
+        <span id="timeOfDayNotice"><i class="fa-solid fa-sun text-amber-500 mr-1"></i>晨光初醒 · 溪水長流</span>
+        <span class="bg-stone-100 px-2.5 py-1 rounded-full text-stone-600 cursor-pointer" onclick="openGraceWellModal()">
+          <i class="fa-solid fa-bucket text-orange-500 mr-1"></i>恩典水井 <strong id="graceWaterPill">0</strong>
+        </span>
+      </div>
+
+      <!-- 樹木 SVG 主舞台 -->
+      <div class="relative w-72 h-72 my-2 flex items-center justify-center">
+        
+        <!-- 土壤水波漣漪 (澆水時觸發) -->
+        <div id="waterRipples" class="absolute bottom-6 w-36 h-12 rounded-full border-2 border-orange-400/40 ripple-effect hidden"></div>
+        
+        <!-- 樹木本體 (SVG 動態繪製) -->
+        <svg id="treeSvg" class="w-full h-full tree-animate" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 溪流底圖 -->
+          <path d="M0 270 C100 250, 200 290, 300 270 L300 300 L0 300 Z" fill="#E2EDF8" />
+          <path d="M20 280 C120 265, 180 295, 280 280" stroke="#B8D7F5" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- 土地小丘 -->
+          <ellipse cx="150" cy="265" rx="80" ry="18" fill="#E6D3BE"/>
+          <ellipse cx="150" cy="263" rx="72" ry="14" fill="#CBB499"/>
+
+          <!-- 樹幹主幹 -->
+          <path id="treeTrunk" d="M142 260 C140 210, 135 170, 150 120 C165 170, 160 210, 158 260 Z" fill="#8B5A2B"/>
+          
+          <!-- 樹枝與綠蔭叢 (以多組圓弧聚合成茂盛樹冠) -->
+          <g id="treeLeavesGroup">
+            <circle cx="150" cy="115" r="50" fill="#48965C" opacity="0.95"/>
+            <circle cx="120" cy="125" r="38" fill="#5BAE70" opacity="0.9"/>
+            <circle cx="180" cy="125" r="38" fill="#3D824E" opacity="0.9"/>
+            <circle cx="140" cy="85" r="36" fill="#67C27D" opacity="0.95"/>
+            <circle cx="165" cy="88" r="34" fill="#5BAE70" opacity="0.9"/>
+          </g>
+
+          <!-- 樹梢黃金果實 (隨天數增加) -->
+          <g id="goldenFruitsGroup">
+            <circle cx="130" cy="100" r="5" fill="#FBBF24" stroke="#D97706" stroke-width="1.5"/>
+            <circle cx="170" cy="110" r="5" fill="#FBBF24" stroke="#D97706" stroke-width="1.5"/>
+            <circle cx="150" cy="75" r="5.5" fill="#FBBF24" stroke="#D97706" stroke-width="1.5"/>
+          </g>
+
+          <!-- 害蟲提示 (若有負面小蟲侵擾) -->
+          <g id="pestGroup" class="cursor-pointer" onclick="handlePestClick()">
+            <circle cx="110" cy="115" r="9" fill="#EF4444" opacity="0.85"/>
+            <text x="106" y="119" font-size="11" fill="white">🐛</text>
+          </g>
+
+          <!-- 待修剪泛黃雜枝 -->
+          <g id="pruneGroup" class="cursor-pointer" onclick="handlePruneClick()">
+            <path d="M152 165 C175 160, 195 175, 205 185" stroke="#D97706" stroke-width="4.5" stroke-linecap="round"/>
+            <circle cx="205" cy="185" r="7" fill="#F59E0B"/>
+            <text x="200" y="189" font-size="10" fill="white">✂️</text>
+          </g>
+        </svg>
+
+        <!-- 澆水噴發特效容器 -->
+        <div id="waterDropAnimation" class="absolute inset-0 pointer-events-none hidden flex items-center justify-center">
+          <i class="fa-solid fa-droplet text-4xl text-sky-400 -translate-y-12 transition-all duration-700 ease-out animate-bounce"></i>
+        </div>
+      </div>
+
+      <!-- 樹木屬靈狀態即時小結 -->
+      <div class="w-full grid grid-cols-3 gap-2 text-center pt-2 border-t border-stone-200/80">
+        <div class="p-2 rounded-2xl bg-stone-50">
+          <div class="text-[10px] text-stone-500 font-bold">累積澆灌</div>
+          <div class="text-sm font-black text-stone-800" id="totalDaysText">85 天</div>
+        </div>
+        <div class="p-2 rounded-2xl bg-stone-50">
+          <div class="text-[10px] text-stone-500 font-bold">生命階段</div>
+          <div class="text-sm font-black text-emerald-700" id="treeStageText">第 2 季·繁茂</div>
+        </div>
+        <div class="p-2 rounded-2xl bg-stone-50">
+          <div class="text-[10px] text-stone-500 font-bold">今日狀態</div>
+          <div class="text-sm font-black text-orange-600" id="todayStatusText">尚未澆灌</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 今日活水經文卡 (每日約 3.5 章精華) -->
+    <div class="card-glass p-5 space-y-3.5">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2.5">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-100/70 px-2 py-0.5 rounded-full">TODAY'S WATER</span>
+          <h3 class="text-sm font-black text-stone-800 pt-1" id="curriculumPassageTitle">創世記 1-3 章 · 馬太福音 1 章 · 詩篇 1 篇</h3>
+        </div>
+        <button onclick="readScriptureFull()" class="text-xs text-orange-700 font-bold hover:underline flex items-center gap-1">
+          <span>經文全文</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </button>
+      </div>
+
+      <!-- 今日核心生命金句 -->
+      <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/60 text-xs leading-relaxed space-y-1">
+        <span class="text-[10px] font-black text-amber-900 block" id="keyVerseRef">【今日扎根金句 · 詩篇 1:3】</span>
+        <p class="font-serif font-black text-stone-800" id="keyVerseContent">
+          「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。凡他所做的盡都順利。」
+        </p>
+      </div>
+
+      <!-- 今日感動一句話筆記 -->
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-black text-stone-600 block">留下今日扎根金葉 (心得/一句禱告)：</label>
+        <input type="text" id="dailyNoteInput" placeholder="這段經文觸動你的是什麼？寫下將化為樹梢金葉..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
+      </div>
+
+      <!-- 澆灌主按鈕 -->
+      <button onclick="waterMyTree()" id="btnWaterAction" class="w-full py-4 rounded-2xl btn-water font-black text-sm tracking-wide flex items-center justify-center gap-2">
+        <i class="fa-solid fa-droplet text-xs"></i>
+        <span id="btnWaterText">💧 注入今日活水 · 澆灌生命樹</span>
+      </button>
+    </div>
+
+    <!-- 底部功能列：即時森林、除蟲修剪與社群分享 -->
+    <div class="grid grid-cols-3 gap-2 pt-1">
+      <button onclick="openForestView()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
+        <i class="fa-solid fa-tree text-emerald-600 text-lg block mb-1"></i>
+        <span class="text-[11px] font-black text-stone-700 block"><span class="group-term-label">小組</span>即時林</span>
+      </button>
+      <button onclick="openCareInteractions()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
+        <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-lg block mb-1"></i>
+        <span class="text-[11px] font-black text-stone-700 block">修剪與除蟲</span>
+      </button>
+      <button onclick="generateShareCard()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
+        <i class="fa-solid fa-share-nodes text-orange-500 text-lg block mb-1"></i>
+        <span class="text-[11px] font-black text-stone-700 block">秀出我的樹</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ================= 彈窗 A：恩典水井 (補讀中心) ================= -->
+  <div id="graceWellModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="card-glass w-full max-w-sm p-6 space-y-4 text-center">
+      <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%)">
+        <i class="fa-solid fa-bucket"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-black text-stone-800">恩典水井 · 隨時補足活水</h3>
+        <p class="text-xs text-stone-500 leading-relaxed pt-1">
+          走得慢沒關係，神總在溪水旁等候！利用週末或空檔補讀，生命樹立刻恢復翠綠光澤！
+        </p>
+      </div>
+
+      <div class="space-y-2 text-left" id="missedDaysList">
+        <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between text-xs">
+          <div>
+            <strong class="text-sky-900 block">Day 86 · 創世記 48-50 章</strong>
+            <span class="text-[10px] text-sky-700">落後 2 天 · 尚未灌溉</span>
+          </div>
+          <button onclick="makeupReading(86)" class="px-3 py-1.5 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700">補讀補水</button>
+        </div>
+      </div>
+
+      <button onclick="closeGraceWellModal()" class="w-full py-2.5 rounded-xl bg-stone-100 text-stone-700 text-xs font-black">返回我的生命樹</button>
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 B：小組/小家 即時樹林 ================= -->
+  <div id="forestModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="card-glass w-full max-w-md p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-stone-200 pb-3">
+        <div>
+          <h3 class="text-base font-black text-stone-800" id="forestModalTitle">大雅一組 · 溪畔生命林</h3>
+          <p class="text-[11px] text-stone-500">今日全組澆灌率：<strong class="text-orange-600" id="forestCompletionRate">75%</strong> (9/12 人)</p>
+        </div>
+        <button onclick="closeForestModal()" class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 2.5D 即時樹林群像 -->
+      <div class="p-4 rounded-2xl bg-gradient-to-b from-sky-50 to-emerald-50 border border-emerald-100 space-y-3">
+        <div class="grid grid-cols-3 gap-3 text-center" id="forestTreeGrid">
+          <!-- 會友 A -->
+          <div class="p-2 rounded-xl bg-white/80 border border-emerald-200 space-y-1">
+            <div class="text-2xl">🌳</div>
+            <div class="text-[11px] font-black text-stone-800">俊璋 牧師</div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">今日已澆水</span>
+          </div>
+          <!-- 會友 B -->
+          <div class="p-2 rounded-xl bg-white/80 border border-amber-200 space-y-1">
+            <div class="text-2xl opacity-75">🌿</div>
+            <div class="text-[11px] font-black text-stone-800">碧鳳 師母</div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">💧 口渴中</span>
+          </div>
+          <!-- 會友 C -->
+          <div class="p-2 rounded-xl bg-white/80 border border-stone-200 space-y-1">
+            <div class="text-2xl">🌲</div>
+            <div class="text-[11px] font-black text-stone-800">頌恩 傳道</div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">今日已澆水</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-[11px] text-stone-500 text-center leading-relaxed">
+        點擊口渴肢體的樹，即可為他代禱澆水送上今日活水！
+      </p>
+    </div>
+  </div>
+
+  <!-- 繪製分享海報專用 Canvas (隱藏) -->
+  <canvas id="shareCanvas" class="hidden" width="1080" height="1920"></canvas>
+
+  <script>
+    // 1. 取得網址堂會參數，貫徹硬隔離架構
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetChurch = urlParams.get('church') || 'M+';
+    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
+    else targetChurch = 'M+';
+
+    const isShine = (targetChurch === 'SHiNE');
+    const groupTerm = isShine ? '小家' : '小組';
+    const leaderTerm = isShine ? '小家長' : '小組長';
+
+    // 狀態變數
+    let currentStreakDays = 85;
+    let todayWatered = false;
+    let hasPest = true;
+    let needPruning = true;
+
+    // 2. 初始化堂會專屬視覺與術語
+    function applyChurchStyles() {
+      document.querySelectorAll('.group-term-label').forEach(el => el.innerText = groupTerm);
+
+      const titleEl = document.getElementById('churchTitle');
+      const iconEl = document.getElementById('churchBadgeIcon');
+      const forestTitle = document.getElementById('forestModalTitle');
+
+      if (isShine) {
+        titleEl.innerText = '火樂教會 SHiNE · 生命樹';
+        iconEl.style.background = 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)';
+        forestTitle.innerText = '敬拜小家 · 火熱生命林';
+        document.getElementById('userGroupName').innerText = '敬拜小家';
+      } else {
+        titleEl.innerText = 'Ｍ＋大雅教會 · 生命樹';
+        iconEl.style.background = 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)';
+        forestTitle.innerText = '大雅一組 · 溪畔生命林';
+        document.getElementById('userGroupName').innerText = '大雅一組';
+      }
+    }
+
+    // 3. 澆水核心互動動畫
+    function waterMyTree() {
+      if (todayWatered) {
+        alert('你今天已經為生命樹注入活水囉！明天繼續一起在溪水旁同行！🌱');
+        return;
+      }
+
+      const note = document.getElementById('dailyNoteInput').value.trim();
+      const dropAnim = document.getElementById('waterDropAnimation');
+      const ripples = document.getElementById('waterRipples');
+      const btn = document.getElementById('btnWaterAction');
+
+      // 觸發滴水與土壤漣漪動畫
+      dropAnim.classList.remove('hidden');
+      ripples.classList.remove('hidden');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在吸收今日恩典甘霖...`;
+
+      setTimeout(() => {
+        dropAnim.classList.add('hidden');
+        todayWatered = true;
+        currentStreakDays += 1;
+
+        document.getElementById('totalDaysText').innerText = `${currentStreakDays} 天`;
+        document.getElementById('todayStatusText').innerText = '已澆灌 (生機盎然)';
+        document.getElementById('todayStatusText').className = 'text-sm font-black text-emerald-600';
+
+        btn.className = 'w-full py-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-sm flex items-center justify-center gap-2';
+        btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span>今日已扎根灌溉 · 感謝讚美神</span>`;
+
+        alert('✨ 澆灌成功！你的信心正在向下扎根，今日靈糧已化為甘霖！');
+      }, 1200);
+    }
+
+    // 4. 除蟲作戰宣告
+    function handlePestClick() {
+      const confirmVictory = confirm('【除蟲作戰 · 剛強校正】\n發現「憂慮毛蟲」！要用今日金句宣告擊退嗎？\n\n「應當一無掛慮，只要凡事藉著禱告祈求，將你們所要的告訴神。」');
+      if (confirmVictory) {
+        const pest = document.getElementById('pestGroup');
+        if (pest) {
+          pest.style.transition = 'all 0.6s ease';
+          pest.style.transform = 'scale(1.5)';
+          pest.style.opacity = '0';
+          setTimeout(() => pest.remove(), 600);
+          alert('⚔️ 宣告得勝！負面控告已消散，心懷意念蒙神保守！');
+        }
+      }
+    }
+
+    // 5. 心靈淨化·溫柔修剪
+    function handlePruneClick() {
+      const confirmPrune = confirm('【心靈淨化 · 溫柔修剪】\n「凡結果子的，他就修理乾淨，使枝子結果子更多。」\n\n滑動修剪枯黃旁枝，卸下本週的焦慮與老我嗎？');
+      if (confirmPrune) {
+        const prune = document.getElementById('pruneGroup');
+        if (prune) {
+          prune.style.transition = 'all 0.6s ease';
+          prune.style.opacity = '0';
+          setTimeout(() => prune.remove(), 600);
+          alert('✂️ 溫柔修剪完成！樹木重新挺拔，重得平靜安息！');
+        }
+      }
+    }
+
+    // 6. 恩典水井彈窗
+    function openGraceWellModal() { document.getElementById('graceWellModal').classList.remove('hidden'); }
+    function closeGraceWellModal() { document.getElementById('graceWellModal').classList.add('hidden'); }
+    function makeupReading(day) {
+      alert(`已成功補讀 Day ${day} 經文！生命樹補足活水，生長天數 +1！`);
+      closeGraceWellModal();
+    }
+
+    // 7. 即時森林彈窗
+    function openForestView() { document.getElementById('forestModal').classList.remove('hidden'); }
+    function closeForestModal() { document.getElementById('forestModal').classList.add('hidden'); }
+
+    // 8. 專屬 IG / LINE 海報秒級合成匯出 (Canvas)
+    function generateShareCard() {
+      const canvas = document.getElementById('shareCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // 背景漸層
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, '#FFF5EB');
+      grad.addColorStop(1, '#F0E5D8');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      // 標題與堂會名稱
+      ctx.fillStyle = '#EA580C';
+      ctx.font = 'bold 54px sans-serif';
+      ctx.fillText(isShine ? '火樂教會 SHiNE' : 'Ｍ＋大雅教會', 100, 220);
+
+      ctx.fillStyle = '#1C1917';
+      ctx.font = '900 78px sans-serif';
+      ctx.fillText('我的生命樹 · 365天讀經漫遊', 100, 320);
+
+      // 成就文字
+      ctx.fillStyle = '#44403C';
+      ctx.font = '600 48px sans-serif';
+      ctx.fillText(`俊璋 牧師 · 已在溪水旁澆灌 ${currentStreakDays} 天`, 100, 420);
+
+      // 核心金句框
+      ctx.fillStyle = '#FFFFFF';
+      ctx.roundRect(100, 500, 880, 500, 40);
+      ctx.fill();
+
+      ctx.fillStyle = '#D97706';
+      ctx.font = 'bold 40px sans-serif';
+      ctx.fillText('今日生命之糧 · 詩篇 1:3', 150, 600);
+
+      ctx.fillStyle = '#1C1917';
+      ctx.font = 'bold 44px serif';
+      ctx.fillText('「他要像一棵樹栽在溪水旁，', 150, 700);
+      ctx.fillText('按時候結果子，葉子也不枯乾。」', 150, 780);
+
+      // 樹木大象徵圖 (簡約繪製)
+      ctx.fillStyle = '#16A34A';
+      ctx.beginPath();
+      ctx.arc(540, 1300, 240, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(510, 1480, 60, 200);
+
+      ctx.fillStyle = '#78716C';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('掃描加入官方 LINE · 一起在愛中種下生命之樹', 540, 1780);
+
+      // 產生預覽並下載
+      const imgData = canvas.toDataURL('image/png');
+      const win = window.open();
+      win.document.write(`<img src="${imgData}" style="width:100%; max-width:480px; border-radius:16px; margin:auto; display:block;">`);
+    }
+
+    function openCareInteractions() {
+      alert('已開啟修剪與除蟲模式！請直接在樹冠上點擊紅色害蟲或泛黃枝條進行互動！');
+    }
+
+    function readScriptureFull() {
+      alert('【今日完整章節】\n1. 創世記 1-3 章\n2. 馬太福音 1 章\n3. 詩篇 1 篇\n\n建議打開聖經或使用聖經 App 深度靈修！');
+    }
+
+    window.onload = () => {
+      applyChurchStyles();
+    };
+  </script>
+</body>
+</html>
