@@ -220,7 +220,7 @@
     </div>
   </div>
 
-  <!-- ================= 彈窗 B：點燃新代禱 (加入牆面漂浮) ================= -->
+  <!-- ================= 彈窗 B：點燃新代禱 (加入姓名自動關聯小組) ================= -->
   <div id="createPrayerModal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="w-full max-w-sm bg-stone-900 border border-amber-500/40 rounded-3xl p-5 space-y-3 text-stone-100 shadow-2xl">
       <div class="flex items-center justify-between border-b border-stone-800 pb-2">
@@ -237,11 +237,19 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-stone-400 font-bold block mb-1">提請人姓名：</label>
-            <input type="text" id="newPrayerAuthor" placeholder="例如：張弟兄" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400">
+            <div class="relative">
+              <input type="text" id="newPrayerAuthor" oninput="debounceLookupMember(this.value)" placeholder="輸入你的姓名" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400">
+              <span id="authorLookupSpinner" class="absolute right-2.5 top-2.5 text-[10px] text-amber-400 hidden">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+              </span>
+            </div>
           </div>
           <div>
-            <label class="text-stone-400 font-bold block mb-1">所屬小組/小家：</label>
-            <input type="text" id="newPrayerGroup" placeholder="例如：大雅一組" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400">
+            <label class="text-stone-400 font-bold block mb-1">所屬<span class="group-term-label">小組</span>：</label>
+            <div class="relative">
+              <input type="text" id="newPrayerGroup" placeholder="輸入姓名自動帶出" class="w-full bg-stone-950 border border-stone-700 rounded-xl p-2 text-stone-200 focus:outline-none focus:border-amber-400 font-bold">
+              <span id="groupAutoBadge" class="absolute right-2 top-2 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-black hidden">名冊關聯</span>
+            </div>
           </div>
         </div>
 
@@ -276,8 +284,50 @@
 
     let orbs = [];
     let currentSelectedOrb = null;
+    let lookupTimer = null;
     const spaceCanvas = document.getElementById('prayerSpaceCanvas');
     const emptyNotice = document.getElementById('emptyStateNotice');
+
+    // 0. 自動依姓名查詢名冊小組/小家
+    window.debounceLookupMember = function(name) {
+      clearTimeout(lookupTimer);
+      const trimmed = name.trim();
+      const badgeEl = document.getElementById('groupAutoBadge');
+      const groupInput = document.getElementById('newPrayerGroup');
+      const spinnerEl = document.getElementById('authorLookupSpinner');
+
+      if (!trimmed) {
+        if (groupInput) groupInput.value = '';
+        if (badgeEl) badgeEl.classList.add('hidden');
+        if (spinnerEl) spinnerEl.classList.add('hidden');
+        return;
+      }
+
+      lookupTimer = setTimeout(async () => {
+        if (spinnerEl) spinnerEl.classList.remove('hidden');
+
+        try {
+          const { data, error } = await db
+            .from('members')
+            .select('name, group_name')
+            .eq('church_id', targetChurch)
+            .eq('name', trimmed)
+            .maybeSingle();
+
+          if (spinnerEl) spinnerEl.classList.add('hidden');
+
+          if (data && data.group_name) {
+            groupInput.value = data.group_name;
+            if (badgeEl) badgeEl.classList.remove('hidden');
+          } else {
+            if (badgeEl) badgeEl.classList.add('hidden');
+          }
+        } catch (err) {
+          if (spinnerEl) spinnerEl.classList.add('hidden');
+          console.error('查詢會友小組失敗:', err);
+        }
+      }, 350);
+    };
 
     // 1. 從 Supabase 載入真實上線代禱事項與環繞留言
     async function loadPrayersFromDb() {
@@ -294,21 +344,16 @@
 
         if (error) throw error;
 
-        // 計算全站代禱次數
         let totalHands = 0;
 
         orbs = (prayers || []).map((p, idx) => {
           totalHands += (p.hands_count || 1);
           
-          // 計算剩餘天數 (7天倒數)
           const now = new Date();
           const exp = new Date(p.expires_at);
           const daysLeft = Math.max(1, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
 
-          // 精巧初始半徑：基準 38px，每 5 次按手 +1px，最大限制 52px (不互卡)
           const calculatedRadius = Math.min(52, 38 + Math.floor((p.hands_count || 1) / 5));
-
-          // 隨機分佈物理座標
           const padding = 60;
           return {
             id: p.id,
@@ -338,7 +383,6 @@
 
     // 2. 初始化 DOM 光球
     function initOrbsDOM() {
-      // 保留 emptyNotice，其餘清除
       spaceCanvas.querySelectorAll('.floating-orb').forEach(el => el.remove());
 
       if (!orbs.length) {
@@ -364,7 +408,6 @@
       for (let i = 0; i < orbs.length; i++) {
         const o1 = orbs[i];
 
-        // 碰撞邊界反彈
         o1.x += o1.vx;
         o1.y += o1.vy;
 
@@ -373,13 +416,12 @@
         if (o1.y - o1.radius < 65) { o1.y = o1.radius + 65; o1.vy *= -1; }
         if (o1.y + o1.radius > height - 70) { o1.y = height - o1.radius - 70; o1.vy *= -1; }
 
-        // 球與球之間柔和避震排斥
         for (let j = i + 1; j < orbs.length; j++) {
           const o2 = orbs[j];
           const dx = o2.x - o1.x;
           const dy = o2.y - o1.y;
           const dist = Math.hypot(dx, dy);
-          const minDist = o1.radius + o2.radius + 20; // 預留 20px 緩衝區
+          const minDist = o1.radius + o2.radius + 20;
 
           if (dist < minDist && dist > 0) {
             const overlap = (minDist - dist) * 0.02;
@@ -392,7 +434,6 @@
           }
         }
 
-        // 衛星公轉
         o1.orbitAngle += 0.022;
 
         const el = document.getElementById(`orb_${o1.id}`);
@@ -413,11 +454,10 @@
       let satellitesHtml = '';
       const commentCount = orb.comments.length;
 
-      // 計算環繞衛星小星點
       orb.comments.forEach((c, idx) => {
         const step = (Math.PI * 2) / Math.max(commentCount, 1);
         const currentAngle = orb.orbitAngle + (step * idx);
-        const orbitDist = orb.radius + 15; // 距離光球邊緣 15px
+        const orbitDist = orb.radius + 15;
         const satX = Math.cos(currentAngle) * orbitDist;
         const satY = Math.sin(currentAngle) * orbitDist;
 
@@ -511,7 +551,6 @@
       const totalEl = document.getElementById('totalPrayersCount');
       totalEl.innerText = parseInt(totalEl.innerText || 0) + 1;
 
-      // 同步回 Supabase
       await db.from('prayers')
         .update({ hands_count: currentSelectedOrb.hands })
         .eq('id', currentSelectedOrb.id);
@@ -531,12 +570,10 @@
         comment_text: text
       };
 
-      // 1. 寫入 Supabase
       const { data, error } = await db.from('prayer_comments').insert([newComment]).select().single();
       
-      // 2. 本地即時更新，環繞小光點立刻冒出
       currentSelectedOrb.comments.push(data || newComment);
-      currentSelectedOrb.hands += 1; // 留言視同按手一次
+      currentSelectedOrb.hands += 1;
       
       triggerPrayVisual(currentSelectedOrb.id);
       document.getElementById('inputCommentPrayer').value = '';
@@ -545,7 +582,11 @@
 
     // 7. 提送全新代禱
     window.openCreatePrayerModal = function() { document.getElementById('createPrayerModal').classList.remove('hidden'); };
-    window.closeCreatePrayerModal = function() { document.getElementById('createPrayerModal').classList.add('hidden'); };
+    window.closeCreatePrayerModal = function() { 
+      document.getElementById('createPrayerModal').classList.add('hidden'); 
+      const badgeEl = document.getElementById('groupAutoBadge');
+      if (badgeEl) badgeEl.classList.add('hidden');
+    };
 
     window.submitNewFloatingPrayer = async function() {
       const author = document.getElementById('newPrayerAuthor').value.trim();
@@ -576,13 +617,13 @@
       document.getElementById('newPrayerTitle').value = '';
       document.getElementById('newPrayerContent').value = '';
 
-      // 重新加載並點燃視覺
       await loadPrayersFromDb();
       if (data) triggerPrayVisual(data.id);
     };
 
     // 初始化運行
     window.onload = () => {
+      document.querySelectorAll('.group-term-label').forEach(el => el.innerText = groupTerm);
       const titleEl = document.getElementById('wallTitle');
       if (isShine) {
         titleEl.innerText = '火樂教會 SHiNE · 守望金香爐';
