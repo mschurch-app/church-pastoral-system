@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>生命之樹 · 365天讀經漫遊</title>
   
-  <!-- Tailwind CSS 核心樣式庫 (必備，排版美化來源) -->
+  <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome 圖示庫 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Google Fonts 精選字型 -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -111,8 +110,8 @@
       </div>
     </header>
 
-    <!-- 核心視覺舞台：Q 版可愛生命樹與微生態 -->
-    <div class="card-glass p-5 relative overflow-hidden flex flex-col items-center">
+    <!-- ================= 核心視覺舞台：生命樹 + 樹下即時操作核心 ================= -->
+    <div class="card-glass p-5 relative overflow-hidden flex flex-col items-center space-y-3">
       
       <div class="w-full flex justify-between items-center text-[11px] text-stone-400 font-bold z-10 px-1">
         <span id="timeOfDayNotice"><i class="fa-solid fa-cloud-sun text-amber-500 mr-1"></i>晨露初醒 · 溪水長流</span>
@@ -139,19 +138,41 @@
 
         <div id="waterDropAnimation" class="absolute inset-0 pointer-events-none hidden flex items-center justify-center">
           <div class="text-center">
-            <i class="fa-solid fa-droplet text-4xl text-sky-400 -translate-y-8 animate-bounce block"></i>
-            <span class="text-xs font-black text-sky-600 bg-white/90 px-2 py-0.5 rounded-full shadow">恩雨降下</span>
+            <i class="fa-solid fa-droplet text-5xl text-sky-400 -translate-y-8 animate-bounce block"></i>
+            <span class="text-xs font-black text-sky-700 bg-white/95 px-2.5 py-1 rounded-full shadow-md">恩雨甘霖降下</span>
           </div>
         </div>
       </div>
 
+      <!-- 🌟 【全新動線】樹木正下方：澆水與修剪除蟲主按鈕列 -->
+      <div class="w-full space-y-2 pt-1">
+        <!-- 澆水主按鈕（在樹正下方，視野零死角） -->
+        <button onclick="waterMyTree()" id="btnWaterAction" class="w-full py-3.5 rounded-2xl btn-water font-black text-sm text-white flex items-center justify-center gap-2 shadow-md">
+          <i class="fa-solid fa-droplet text-sm"></i>
+          <span id="btnWaterText">💧 注入今日活水 · 滋養小樹苗</span>
+        </button>
+
+        <!-- 修剪與除蟲快捷按鈕組 -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="handlePruneClick()" class="py-2.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-scissors text-amber-600"></i>
+            <span>心靈溫柔修剪</span>
+          </button>
+          <button onclick="handlePestClick()" class="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-shield-halved text-rose-600"></i>
+            <span>得勝宣告除蟲</span>
+          </button>
+        </div>
+      </div>
+
       <!-- 預覽成長滑桿 -->
-      <div class="w-full bg-stone-100/70 p-2.5 rounded-2xl mb-2 flex items-center gap-2 border border-stone-200/60">
+      <div class="w-full bg-stone-100/70 p-2.5 rounded-2xl flex items-center gap-2 border border-stone-200/60">
         <span class="text-[10px] font-black text-stone-500 whitespace-nowrap"><i class="fa-solid fa-sliders text-orange-500 mr-1"></i>成長預覽:</span>
         <input type="range" min="1" max="365" value="5" id="sliderDaysPreview" oninput="previewGrowth(this.value)" class="w-full accent-orange-500 cursor-pointer">
         <span class="text-[11px] font-black text-orange-600 w-16 text-right" id="sliderDaysLabel">Day 5</span>
       </div>
 
+      <!-- 樹木數據摘要 -->
       <div class="w-full grid grid-cols-3 gap-2 text-center pt-2 border-t border-stone-200/70">
         <div class="p-2 rounded-2xl bg-stone-50">
           <div class="text-[10px] text-stone-500 font-bold">累積澆灌</div>
@@ -299,27 +320,18 @@
         </div>
       </div>
 
-      <!-- 扎根心得留言框與澆水主按鈕 -->
+      <!-- 扎根心得留言框 -->
       <div class="space-y-1.5 pt-1">
         <label class="text-[11px] font-black text-stone-600 block">留下今日扎根金葉 (心得/一句禱告)：</label>
         <input type="text" id="dailyNoteInput" placeholder="寫下一句感動，這句話將化為樹梢金葉..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400">
       </div>
-
-      <button onclick="waterMyTree()" id="btnWaterAction" class="w-full py-4 rounded-2xl btn-water font-black text-sm text-white flex items-center justify-center gap-2">
-        <i class="fa-solid fa-droplet text-xs"></i>
-        <span id="btnWaterText">💧 注入今日活水 · 滋養小樹苗</span>
-      </button>
     </div>
 
     <!-- 底部功能列 -->
-    <div class="grid grid-cols-3 gap-2 pt-1">
+    <div class="grid grid-cols-2 gap-2 pt-1">
       <button onclick="openForestView()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
         <i class="fa-solid fa-tree text-emerald-600 text-lg block mb-1"></i>
         <span class="text-[11px] font-black text-stone-700 block"><span class="group-term-label">小組</span>即時林</span>
-      </button>
-      <button onclick="openCareInteractions()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
-        <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-lg block mb-1"></i>
-        <span class="text-[11px] font-black text-stone-700 block">修剪與除蟲</span>
       </button>
       <button onclick="generateShareCard()" class="card-glass p-3 text-center hover:bg-stone-50 transition">
         <i class="fa-solid fa-share-nodes text-orange-500 text-lg block mb-1"></i>
@@ -539,7 +551,7 @@
         document.getElementById('todayStatusText').innerText = '已澆灌 (充滿精神)';
         document.getElementById('todayStatusText').className = 'text-sm font-black text-emerald-600';
 
-        btn.className = 'w-full py-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-sm flex items-center justify-center gap-2';
+        btn.className = 'w-full py-3.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-sm flex items-center justify-center gap-2';
         btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span>今日已扎根灌溉 · 小樹長大中！</span>`;
       }, 1000);
     }
@@ -667,7 +679,6 @@
 
     function openForestView() { document.getElementById('forestModal').classList.remove('hidden'); }
     function closeForestModal() { document.getElementById('forestModal').classList.add('hidden'); }
-    function openCareInteractions() { alert('已開啟修剪與除蟲模式！請直接在畫面上點擊紅色小毛蟲或小剪刀！'); }
     function generateShareCard() { alert('📸 已產生超萌 Q 版分享卡！可儲存分享至 IG 限時動態或 LINE 群組！'); }
 
     window.onload = () => {
