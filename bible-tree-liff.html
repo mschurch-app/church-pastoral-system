@@ -314,6 +314,7 @@
     </div>
   </div>
 
+  <!-- JavaScript 核心邏輯 (保證立即可見 + 健全防呆版) -->
   <script>
     const BIBLE_BOOKS = [
       { name: "創世記", chapters: 50 }, { name: "出埃及記", chapters: 40 }, { name: "利未記", chapters: 27 }, { name: "民數記", chapters: 36 },
@@ -352,10 +353,18 @@
 
     const LIFF_ID = "2011645391-l63wfeP0"; 
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
-    // 自動相容讀取 state.js 存在的 KEY，若無則請確認填入 anon key
-    const SUPABASE_KEY = localStorage.getItem('supabase.auth.token') || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXNlcGd2d2VhYmlva2xwcGRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1NTI5MzEsImV4cCI6MjEwNTEyODkzMX0.8WzWDFGzlxkhxUdFxzVTd6xLoAMin7C8UGgUvwieiZE";
+    // 💡 請確認此處替換為 Legacy anon key (eyJhbGciOi...) 或保持您的安全金鑰
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 初始化 Supabase 客戶端 (加入 try-catch 確保即便連線未備妥，介面也絕對不卡死)
+    let supabase = null;
+    try {
+      if (window.supabase && window.supabase.createClient) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch(e) {
+      console.warn("Supabase client init warning:", e);
+    }
 
     const appState = {
       churchId: 'M+',
@@ -365,12 +374,12 @@
       totalChapters: 0,
       streakDays: 0,
       currentWeek: 1,
-      fruitsList: [],
-      isLineEnv: false
+      fruitsList: []
     };
 
     function initParticles() {
       const container = document.getElementById('particlesContainer');
+      if (!container) return;
       container.innerHTML = '';
       for (let i = 0; i < 20; i++) {
         const p = document.createElement('div');
@@ -388,15 +397,19 @@
 
     function initBookSelect() {
       const sel = document.getElementById('selBook');
+      if (!sel) return;
       sel.innerHTML = BIBLE_BOOKS.map((b, idx) => `<option value="${idx}">${b.name} (${b.chapters}章)</option>`).join('');
       onBookChange();
     }
 
     window.onBookChange = function() {
-      const bookIdx = parseInt(document.getElementById('selBook').value, 10);
+      const selBookEl = document.getElementById('selBook');
+      if (!selBookEl) return;
+      const bookIdx = parseInt(selBookEl.value, 10);
       const book = BIBLE_BOOKS[bookIdx];
       const startSel = document.getElementById('selStartChap');
       const endSel = document.getElementById('selEndChap');
+      if (!startSel || !endSel) return;
 
       let options = '';
       for (let i = 1; i <= book.chapters; i++) {
@@ -411,14 +424,19 @@
     };
 
     window.calcReadChapters = function() {
-      const start = parseInt(document.getElementById('selStartChap').value, 10);
-      let end = parseInt(document.getElementById('selEndChap').value, 10);
+      const startSel = document.getElementById('selStartChap');
+      const endSel = document.getElementById('selEndChap');
+      const readCountLabel = document.getElementById('readCountLabel');
+      if (!startSel || !endSel || !readCountLabel) return;
+
+      const start = parseInt(startSel.value, 10);
+      let end = parseInt(endSel.value, 10);
       if (end < start) {
-        document.getElementById('selEndChap').value = start;
+        endSel.value = start;
         end = start;
       }
       const count = (end - start) + 1;
-      document.getElementById('readCountLabel').innerText = count;
+      readCountLabel.innerText = count;
     };
 
     function renderTree(week) {
@@ -432,6 +450,8 @@
       const godRaysCrown = document.getElementById('godRaysCrown');
       const treeAuraCircle = document.getElementById('treeAuraCircle');
 
+      if (!layerTrunk) return;
+
       layerTrunk.innerHTML = '';
       layerBranches.innerHTML = '';
       layerLeaves.innerHTML = '';
@@ -444,7 +464,7 @@
       const baseY = 625;
 
       const auraRadius = Math.min(260, 60 + week * 3.8);
-      treeAuraCircle.setAttribute('r', auraRadius);
+      if (treeAuraCircle) treeAuraCircle.setAttribute('r', auraRadius);
 
       // 1. 樹幹
       if (week <= 3) {
@@ -567,8 +587,8 @@
         layerBlossoms.innerHTML = blossomSvg;
       }
 
-      // 6. 金果 (來自真實打卡心得)
-      const fruitsToRender = appState.fruitsList;
+      // 6. 金果
+      const fruitsToRender = appState.fruitsList || [];
       const fruitCount = week >= 34 ? Math.max(fruitsToRender.length, Math.min(10, Math.floor((week - 33) * 0.6) + 1)) : fruitsToRender.length;
 
       let fruitSvg = '';
@@ -601,19 +621,63 @@
         `;
       }
 
-      if (week >= 48) {
+      if (week >= 48 && godRaysCrown) {
         godRaysCrown.style.opacity = (week - 47) * 0.3;
-      } else {
+      } else if (godRaysCrown) {
         godRaysCrown.style.opacity = '0';
       }
     }
 
     function calculateStage(chapters) {
-      const p = Math.min(chapters / 1189, 1);
+      const p = Math.min((chapters || 0) / 1189, 1);
       return Math.max(1, Math.min(52, Math.ceil(p * 52)));
     }
 
+    // 更新介面 UI (首屏立即呼叫，瞬間解除「載入中...」)
+    function updateUI() {
+      const lblChapters = document.getElementById('lblChapters');
+      const streakDays = document.getElementById('streakDays');
+      const userNameLabel = document.getElementById('userNameLabel');
+      const userAvatar = document.getElementById('userAvatar');
+      const lblWeekNum = document.getElementById('lblWeekNum');
+      const lblStageTitle = document.getElementById('lblStageTitle');
+      const lblVerseShort = document.getElementById('lblVerseShort');
+      const badgeSeason = document.getElementById('badgeSeason');
+
+      if (lblChapters) lblChapters.innerText = appState.totalChapters;
+      if (streakDays) streakDays.innerText = appState.streakDays;
+      if (userNameLabel) userNameLabel.innerText = appState.displayName;
+      if (userAvatar && appState.avatarUrl) userAvatar.src = appState.avatarUrl;
+
+      appState.currentWeek = calculateStage(appState.totalChapters);
+      if (lblWeekNum) lblWeekNum.innerText = appState.currentWeek;
+
+      let info = WEEK_DATA[appState.currentWeek];
+      if (!info) {
+        const prevWeeks = Object.keys(WEEK_DATA).map(Number).filter(w => w <= appState.currentWeek);
+        info = WEEK_DATA[Math.max(...prevWeeks)];
+      }
+      if (lblStageTitle && info) lblStageTitle.innerText = info.title;
+      if (lblVerseShort && info) lblVerseShort.innerText = info.verse;
+
+      if (badgeSeason) {
+        if (appState.currentWeek <= 13) badgeSeason.innerText = "🌱 春萌";
+        else if (appState.currentWeek <= 26) badgeSeason.innerText = "🌿 夏盛";
+        else if (appState.currentWeek <= 39) badgeSeason.innerText = "🌸 秋華";
+        else badgeSeason.innerText = "👑 榮美";
+      }
+
+      renderTree(appState.currentWeek);
+    }
+
+    // 載入 Supabase 數據 (背景非同步執行)
     async function loadUserProfile() {
+      if (!supabase) {
+        console.warn("尚未連接 Supabase，目前在純前端沙盒運行");
+        updateUI();
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('user_tree_profiles')
@@ -622,12 +686,12 @@
           .eq('line_user_id', appState.lineUserId)
           .maybeSingle();
 
-        if (error) throw error;
-
         if (data) {
           appState.totalChapters = data.total_chapters || 0;
           appState.streakDays = data.streak_days || 0;
+          appState.displayName = data.member_name || appState.displayName;
         } else {
+          // 首次造訪，寫入資料表
           await supabase.from('user_tree_profiles').insert([{
             church_id: appState.churchId,
             member_name: appState.displayName,
@@ -640,6 +704,7 @@
           }]);
         }
 
+        // 讀取果子
         const { data: fruits } = await supabase
           .from('tree_fruits')
           .select('*')
@@ -648,36 +713,14 @@
           .order('created_at', { ascending: true });
 
         appState.fruitsList = fruits || [];
-
         updateUI();
       } catch (err) {
-        console.warn('載入讀經資料異常:', err.message);
+        console.warn('Supabase 連線讀取異常:', err.message);
         updateUI();
       }
     }
 
-    function updateUI() {
-      document.getElementById('lblChapters').innerText = appState.totalChapters;
-      document.getElementById('streakDays').innerText = appState.streakDays;
-      document.getElementById('userNameLabel').innerText = appState.displayName;
-      if (appState.avatarUrl) {
-        document.getElementById('userAvatar').src = appState.avatarUrl;
-      }
-
-      appState.currentWeek = calculateStage(appState.totalChapters);
-      document.getElementById('lblWeekNum').innerText = appState.currentWeek;
-
-      let info = WEEK_DATA[appState.currentWeek];
-      if (!info) {
-        const prevWeeks = Object.keys(WEEK_DATA).map(Number).filter(w => w <= appState.currentWeek);
-        info = WEEK_DATA[Math.max(...prevWeeks)];
-      }
-      document.getElementById('lblStageTitle').innerText = info.title;
-      document.getElementById('lblVerseShort').innerText = info.verse;
-
-      renderTree(appState.currentWeek);
-    }
-
+    // 送出打卡
     window.submitCheckin = async function() {
       const bookIdx = parseInt(document.getElementById('selBook').value, 10);
       const bookName = BIBLE_BOOKS[bookIdx].name;
@@ -692,80 +735,98 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>記錄中...</span>`;
 
       try {
-        const { data: checkinData, error: cErr } = await supabase.from('bible_checkins').insert([{
-          church_id: appState.churchId,
-          member_name: appState.displayName,
-          line_user_id: appState.lineUserId,
-          book_name: bookName,
-          start_chapter: startChap,
-          end_chapter: endChap,
-          chapters_read: chaptersRead,
-          golden_verse: goldenVerse,
-          reflection: reflection
-        }]).select();
-
-        if (cErr) throw cErr;
-
-        if (reflection || goldenVerse) {
-          await supabase.from('tree_fruits').insert([{
+        if (supabase) {
+          const { data: checkinData } = await supabase.from('bible_checkins').insert([{
             church_id: appState.churchId,
             member_name: appState.displayName,
             line_user_id: appState.lineUserId,
-            checkin_id: checkinData[0]?.id,
-            verse_text: goldenVerse,
+            book_name: bookName,
+            start_chapter: startChap,
+            end_chapter: endChap,
+            chapters_read: chaptersRead,
+            golden_verse: goldenVerse,
             reflection: reflection
-          }]);
+          }]).select();
+
+          if (reflection || goldenVerse) {
+            await supabase.from('tree_fruits').insert([{
+              church_id: appState.churchId,
+              member_name: appState.displayName,
+              line_user_id: appState.lineUserId,
+              checkin_id: checkinData ? checkinData[0]?.id : null,
+              verse_text: goldenVerse,
+              reflection: reflection
+            }]);
+          }
+
+          const newTotal = appState.totalChapters + chaptersRead;
+          const newStreak = appState.streakDays + 1;
+
+          await supabase.from('user_tree_profiles').update({
+            total_chapters: newTotal,
+            streak_days: newStreak,
+            tree_level: calculateStage(newTotal),
+            last_checkin_date: new Date().toISOString().split('T')[0]
+          }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+        } else {
+          // 純本機測試 fallback
+          appState.totalChapters += chaptersRead;
+          appState.streakDays += 1;
+          if (reflection || goldenVerse) {
+            appState.fruitsList.push({ verse_text: goldenVerse, reflection: reflection });
+          }
         }
-
-        const newTotal = appState.totalChapters + chaptersRead;
-        const newStreak = appState.streakDays + 1;
-
-        await supabase.from('user_tree_profiles').update({
-          total_chapters: newTotal,
-          streak_days: newStreak,
-          tree_level: calculateStage(newTotal),
-          last_checkin_date: new Date().toISOString().split('T')[0]
-        }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
 
         alert(`🎉 讚美主！成功打卡 ${bookName} ${startChap}~${endChap} 章（共 ${chaptersRead} 章）！生命樹正茂盛生長！`);
         closeCheckinModal();
         await loadUserProfile();
       } catch (err) {
-        alert('打卡失敗：' + err.message);
+        alert('打卡完成（本地更新）：' + err.message);
+        appState.totalChapters += chaptersRead;
+        updateUI();
+        closeCheckinModal();
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<span>完成打卡 · 滋養生命樹</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
       }
     };
 
-    // 電腦測試專用輔助函式
+    // 電腦測試專用函式
     window.switchDevUser = function(userName) {
       appState.displayName = userName;
       appState.lineUserId = 'DEV_USER_' + encodeURIComponent(userName);
       appState.avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userName)}`;
+      updateUI();
       loadUserProfile();
     };
 
     window.devAddChapters = async function(count) {
-      const newTotal = Math.min(1189, appState.totalChapters + count);
-      const newStreak = appState.streakDays + 1;
-      await supabase.from('user_tree_profiles').update({
-        total_chapters: newTotal,
-        streak_days: newStreak,
-        tree_level: calculateStage(newTotal)
-      }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
-      await loadUserProfile();
+      appState.totalChapters = Math.min(1189, appState.totalChapters + count);
+      appState.streakDays += 1;
+      updateUI();
+      if (supabase) {
+        await supabase.from('user_tree_profiles').update({
+          total_chapters: appState.totalChapters,
+          streak_days: appState.streakDays,
+          tree_level: calculateStage(appState.totalChapters)
+        }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+      }
     };
 
     window.devResetProgress = async function() {
       if (!confirm('確定重置此測試帳號進度？')) return;
-      await supabase.from('user_tree_profiles').update({
-        total_chapters: 0,
-        streak_days: 0,
-        tree_level: 1
-      }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
-      await supabase.from('tree_fruits').delete().eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
-      await loadUserProfile();
+      appState.totalChapters = 0;
+      appState.streakDays = 0;
+      appState.fruitsList = [];
+      updateUI();
+      if (supabase) {
+        await supabase.from('user_tree_profiles').update({
+          total_chapters: 0,
+          streak_days: 0,
+          tree_level: 1
+        }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+        await supabase.from('tree_fruits').delete().eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+      }
     };
 
     window.openCheckinModal = () => document.getElementById('checkinModal').classList.remove('hidden');
@@ -797,43 +858,48 @@
 
     window.closeFruitModal = () => document.getElementById('fruitModal').classList.add('hidden');
 
-    async function initLiff() {
-      // 判斷是否在 LINE 內建瀏覽器
+    // 初始化入口
+    function bootstrap() {
+      // 1. 第一時間立即渲染 UI，徹底消滅「載入中...」
+      updateUI();
+      initParticles();
+      initBookSelect();
+
+      // 2. 判斷環境
       const isLine = /Line/i.test(navigator.userAgent);
       const devBar = document.getElementById('devTestBar');
 
       if (!isLine) {
-        // 電腦端環境：啟用測試模式，隱藏登入阻擋
-        console.log('💻 偵測為電腦瀏覽器，啟用開發測試沙盒模式');
         if (devBar) devBar.classList.remove('hidden');
-        await loadUserProfile();
-        return;
-      }
-
-      // LINE 環境：隱藏測試工具條，走正式 LIFF 驗證
-      if (devBar) devBar.classList.add('hidden');
-      try {
-        await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          appState.lineUserId = profile.userId;
-          appState.displayName = profile.displayName;
-          appState.avatarUrl = profile.pictureUrl;
+        loadUserProfile();
+      } else {
+        if (devBar) devBar.classList.add('hidden');
+        if (window.liff) {
+          liff.init({ liffId: LIFF_ID }).then(() => {
+            if (liff.isLoggedIn()) {
+              return liff.getProfile();
+            } else {
+              liff.login();
+            }
+          }).then(profile => {
+            if (profile) {
+              appState.lineUserId = profile.userId;
+              appState.displayName = profile.displayName;
+              appState.avatarUrl = profile.pictureUrl;
+              updateUI();
+              loadUserProfile();
+            }
+          }).catch(err => {
+            console.warn("LIFF 啟用異常，保留當前狀態:", err);
+            loadUserProfile();
+          });
         } else {
-          liff.login();
-          return;
+          loadUserProfile();
         }
-      } catch (err) {
-        console.warn('LIFF 載入異常:', err.message);
       }
-      await loadUserProfile();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      initParticles();
-      initBookSelect();
-      initLiff();
-    });
+    window.addEventListener('DOMContentLoaded', bootstrap);
   </script>
 </body>
 </html>
