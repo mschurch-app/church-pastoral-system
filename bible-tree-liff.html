@@ -89,6 +89,26 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-storybook-sky select-none pb-8">
 
+  <!-- 電腦測試工具條 (僅在非 LINE 環境顯示) -->
+  <div id="devTestBar" class="bg-amber-500 text-stone-950 px-4 py-2 text-xs font-black flex flex-wrap items-center justify-between gap-2 shadow-md z-30">
+    <div class="flex items-center gap-2">
+      <span class="bg-amber-900 text-white px-2 py-0.5 rounded-md text-[10px]">電腦測試模式</span>
+      <span>模擬測試身分：</span>
+      <select id="devUserSelect" onchange="switchDevUser(this.value)" class="bg-white px-2 py-1 rounded-md text-xs font-bold border border-amber-600 cursor-pointer">
+        <option value="吳俊璋牧師">吳俊璋 牧師 (測試主帳號)</option>
+        <option value="曾恩茹">曾恩茹 同工</option>
+        <option value="測試會友A">測試會友 A</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <span>快速灌章數：</span>
+      <button onclick="devAddChapters(10)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+10章</button>
+      <button onclick="devAddChapters(50)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+50章</button>
+      <button onclick="devAddChapters(200)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+200章 (看大樹)</button>
+      <button onclick="devResetProgress()" class="bg-rose-100 hover:bg-rose-200 text-rose-800 px-2 py-1 rounded text-[11px] font-bold shadow-sm">歸零重測</button>
+    </div>
+  </div>
+
   <!-- 頂部：會友名牌與連續天數 -->
   <header class="p-4 z-20 flex justify-between items-center max-w-lg w-full mx-auto">
     <div class="flex items-center gap-2.5">
@@ -330,23 +350,23 @@
       52: { title: "榮耀生命樹 · 幸福圓滿", verse: "「河兩邊有生命樹，結十二樣果子……葉子乃為醫治萬民。」—— 啟示錄 22:2" }
     };
 
-    // Ｍ＋大雅專屬 LIFF 設定
     const LIFF_ID = "2011645391-l63wfeP0"; 
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
-    // 請確認替換為您的 Supabase anon public key
-    const SUPABASE_KEY = "貼上你的_SUPABASE_ANON_KEY";
+    // 自動相容讀取 state.js 存在的 KEY，若無則請確認填入 anon key
+    const SUPABASE_KEY = localStorage.getItem('supabase.auth.token') || "貼上你的_SUPABASE_ANON_KEY";
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const appState = {
       churchId: 'M+',
-      lineUserId: 'TEST_USER_LINE_ID',
-      displayName: 'Ｍ＋家人',
-      avatarUrl: '',
+      lineUserId: 'DEV_PASTOR_WU',
+      displayName: '吳俊璋 牧師',
+      avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=PastorWu',
       totalChapters: 0,
       streakDays: 0,
       currentWeek: 1,
-      fruitsList: []
+      fruitsList: [],
+      isLineEnv: false
     };
 
     function initParticles() {
@@ -462,7 +482,7 @@
         `;
       }
 
-      // 2. 樹底圓草簇
+      // 2. 樹底草簇
       if (week <= 3) {
         layerBaseTufts.innerHTML = `<ellipse cx="${baseX}" cy="${baseY}" rx="14" ry="5" fill="#86efac" opacity="0.8"/>`;
       } else {
@@ -547,7 +567,7 @@
         layerBlossoms.innerHTML = blossomSvg;
       }
 
-      // 6. 金果
+      // 6. 金果 (來自真實打卡心得)
       const fruitsToRender = appState.fruitsList;
       const fruitCount = week >= 34 ? Math.max(fruitsToRender.length, Math.min(10, Math.floor((week - 33) * 0.6) + 1)) : fruitsToRender.length;
 
@@ -718,6 +738,36 @@
       }
     };
 
+    // 電腦測試專用輔助函式
+    window.switchDevUser = function(userName) {
+      appState.displayName = userName;
+      appState.lineUserId = 'DEV_USER_' + encodeURIComponent(userName);
+      appState.avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userName)}`;
+      loadUserProfile();
+    };
+
+    window.devAddChapters = async function(count) {
+      const newTotal = Math.min(1189, appState.totalChapters + count);
+      const newStreak = appState.streakDays + 1;
+      await supabase.from('user_tree_profiles').update({
+        total_chapters: newTotal,
+        streak_days: newStreak,
+        tree_level: calculateStage(newTotal)
+      }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+      await loadUserProfile();
+    };
+
+    window.devResetProgress = async function() {
+      if (!confirm('確定重置此測試帳號進度？')) return;
+      await supabase.from('user_tree_profiles').update({
+        total_chapters: 0,
+        streak_days: 0,
+        tree_level: 1
+      }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+      await supabase.from('tree_fruits').delete().eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+      await loadUserProfile();
+    };
+
     window.openCheckinModal = () => document.getElementById('checkinModal').classList.remove('hidden');
     window.closeCheckinModal = () => document.getElementById('checkinModal').classList.add('hidden');
 
@@ -748,6 +798,20 @@
     window.closeFruitModal = () => document.getElementById('fruitModal').classList.add('hidden');
 
     async function initLiff() {
+      // 判斷是否在 LINE 內建瀏覽器
+      const isLine = /Line/i.test(navigator.userAgent);
+      const devBar = document.getElementById('devTestBar');
+
+      if (!isLine) {
+        // 電腦端環境：啟用測試模式，隱藏登入阻擋
+        console.log('💻 偵測為電腦瀏覽器，啟用開發測試沙盒模式');
+        if (devBar) devBar.classList.remove('hidden');
+        await loadUserProfile();
+        return;
+      }
+
+      // LINE 環境：隱藏測試工具條，走正式 LIFF 驗證
+      if (devBar) devBar.classList.add('hidden');
       try {
         await liff.init({ liffId: LIFF_ID });
         if (liff.isLoggedIn()) {
@@ -760,7 +824,7 @@
           return;
         }
       } catch (err) {
-        console.warn('非 LINE 環境或 LIFF 載入中，使用測試身分:', err.message);
+        console.warn('LIFF 載入異常:', err.message);
       }
       await loadUserProfile();
     }
