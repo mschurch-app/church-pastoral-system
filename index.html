@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>CHURCH OS · 智慧教牧行政治理平台</title>
   
-  <!-- Tailwind CSS & Supabase & FontAwesome -->
+  <!-- Tailwind CSS & Supabase & FontAwesome & html2canvas -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- 頂級人文字體 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -21,6 +22,7 @@
         extend: {
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
+            serif: ['"Noto Serif TC"', 'serif'],
           }
         }
       }
@@ -134,6 +136,19 @@
       body { background: #ffffff !important; color: #000000 !important; }
       header, nav, button, .no-print { display: none !important; }
       .lux-card, .lux-card-newcomer { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+      
+      /* 列印服事表海報專用設定 */
+      #exportScheduleModal, #exportWeeklyScheduleModal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: white !important;
+        padding: 0 !important;
+      }
+      .modal-header-actions {
+        display: none !important;
+      }
     }
 
     ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -280,10 +295,22 @@
           <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">主日崇拜事工輪值</h2>
           <p class="text-xs text-stone-500 mt-1" id="serviceSectionSubtitle">掌握講道、主領、影音燈控與接待招待服事安排</p>
         </div>
-        <button onclick="openNewServiceModal()" class="py-3 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center gap-2 flex-shrink-0">
-          <i class="fa-solid fa-calendar-plus text-xs"></i>
-          <span>新增主日服事週次</span>
-        </button>
+        
+        <!-- 🌟 服事頁頂部按鈕組：當週精緻海報 + 當月全表 + 新增週次 -->
+        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <button onclick="exportWeeklySchedulePoster()" class="py-2.5 px-4 rounded-2xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-900 text-xs font-black flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+            <i class="fa-solid fa-star text-orange-600"></i>
+            <span>輸出當週精緻事奉卡</span>
+          </button>
+          <button onclick="exportMonthlySchedulePoster()" class="py-2.5 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+            <i class="fa-solid fa-calendar-days text-amber-600"></i>
+            <span>當月總覽表</span>
+          </button>
+          <button onclick="openNewServiceModal()" class="py-2.5 px-5 rounded-2xl btn-warm text-xs font-bold flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-calendar-plus text-xs"></i>
+            <span>新增服事週次</span>
+          </button>
+        </div>
       </div>
       <div id="serviceCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
     </section>
@@ -338,7 +365,7 @@
       </div>
     </section>
 
-    <!-- 模組五：教牧私密代禱收納匣與守望關懷中心 (已升級收納專區) -->
+    <!-- 模組五：教牧私密代禱收納匣與守望關懷中心 -->
     <section id="mod-prayers" class="space-y-6 hidden">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -349,7 +376,6 @@
           <p class="text-xs text-stone-500 mt-1">管理教牧專屬私密代禱匣、追蹤牧養備註、回覆祝福與公開牆事項守望</p>
         </div>
 
-        <!-- 頂部分頁切換：私密收納匣 vs 公開代禱牆 -->
         <div class="flex items-center gap-2 flex-wrap">
           <div class="flex p-1 bg-white/90 rounded-2xl border border-stone-200/90 text-xs shadow-sm">
             <button onclick="switchPrayerSubTab('private')" id="btn-prayer-private" class="px-4 py-2 rounded-xl font-extrabold btn-warm flex items-center gap-2">
@@ -364,7 +390,6 @@
         </div>
       </div>
 
-      <!-- 快速狀態篩選列 -->
       <div class="flex flex-wrap items-center justify-between gap-3 bg-white/70 p-3 rounded-2xl border border-stone-200/70 text-xs">
         <div class="flex items-center gap-2">
           <span class="text-stone-500 font-bold text-[11px]"><i class="fa-solid fa-filter text-orange-600"></i> 關懷進度：</span>
@@ -382,7 +407,6 @@
         </div>
       </div>
 
-      <!-- 代禱事項卡片容器 -->
       <div id="prayerCardsList" class="space-y-4"></div>
     </section>
 
@@ -403,12 +427,10 @@
         </div>
       </div>
 
-      <!-- 子分頁 1：祝禱範本 -->
       <div id="sub-templates" class="space-y-4">
         <div id="templatesListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <!-- 子分頁 2：金句卡庫 -->
       <div id="sub-cards" class="space-y-4 hidden">
         <div class="flex justify-end">
           <button onclick="openNewCardModal()" class="py-2.5 px-4 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
@@ -418,7 +440,6 @@
         <div id="cardsListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <!-- 子分頁 3：給今天的你 (每日靈糧設定) -->
       <div id="sub-todays" class="space-y-4 hidden">
         <div class="lux-card p-6 sm:p-8 space-y-4">
           <h3 class="font-black text-stone-800 text-base flex items-center gap-2">
@@ -444,7 +465,6 @@
         </div>
       </div>
 
-      <!-- 子分頁 4：新朋友旅程 -->
       <div id="sub-journey" class="space-y-4 hidden">
         <div class="flex justify-between items-center bg-orange-50/70 p-3.5 rounded-2xl border border-orange-200/60">
           <div class="text-xs text-orange-950 font-bold">
@@ -457,7 +477,6 @@
         <div id="journeyListContainer" class="space-y-3"></div>
       </div>
 
-      <!-- 子分頁 5：祝福圖卡庫 (多圖) -->
       <div id="sub-images" class="space-y-4 hidden">
         <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
           <div class="flex gap-1.5 p-1 bg-stone-100 rounded-xl">
@@ -475,7 +494,6 @@
         <div id="greetingCardsGridContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
       </div>
 
-      <!-- 子分頁 6：新朋友即時推播設定 -->
       <div id="sub-newcomer-notify" class="space-y-4 hidden">
         <div class="lux-card p-6 sm:p-8 space-y-4">
           <h3 class="font-black text-stone-800 text-base flex items-center gap-2">
@@ -588,6 +606,85 @@
   </nav>
 
   <!-- ======================== 彈窗 MODALS ======================== -->
+
+  <!-- 🌟 【Modal: 當週精緻事奉海報卡片】 -->
+  <div id="exportWeeklyScheduleModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+    <div class="lux-modal w-full max-w-xl rounded-[32px] p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col bg-white">
+      
+      <!-- 彈窗頂部動作列 -->
+      <div class="modal-header-actions flex justify-between items-center border-b border-stone-100 pb-3 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center text-sm font-bold shadow-sm">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-black text-stone-800">當週主日事奉卡 · 輸出</h3>
+            <p class="text-[11px] text-stone-400 font-medium">適合直接轉發至 LINE 事奉同工群組</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- 週次選單 -->
+          <select id="selWeeklySundayTarget" onchange="renderWeeklyPosterContent(this.value)" class="bg-stone-50 border border-stone-200 text-xs font-black rounded-xl px-2.5 py-1.5 text-stone-800 focus:outline-none cursor-pointer">
+          </select>
+          <button onclick="downloadWeeklyScheduleAsImage()" id="btnDownloadWeeklyImage" class="px-3.5 py-1.5 rounded-xl btn-warm text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-orange-500/25 transition">
+            <i class="fa-solid fa-image"></i>
+            <span>下載圖卡</span>
+          </button>
+          <button onclick="closeWeeklyScheduleModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center ml-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 畫布容器 -->
+      <div class="flex-1 overflow-auto bg-stone-100/60 p-2 sm:p-4 rounded-2xl flex justify-center">
+        <div id="weeklySchedulePosterCard" class="w-full max-w-md bg-white p-6 sm:p-7 rounded-[28px] shadow-sm border border-stone-200/80 space-y-5 text-stone-800">
+          <!-- 內容由 JS 動態產出 -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🌟 【Modal: 當月精美服事總覽表】 -->
+  <div id="exportScheduleModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+    <div class="lux-modal w-full max-w-5xl rounded-[32px] p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col bg-white">
+      
+      <div class="modal-header-actions flex justify-between items-center border-b border-stone-100 pb-3 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center text-sm font-bold shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-black text-stone-800">當月主日事奉輪值表 · 預覽輸出</h3>
+            <p class="text-[11px] text-stone-400 font-medium">適合列印公佈欄張貼，或發送全月輪值</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button onclick="printSchedulePoster()" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-print"></i>
+            <span>列印 / 存為 PDF</span>
+          </button>
+          <button onclick="downloadScheduleAsImage()" id="btnDownloadImage" class="px-4 py-2 rounded-xl btn-warm text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-orange-500/25 transition">
+            <i class="fa-solid fa-image"></i>
+            <span>下載 LINE 分享圖</span>
+          </button>
+          <button onclick="closeScheduleModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center ml-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-auto bg-stone-100/60 p-2 sm:p-4 rounded-2xl flex justify-center">
+        <div id="schedulePosterCard" class="w-full max-w-4xl bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200/80 space-y-6 text-stone-800">
+          <!-- 內容由 JS 動態產出 -->
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- 【Modal: 空間建立與完整編輯】 -->
   <div id="roomEditModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -889,7 +986,7 @@
           </div>
         </div>
 
-        <!-- 🌟 新增：很久沒來（沉睡歸檔）勾選框 -->
+        <!-- 🌟 很久沒來（沉睡歸檔）勾選框 -->
         <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-amber-50/60 border border-amber-200/70 hover:bg-amber-50 transition cursor-pointer" onclick="document.getElementById('editIsInactive').click()">
           <input type="checkbox" id="editIsInactive" onclick="event.stopPropagation()" class="w-4 h-4 rounded text-orange-600 border-stone-300 focus:ring-orange-500 cursor-pointer">
           <label for="editIsInactive" onclick="event.stopPropagation()" class="text-xs font-bold text-stone-700 cursor-pointer select-none flex items-center gap-1.5">
@@ -1170,7 +1267,7 @@
     import { loadPastoralBotSettings } from './js/pastoral-bot.js';
     import { loadAdminUsersList } from './js/superadmin.js';
 
-    // 安全掛載，避免因舊版 prayers.js 缺少 export 導致整頁當掉
+    // 安全掛載
     const loadPrayers = PrayersModule.loadPrayers || (async () => {});
     window.switchPrayerSubTab = PrayersModule.switchPrayerSubTab || (() => {});
     window.filterPrayersByStatus = PrayersModule.filterPrayersByStatus || (() => {});
@@ -1185,22 +1282,18 @@
       const termLeader = isMPlus ? '小組長' : '小家長';
       const termMember = isMPlus ? '組員' : '組員';
 
-      // 1. 更新所有帶有 .group-term-label 的元素（包含底部導覽列、標題、下拉選單）
       document.querySelectorAll('.group-term-label').forEach(el => {
         el.innerText = termGroup;
       });
 
-      // 2. 更新小組長/小家長標籤
       document.querySelectorAll('.group-leader-term-label').forEach(el => {
         el.innerText = termLeader;
       });
 
-      // 3. 更新組員標籤
       document.querySelectorAll('.group-member-term-label').forEach(el => {
         el.innerText = termMember;
       });
 
-      // 4. 更新主日服事區塊專屬欄位（M+ 顯示崇拜司會，SHiNE 顯示樂團配置）
       const shineFields = document.getElementById('shineFieldsWrapper');
       const mplusFields = document.getElementById('mplusFieldsWrapper');
       if (shineFields && mplusFields) {
@@ -1214,7 +1307,359 @@
       }
     }
 
-    // 提供全域切換推播中心子分頁的函式
+    // 🌟 核心功能一：當週精緻事奉海報卡片 (Weekly Poster)
+    window.exportWeeklySchedulePoster = function() {
+      const servicesList = state.cachedServices || [];
+      const selTarget = document.getElementById('selWeeklySundayTarget');
+      if (!selTarget) return;
+
+      if (!servicesList.length) {
+        alert('目前尚無主日服事排班資料！請先在主日服事頁新增週次。');
+        return;
+      }
+
+      // 填充可選的主日日期
+      selTarget.innerHTML = servicesList.map(s => `
+        <option value="${s.service_date}">${s.service_date} ${s.special_event ? `(${s.special_event})` : ''}</option>
+      `).join('');
+
+      // 預設渲染第一筆（最新主日）
+      renderWeeklyPosterContent(servicesList[0].service_date);
+      document.getElementById('exportWeeklyScheduleModal').classList.remove('hidden');
+    };
+
+    window.renderWeeklyPosterContent = function(targetDate) {
+      const currentChurch = state.activeChurch;
+      const churchTitle = (currentChurch === 'SHiNE') ? '火樂教會 SHiNE' : 'Ｍ＋大雅教會';
+      const servicesList = state.cachedServices || [];
+      const svc = servicesList.find(s => s.service_date === targetDate) || servicesList[0];
+      if (!svc) return;
+
+      const isMPlus = (currentChurch === 'M+');
+      const posterEl = document.getElementById('weeklySchedulePosterCard');
+
+      // 提取各組同工名單
+      const speaker = svc.speaker || '吳俊璋 牧師';
+      const presider = svc.presider || '曾恩茹 同工';
+      const prayer = svc.prayer || '長執同工';
+      const leader = svc.worship_leader || '敬拜主領';
+      const keyboard = svc.keyboard || '司琴同工';
+      const singers = svc.singers || '敬拜歌者';
+      const guitar = svc.guitar || '－';
+      const bass = svc.bass || '－';
+      const drums = svc.drums || '－';
+      const sound = svc.sound_engineer || '音控同工';
+      const video = svc.video_operator || '簡報導播';
+      const ushers = [svc.usher_1, svc.usher_2].filter(Boolean).join('、 ') || '服事同工';
+      const sundaySchool = svc.sunday_school || '－';
+      const transport = svc.transport || '－';
+
+      posterEl.innerHTML = `
+        <!-- 卡片頂部 Header -->
+        <div class="text-center space-y-2 border-b border-stone-200/80 pb-4 relative">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black tracking-widest uppercase shadow-sm">
+            <i class="fa-solid fa-fire text-yellow-200"></i>
+            <span>SUNDAY SERVICE MINISTRY</span>
+          </div>
+          <h2 class="text-xl font-black text-stone-900 tracking-tight">${churchTitle}</h2>
+          <div class="flex items-center justify-center gap-2 pt-0.5">
+            <span class="text-base font-black text-orange-600 font-mono tracking-tight">${svc.service_date} (主日)</span>
+            ${svc.special_event ? `<span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold border border-amber-200/60">${svc.special_event}</span>` : ''}
+          </div>
+        </div>
+
+        <!-- 主題經文 -->
+        <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/60 text-center space-y-1">
+          <p class="font-serif text-xs font-bold text-amber-950 leading-relaxed italic">
+            「各人要照所得的恩賜彼此服事，作神百般恩賜的好管家。」
+          </p>
+          <span class="text-[9px] text-amber-700/80 font-semibold block">彼得前書 4:10</span>
+        </div>
+
+        <!-- 事奉同工矩陣區塊 -->
+        <div class="space-y-3 text-xs">
+          
+          <!-- 1. 聖道與主持 -->
+          <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
+            <div class="flex items-center justify-between text-stone-500 text-[11px] font-bold border-b border-stone-200/60 pb-1.5">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-microphone text-orange-600"></i> 聖道與主持敬拜</span>
+              <span class="text-[10px] text-stone-400 font-mono">WORSHIP & WORD</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-0.5">
+              <div class="bg-white p-2.5 rounded-xl border border-stone-200/60 shadow-xs">
+                <span class="text-[10px] text-stone-400 block font-bold">主日講員</span>
+                <span class="text-xs font-black text-stone-800 mt-0.5 block">${speaker}</span>
+              </div>
+              <div class="bg-white p-2.5 rounded-xl border border-stone-200/60 shadow-xs">
+                <span class="text-[10px] text-stone-400 block font-bold">${isMPlus ? '司會主持' : '敬拜主領'}</span>
+                <span class="text-xs font-black text-orange-600 mt-0.5 block">${isMPlus ? presider : leader}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 敬拜團隊 -->
+          <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
+            <div class="flex items-center justify-between text-stone-500 text-[11px] font-bold border-b border-stone-200/60 pb-1.5">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-guitar text-orange-600"></i> 敬拜團與樂手配置</span>
+              <span class="text-[10px] text-stone-400 font-mono">BAND & VOCAL</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-0.5">
+              <div class="bg-white p-2 rounded-xl border border-stone-200/60 text-center shadow-xs">
+                <span class="text-[9px] text-stone-400 block font-bold">${isMPlus ? '敬拜主領' : '司琴鍵盤'}</span>
+                <span class="text-[11px] font-bold text-stone-800 truncate mt-0.5 block">${isMPlus ? leader : keyboard}</span>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-stone-200/60 text-center shadow-xs">
+                <span class="text-[9px] text-stone-400 block font-bold">${isMPlus ? '司琴鍵盤' : '吉他 / 貝斯'}</span>
+                <span class="text-[11px] font-bold text-stone-800 truncate mt-0.5 block">${isMPlus ? keyboard : (guitar !== '－' ? guitar : bass)}</span>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-stone-200/60 text-center shadow-xs">
+                <span class="text-[9px] text-stone-400 block font-bold">${isMPlus ? '公禱代求' : '爵士鼓手'}</span>
+                <span class="text-[11px] font-bold text-stone-800 truncate mt-0.5 block">${isMPlus ? prayer : drums}</span>
+              </div>
+            </div>
+            ${singers !== '－' ? `
+              <div class="bg-white px-2.5 py-1.5 rounded-xl border border-stone-200/60 flex items-center justify-between text-[11px]">
+                <span class="text-stone-400 font-bold text-[10px]">敬拜歌者：</span>
+                <span class="font-bold text-stone-800">${singers}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- 3. 技術控台與接待服事 -->
+          <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
+            <div class="flex items-center justify-between text-stone-500 text-[11px] font-bold border-b border-stone-200/60 pb-1.5">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-orange-600"></i> 技術控台與接待愛筵</span>
+              <span class="text-[10px] text-stone-400 font-mono">TECH & USHERS</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-0.5">
+              <div class="bg-white p-2 rounded-xl border border-stone-200/60 text-center shadow-xs">
+                <span class="text-[9px] text-stone-400 block font-bold">音控 PA</span>
+                <span class="text-[11px] font-bold text-stone-800 truncate mt-0.5 block">${sound}</span>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-stone-200/60 text-center shadow-xs">
+                <span class="text-[9px] text-stone-400 block font-bold">投影字幕 / 導播</span>
+                <span class="text-[11px] font-bold text-stone-800 truncate mt-0.5 block">${video}</span>
+              </div>
+            </div>
+            <div class="bg-white px-2.5 py-1.5 rounded-xl border border-stone-200/60 flex items-center justify-between text-[11px]">
+              <span class="text-stone-400 font-bold text-[10px]">主日接待：</span>
+              <span class="font-bold text-stone-800">${ushers}</span>
+            </div>
+            ${isMPlus && (sundaySchool !== '－' || transport !== '－') ? `
+              <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                <div class="bg-white px-2 py-1.5 rounded-xl border border-stone-200/60"><span class="text-stone-400 text-[9px] block">兒主師資</span><span class="font-bold text-stone-800">${sundaySchool}</span></div>
+                <div class="bg-white px-2 py-1.5 rounded-xl border border-stone-200/60"><span class="text-stone-400 text-[9px] block">接送服事</span><span class="font-bold text-stone-800">${transport}</span></div>
+              </div>
+            ` : ''}
+          </div>
+
+        </div>
+
+        <!-- 底部溫馨提醒 -->
+        <div class="pt-2 border-t border-stone-200/70 text-center text-[10px] text-stone-400">
+          <p>★ 請事奉同工於主日早上準時到場彩排預備，願神親自賜福您的擺上！</p>
+        </div>
+      `;
+    };
+
+    // 一鍵下載當週高清圖卡
+    window.downloadWeeklyScheduleAsImage = async function() {
+      const card = document.getElementById('weeklySchedulePosterCard');
+      const btn = document.getElementById('btnDownloadWeeklyImage');
+      const targetDate = document.getElementById('selWeeklySundayTarget').value;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>產生中...</span>`;
+
+      try {
+        const canvas = await html2canvas(card, {
+          scale: 2.5, // 超高解析度，文字清晰不模糊
+          backgroundColor: '#ffffff',
+          useCORS: true
+        });
+        const link = document.createElement('a');
+        link.download = `${state.activeChurch}_當週主日事奉卡_${targetDate.replace(/\//g, '-')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch(err) {
+        alert('產生圖片失敗：' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-image"></i> <span>下載圖卡</span>`;
+      }
+    };
+
+    window.closeWeeklyScheduleModal = function() {
+      document.getElementById('exportWeeklyScheduleModal').classList.add('hidden');
+    };
+
+    // 🌟 核心功能二：當月主日服事全表 (Monthly Poster)
+    window.exportMonthlySchedulePoster = async function() {
+      const currentChurch = state.activeChurch;
+      const churchTitle = (currentChurch === 'SHiNE') ? '火樂教會 SHiNE' : 'Ｍ＋大雅教會';
+      
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // 1. 計算該月份所有週日
+      const sundays = [];
+      const d = new Date(year, month - 1, 1);
+      while (d.getMonth() === month - 1) {
+        if (d.getDay() === 0) {
+          sundays.push({
+            fullDate: `${year}/${String(month).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`,
+            month: month,
+            day: d.getDate()
+          });
+        }
+        d.setDate(d.getDate() + 1);
+      }
+
+      // 2. 獲取排班資料快取
+      const servicesList = state.cachedServices || [];
+      const serviceMap = {};
+      servicesList.forEach(s => {
+        if (s.service_date) serviceMap[s.service_date] = s;
+      });
+
+      // 3. 依堂會區分崗位分組
+      const isMPlus = (currentChurch === 'M+');
+      const roleGroups = isMPlus ? [
+        { category: "聖道與主持", icon: "fa-microphone", roles: ["講員", "司會", "公禱"] },
+        { category: "敬拜樂團與歌者", icon: "fa-guitar", roles: ["敬拜主領", "司琴", "敬拜歌者"] },
+        { category: "兒童主日學與接送", icon: "fa-children", roles: ["兒主主責", "兒主助教", "接送服事"] },
+        { category: "技術與招待事奉", icon: "fa-sliders", roles: ["音控", "投影導播", "主日招待"] }
+      ] : [
+        { category: "聖道事奉", icon: "fa-microphone", roles: ["講員"] },
+        { category: "火樂敬拜團", icon: "fa-guitar", roles: ["敬拜主領", "敬拜歌者", "司琴", "吉他", "貝斯", "鼓手"] },
+        { category: "技術與接待", icon: "fa-sliders", roles: ["音控", "投影導播", "主日招待"] }
+      ];
+
+      // 4. 動態渲染全月海報畫布
+      const posterEl = document.getElementById('schedulePosterCard');
+      posterEl.innerHTML = `
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-orange-500 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800">主日事奉輪值</span>
+              <span class="text-xs font-bold text-stone-400 font-mono">${year} 年度</span>
+            </div>
+            <h1 class="text-2xl font-black text-stone-900 mt-1 tracking-tight">${churchTitle} · ${month} 月份服事表</h1>
+          </div>
+          <div class="text-left sm:text-right">
+            <p class="text-xs font-bold text-amber-900 italic font-serif">「各人要照所得的恩賜彼此服事，作神百般恩賜的好管家。」</p>
+            <p class="text-[10px] text-stone-400 mt-0.5 font-medium">彼得前書 4:10</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse text-xs">
+            <thead>
+              <tr class="bg-stone-50 border-b border-stone-200">
+                <th class="p-3 text-left font-black text-stone-600 w-36 whitespace-nowrap">事奉崗位</th>
+                ${sundays.map((s, idx) => `
+                  <th class="p-3 text-center font-black text-stone-800 whitespace-nowrap min-w-[120px]">
+                    <div class="text-xs text-orange-600 font-black">第 ${idx + 1} 週</div>
+                    <div class="text-sm font-mono mt-0.5">${s.month}/${s.day} (主日)</div>
+                  </th>
+                `).join('')}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+              ${roleGroups.map(grp => `
+                <tr class="bg-stone-50/70">
+                  <td colspan="${sundays.length + 1}" class="p-2 px-3 font-black text-stone-700 text-[11px]">
+                    <i class="fa-solid ${grp.icon} mr-1.5 text-orange-600"></i>${grp.category}
+                  </td>
+                </tr>
+                ${grp.roles.map(role => `
+                  <tr class="hover:bg-amber-50/20 transition">
+                    <td class="p-2.5 px-3 font-bold text-stone-600 whitespace-nowrap flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span>
+                      <span>${role}</span>
+                    </td>
+                    ${sundays.map(s => {
+                      const svc = serviceMap[s.fullDate] || {};
+                      let person = '－';
+                      if (role === '講員') person = svc.speaker || '－';
+                      else if (role === '司會') person = svc.presider || '－';
+                      else if (role === '公禱') person = svc.prayer || '－';
+                      else if (role === '敬拜主領') person = svc.worship_leader || '－';
+                      else if (role === '敬拜歌者') person = svc.singers || '－';
+                      else if (role === '司琴') person = svc.keyboard || '－';
+                      else if (role === '吉他') person = svc.guitar || '－';
+                      else if (role === '貝斯') person = svc.bass || '－';
+                      else if (role === '鼓手') person = svc.drums || '－';
+                      else if (role === '兒主主責') person = svc.sunday_school || '－';
+                      else if (role === '兒主助教') person = svc.sunday_school_ta || '－';
+                      else if (role === '接送服事') person = svc.transport || '－';
+                      else if (role === '音控') person = svc.sound_engineer || '－';
+                      else if (role === '投影導播') person = svc.video_operator || '－';
+                      else if (role === '主日招待') person = [svc.usher_1, svc.usher_2].filter(Boolean).join(', ') || '－';
+
+                      const isAssigned = person !== '－';
+                      return `
+                        <td class="p-2 text-center whitespace-nowrap">
+                          <span class="inline-block px-2.5 py-1 rounded-lg font-bold text-[11px] ${isAssigned ? 'bg-amber-50 text-amber-950 border border-amber-200/80 shadow-xs' : 'text-stone-300'}">
+                            ${person}
+                          </span>
+                        </td>
+                      `;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pt-3 border-t border-stone-200/80 flex flex-col sm:flex-row justify-between items-center text-[11px] text-stone-400 gap-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-orange-500"></i>
+            <span>若遇臨時調班請提早告知團隊同工，感謝每位家人的同心擺上與服事！</span>
+          </div>
+          <div class="font-mono text-[10px]">
+            製表日期：${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('exportScheduleModal').classList.remove('hidden');
+    };
+
+    window.downloadScheduleAsImage = async function() {
+      const card = document.getElementById('schedulePosterCard');
+      const btn = document.getElementById('btnDownloadImage');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>產生中...</span>`;
+
+      try {
+        const canvas = await html2canvas(card, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true
+        });
+        const link = document.createElement('a');
+        link.download = `${state.activeChurch}_主日服事表_${new Date().getMonth()+1}月份.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch(err) {
+        alert('產生圖片失敗：' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-image"></i> <span>下載 LINE 分享圖</span>`;
+      }
+    };
+
+    window.printSchedulePoster = function() {
+      window.print();
+    };
+
+    window.closeScheduleModal = function() {
+      document.getElementById('exportScheduleModal').classList.add('hidden');
+    };
+
+    // 切換推播中心子分頁
     window.switchBotSubTab = function(tab) {
       const allSubTabs = ['templates', 'cards', 'todays', 'journey', 'images', 'newcomer-notify'];
       allSubTabs.forEach(t => {
@@ -1284,7 +1729,6 @@
     }
 
     function applyChurchTheme(churchId) {
-      // 1. 更新堂會術語（小組 / 小家）
       updateTerminology(churchId);
 
       const c = state.cachedChurches[churchId];
