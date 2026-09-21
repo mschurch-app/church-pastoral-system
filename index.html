@@ -888,6 +888,16 @@
             </select>
           </div>
         </div>
+
+        <!-- 🌟 新增：很久沒來（沉睡歸檔）勾選框 -->
+        <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-amber-50/60 border border-amber-200/70 hover:bg-amber-50 transition cursor-pointer" onclick="document.getElementById('editIsInactive').click()">
+          <input type="checkbox" id="editIsInactive" onclick="event.stopPropagation()" class="w-4 h-4 rounded text-orange-600 border-stone-300 focus:ring-orange-500 cursor-pointer">
+          <label for="editIsInactive" onclick="event.stopPropagation()" class="text-xs font-bold text-stone-700 cursor-pointer select-none flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left text-orange-600"></i>
+            <span>很久沒來（勾選後暫時移至名冊底部收納區）</span>
+          </label>
+        </div>
+
         <div>
           <label class="text-stone-600 font-bold block mb-1.5">服事恩賜 / 興趣標籤：</label>
           <div id="ministryChipsContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
