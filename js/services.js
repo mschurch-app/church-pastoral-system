@@ -119,12 +119,12 @@ function populateMinistryMemberDropdown(selectId, targetKeyword, currentValue) {
   
   let html = `<option value="－">－ (無)</option>`;
   if (recommended.length) {
-    html += `<optgroup label="🌟 推薦具恩賜同工">` + 
-      recommended.map(m => `<option value="${m.name}" ${isMatch(m.name) ? 'selected' : ''}>${m.name} (${m.group_name})</option>`).join('') + 
+    html += `<optgroup label="🌟 推薦具恩賜同工">` +  
+      recommended.map(m => `<option value="${m.name}" ${isMatch(m.name) ? 'selected' : ''}>${m.name} (${m.group_name})</option>`).join('') +  
       `</optgroup>`;
   }
-  html += `<optgroup label="全部名冊名單">` + 
-    others.map(m => `<option value="${m.name}" ${isMatch(m.name) ? 'selected' : ''}>${m.name}</option>`).join('') + 
+  html += `<optgroup label="全部名冊名單">` +  
+    others.map(m => `<option value="${m.name}" ${isMatch(m.name) ? 'selected' : ''}>${m.name}</option>`).join('') +  
     `</optgroup>`;
   select.innerHTML = html;
 }
