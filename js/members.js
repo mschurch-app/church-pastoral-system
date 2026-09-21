@@ -22,7 +22,6 @@ export function setMemberViewMode(mode) {
   filterMembers();
 }
 
-// 掛載至全域 window，確保 HTML onclick="setMemberViewMode(...)" 正常呼叫
 window.setMemberViewMode = setMemberViewMode;
 
 export function filterMembers() {
@@ -42,7 +41,6 @@ export function filterMembers() {
     return matchesQ && matchesGrp;
   });
 
-  // 信仰成熟度排序階層：插入「一般會友」於「受洗初信」與「委身家人」之間
   const faithOrder = {
     '新朋友（初次聚會）': 1,
     '慕道友（偶爾出現）': 2,
@@ -63,16 +61,29 @@ export function filterMembers() {
     }
   });
 
-  renderMembersView(filtered);
+  // 🌟 分流：常態會友 vs 很久沒來（沉睡/待尋會友）
+  const activeMembers = [];
+  const inactiveMembers = [];
+
+  filtered.forEach(m => {
+    const isInactive = m.growth_progress && (m.growth_progress.includes('很久沒來') || m.growth_progress.includes('沒出現'));
+    if (isInactive) {
+      inactiveMembers.push(m);
+    } else {
+      activeMembers.push(m);
+    }
+  });
+
+  renderMembersView(activeMembers, inactiveMembers);
 }
 
-// 掛載至全域 window
 window.filterMembers = filterMembers;
 
-function renderMembersView(list) {
+function renderMembersView(activeList, inactiveList) {
   const container = document.getElementById('memberCardsStream');
   if (!container) return;
-  if (!list.length) {
+  
+  if (!activeList.length && !inactiveList.length) {
     container.className = "w-full";
     container.innerHTML = `<div class="py-16 text-center text-stone-400 text-xs">查無名冊資料</div>`;
     return;
@@ -80,128 +91,221 @@ function renderMembersView(list) {
 
   const terms = getChurchTerms(state.activeChurch);
 
+  // 1. 常態名冊內容
+  let mainHtml = '';
   if (state.memberViewMode === 'table') {
-    container.className = "w-full overflow-hidden";
-    container.innerHTML = `
-      <div class="lux-card overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-stone-100/80 border-b border-stone-200 text-stone-600 font-black">
-                <th class="p-3.5 whitespace-nowrap">姓名 / 性別</th>
-                <th class="p-3.5 whitespace-nowrap">電話號碼</th>
-                <th class="p-3.5 whitespace-nowrap">所屬${terms.group}</th>
-                <th class="p-3.5 whitespace-nowrap">信仰成熟度</th>
-                <th class="p-3.5 whitespace-nowrap">居住區域</th>
-                <th class="p-3.5 whitespace-nowrap">服事恩賜</th>
-                <th class="p-3.5 whitespace-nowrap text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-stone-200/60">
-              ${list.map(m => {
-                const hasLine = m.line_id && m.line_id.startsWith('U');
-                const isNewcomer = m.faith_status === '新朋友（初次聚會）';
-                return `
-                  <tr class="hover:bg-orange-50/30 transition">
-                    <td class="p-3.5 font-black text-stone-800 whitespace-nowrap">
-                      <div class="flex items-center gap-1.5">
-                        <span>${m.name}</span>
-                        <span class="text-[10px] text-stone-400 font-normal">(${m.gender || '弟兄'})</span>
-                        ${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定LINE"></i>' : ''}
-                      </div>
-                    </td>
-                    <td class="p-3.5 font-mono text-stone-600 whitespace-nowrap">${m.phone || '－'}</td>
-                    <td class="p-3.5 font-bold text-stone-700 whitespace-nowrap">${m.group_name || '未編組'}</td>
-                    <td class="p-3.5 whitespace-nowrap">
-                      <span class="px-2.5 py-0.5 rounded-lg ${isNewcomer ? 'bg-orange-500 text-white font-black animate-pulse' : 'bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold'}">
-                        ${isNewcomer ? '🌱 新朋友（初次聚會）' : (m.faith_status || '委身家人')}
-                      </span>
-                    </td>
-                    <td class="p-3.5 text-stone-600 whitespace-nowrap">${m.district || '－'}</td>
-                    <td class="p-3.5 text-stone-500 truncate max-w-[160px]">${m.ministry || '－'}</td>
-                    <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
-                      <button onclick="editMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 font-bold hover:bg-orange-100"><i class="fa-solid fa-pen mr-1"></i>編輯</button>
-                      <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 font-bold hover:bg-rose-100"><i class="fa-solid fa-trash mr-1"></i>刪除</button>
-                    </td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
+    mainHtml = renderTableView(activeList, terms, false);
+  } else {
+    mainHtml = renderCardsView(activeList, terms, false);
+  }
+
+  // 2. 底部折疊區塊：很久沒來（待尋訪）名冊
+  let inactiveSectionHtml = '';
+  if (inactiveList.length > 0) {
+    const inactiveContent = (state.memberViewMode === 'table') 
+      ? renderTableView(inactiveList, terms, true) 
+      : renderCardsView(inactiveList, terms, true);
+
+    inactiveSectionHtml = `
+      <div class="w-full mt-10 pt-6 border-t-2 border-dashed border-stone-200">
+        <div class="flex items-center justify-between p-4 rounded-2xl bg-stone-100/80 border border-stone-200 cursor-pointer select-none" onclick="toggleInactiveDrawer()">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-xl bg-stone-300 text-stone-700 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-bed"></i>
+            </div>
+            <div>
+              <span class="font-black text-xs text-stone-700">很久沒來 · 待關懷羊群名單</span>
+              <span class="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-stone-200 text-stone-600 font-mono font-bold">${inactiveList.length} 人</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-stone-500 font-bold">
+            <span id="lblInactiveState">點擊展開</span>
+            <i id="iconInactiveArrow" class="fa-solid fa-chevron-down transition-transform"></i>
+          </div>
+        </div>
+
+        <div id="drawerInactiveMembers" class="hidden mt-4 space-y-4">
+          <p class="text-[11px] text-stone-400 font-medium px-1">
+            * 此區塊為暫時移出的名單。點擊「恢復常態」即可一鍵移回上方主要名冊。
+          </p>
+          ${inactiveContent}
         </div>
       </div>
     `;
-  } else {
-    container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
-    container.innerHTML = list.map(m => {
-      const hasLine = m.line_id && m.line_id.startsWith('U');
-      const isNewcomer = m.faith_status === '新朋友（初次聚會）';
-      const ministries = m.ministry ? m.ministry.split(',').map(s => s.trim()).filter(Boolean) : [];
-      const cardClass = isNewcomer ? 'lux-card-newcomer p-5 space-y-3.5 flex flex-col justify-between' : 'lux-card p-5 space-y-3.5 flex flex-col justify-between';
-
-      return `
-        <div class="${cardClass}">
-          <div class="space-y-3">
-            <div class="flex justify-between items-start">
-              <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-2xl ${m.gender === '姊妹' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-extrabold text-sm shadow-sm overflow-hidden">
-                  ${m.photo_url ? `<img src="${m.photo_url}" class="w-full h-full object-cover">` : m.name.slice(0, 1)}
-                </div>
-                <div>
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-black text-stone-800 text-base">${m.name}</span>
-                    <span class="text-[11px] text-stone-400">(${m.gender})</span>
-                    ${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定 LINE"></i>' : ''}
-                  </div>
-                  <p class="text-xs text-stone-500 font-mono mt-0.5">${m.phone || '未登記電話'}</p>
-                </div>
-              </div>
-              <span class="text-[11px] font-bold px-3 py-1 rounded-xl bg-stone-100 text-stone-700 border border-stone-200/80">
-                ${m.group_name || '未編組'}
-              </span>
-            </div>
-
-            <div class="flex flex-wrap gap-1.5 items-center pt-1">
-              <span class="text-[10px] px-2 py-0.5 rounded-lg ${isNewcomer ? 'bg-orange-500 text-white font-black animate-pulse' : 'bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold'}">
-                ${isNewcomer ? '🌱 新朋友（迎賓中）' : (m.faith_status || '委身家人')}
-              </span>
-              ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
-              ${m.age_group ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold">${m.age_group}</span>` : ''}
-              ${m.birthday ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold"><i class="fa-solid fa-cake-candles mr-1"></i>${m.birthday}</span>` : ''}
-              ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
-            </div>
-
-            ${isNewcomer && m.memo ? `
-              <div class="p-3 rounded-2xl bg-orange-50/90 border border-orange-200 text-xs text-stone-800 space-y-1.5 shadow-sm">
-                <div class="flex items-center gap-1.5 font-black text-orange-950 text-[11px]">
-                  <i class="fa-solid fa-seedling text-orange-600"></i>
-                  <span>新朋友初次填寫摘要</span>
-                </div>
-                <p class="leading-relaxed font-medium text-[11px]">${m.memo}</p>
-              </div>
-            ` : (m.memo ? `
-              <div class="p-2.5 rounded-xl bg-stone-100/70 border border-stone-200/60 text-[11px] text-stone-600 flex items-start gap-2">
-                <i class="fa-regular fa-note-sticky text-amber-600 mt-0.5 flex-shrink-0"></i>
-                <span class="line-clamp-2 leading-relaxed">${m.memo}</span>
-              </div>
-            ` : '')}
-          </div>
-
-          <div class="pt-3 border-t border-stone-200/80 flex items-center justify-end">
-            <div class="flex gap-2">
-              <button onclick="editMember('${m.id}')" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
-                <i class="fa-solid fa-pen mr-1"></i>編輯
-              </button>
-              <button onclick="deleteMember('${m.id}')" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
   }
+
+  container.className = "w-full space-y-4";
+  container.innerHTML = mainHtml + inactiveSectionHtml;
 }
+
+// 產生表格視圖
+function renderTableView(list, terms, isInactiveSection) {
+  if (!list.length) return `<div class="py-6 text-center text-stone-400 text-xs">無名冊</div>`;
+  return `
+    <div class="lux-card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-stone-100/80 border-b border-stone-200 text-stone-600 font-black">
+              <th class="p-3.5 whitespace-nowrap">姓名 / 性別</th>
+              <th class="p-3.5 whitespace-nowrap">電話號碼</th>
+              <th class="p-3.5 whitespace-nowrap">所屬${terms.group}</th>
+              <th class="p-3.5 whitespace-nowrap">信仰成熟度</th>
+              <th class="p-3.5 whitespace-nowrap">居住區域</th>
+              <th class="p-3.5 whitespace-nowrap">服事恩賜</th>
+              <th class="p-3.5 whitespace-nowrap text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-200/60">
+            ${list.map(m => {
+              const hasLine = m.line_id && m.line_id.startsWith('U');
+              const isNewcomer = m.faith_status === '新朋友（初次聚會）';
+              return `
+                <tr class="hover:bg-orange-50/30 transition ${isInactiveSection ? 'opacity-70 bg-stone-50/50' : ''}">
+                  <td class="p-3.5 font-black text-stone-800 whitespace-nowrap">
+                    <div class="flex items-center gap-1.5">
+                      <span>${m.name}</span>
+                      <span class="text-[10px] text-stone-400 font-normal">(${m.gender || '弟兄'})</span>
+                      ${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定LINE"></i>' : ''}
+                    </div>
+                  </td>
+                  <td class="p-3.5 font-mono text-stone-600 whitespace-nowrap">${m.phone || '－'}</td>
+                  <td class="p-3.5 font-bold text-stone-700 whitespace-nowrap">${m.group_name || '未編組'}</td>
+                  <td class="p-3.5 whitespace-nowrap">
+                    <span class="px-2.5 py-0.5 rounded-lg ${isNewcomer ? 'bg-orange-500 text-white font-black animate-pulse' : 'bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold'}">
+                      ${isNewcomer ? '🌱 新朋友（初次聚會）' : (m.faith_status || '一般會友')}
+                    </span>
+                  </td>
+                  <td class="p-3.5 text-stone-600 whitespace-nowrap">${m.district || '－'}</td>
+                  <td class="p-3.5 text-stone-500 truncate max-w-[160px]">${m.ministry || '－'}</td>
+                  <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
+                    ${isInactiveSection ? `
+                      <button onclick="restoreMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100"><i class="fa-solid fa-rotate-left mr-1"></i>恢復常態</button>
+                    ` : `
+                      <button onclick="markMemberInactive('${m.id}')" class="px-2 py-1 rounded-lg bg-stone-100 text-stone-600 font-bold hover:bg-stone-200" title="標記很久沒來"><i class="fa-solid fa-user-clock mr-1"></i>很久沒來</button>
+                    `}
+                    <button onclick="editMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 font-bold hover:bg-orange-100"><i class="fa-solid fa-pen mr-1"></i>編輯</button>
+                    <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 font-bold hover:bg-rose-100"><i class="fa-solid fa-trash mr-1"></i>刪除</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// 產生卡片視圖
+function renderCardsView(list, terms, isInactiveSection) {
+  if (!list.length) return `<div class="py-6 text-center text-stone-400 text-xs">無名冊</div>`;
+  return `
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${list.map(m => {
+        const hasLine = m.line_id && m.line_id.startsWith('U');
+        const isNewcomer = m.faith_status === '新朋友（初次聚會）';
+        const ministries = m.ministry ? m.ministry.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const cardClass = isInactiveSection 
+          ? 'lux-card p-5 space-y-3.5 flex flex-col justify-between opacity-75 bg-stone-50/80 border-dashed'
+          : (isNewcomer ? 'lux-card-newcomer p-5 space-y-3.5 flex flex-col justify-between' : 'lux-card p-5 space-y-3.5 flex flex-col justify-between');
+
+        return `
+          <div class="${cardClass}">
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl ${m.gender === '姊妹' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-800'} flex items-center justify-center font-extrabold text-sm shadow-sm overflow-hidden">
+                    ${m.photo_url ? `<img src="${m.photo_url}" class="w-full h-full object-cover">` : m.name.slice(0, 1)}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-black text-stone-800 text-base">${m.name}</span>
+                      <span class="text-[11px] text-stone-400">(${m.gender})</span>${hasLine ? '<i class="fa-brands fa-line text-emerald-500 text-xs" title="已綁定 LINE"></i>' : ''}
+                    </div>
+                    <p class="text-xs text-stone-500 font-mono mt-0.5">${m.phone || '未登記電話'}</p>
+                  </div>
+                </div>
+                <span class="text-[11px] font-bold px-3 py-1 rounded-xl bg-stone-100 text-stone-700 border border-stone-200/80">
+                  ${m.group_name || '未編組'}
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-1.5 items-center pt-1">
+                <span class="text-[10px] px-2 py-0.5 rounded-lg ${isNewcomer ? 'bg-orange-500 text-white font-black animate-pulse' : 'bg-amber-50 text-amber-900 border border-amber-200/60 font-semibold'}">
+                  ${isNewcomer ? '🌱 新朋友（迎賓中）' : (m.faith_status || '一般會友')}
+                </span>
+                ${m.district ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 font-medium">${m.district}</span>` : ''}
+                ${isInactiveSection ? `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-stone-200 text-stone-700 font-bold"><i class="fa-solid fa-clock-rotate-left mr-1"></i>很久沒來</span>` : ''}
+                ${ministries.map(item => `<span class="text-[10px] px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 font-bold">${item}</span>`).join('')}
+              </div>
+
+              ${m.memo ? `
+                <div class="p-2.5 rounded-xl bg-stone-100/70 border border-stone-200/60 text-[11px] text-stone-600 flex items-start gap-2">
+                  <i class="fa-regular fa-note-sticky text-amber-600 mt-0.5 flex-shrink-0"></i>
+                  <span class="line-clamp-2 leading-relaxed">${m.memo}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="pt-3 border-t border-stone-200/80 flex items-center justify-between">
+              <div>
+                ${isInactiveSection ? `
+                  <button onclick="restoreMember('${m.id}')" class="text-xs px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold transition">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>恢復常態
+                  </button>
+                ` : `
+                  <button onclick="markMemberInactive('${m.id}')" class="text-xs px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold transition" title="移至很久沒來">
+                    <i class="fa-solid fa-user-clock mr-1"></i>很久沒來
+                  </button>
+                `}
+              </div>
+              <div class="flex gap-1.5">
+                <button onclick="editMember('${m.id}')" class="text-xs px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold transition">
+                  <i class="fa-solid fa-pen mr-1"></i>編輯
+                </button>
+                <button onclick="deleteMember('${m.id}')" class="text-xs px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold transition">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// 展開 / 收合底部抽屜
+window.toggleInactiveDrawer = function() {
+  const drawer = document.getElementById('drawerInactiveMembers');
+  const lbl = document.getElementById('lblInactiveState');
+  const icon = document.getElementById('iconInactiveArrow');
+  if (!drawer) return;
+
+  if (drawer.classList.contains('hidden')) {
+    drawer.classList.remove('hidden');
+    if (lbl) lbl.innerText = '點擊收合';
+    if (icon) icon.className = "fa-solid fa-chevron-up transition-transform";
+  } else {
+    drawer.classList.add('hidden');
+    if (lbl) lbl.innerText = '點擊展開';
+    if (icon) icon.className = "fa-solid fa-chevron-down transition-transform";
+  }
+};
+
+// 🌟 快捷標記為很久沒來
+window.markMemberInactive = async function(id) {
+  if (!confirm('要將此會友暫時移至底部的「很久沒來名單」嗎？')) return;
+  await db.from('members').update({ growth_progress: '很久沒來(都沒出現）' }).eq('id', id);
+  await loadMembers();
+};
+
+// 🌟 一鍵恢復回常態名冊
+window.restoreMember = async function(id) {
+  await db.from('members').update({ growth_progress: '穩定聚會(8成以上)' }).eq('id', id);
+  await loadMembers();
+};
 
 function populateGroupFilterDropdown() {
   const select = document.getElementById('memberFilterGroupSelect');
@@ -249,6 +353,11 @@ window.openMemberModal = function() {
   document.getElementById('editBirthday').value = '';
   document.getElementById('editBaptism').value = '';
   document.getElementById('editMemo').value = '';
+  
+  // 很久沒來勾選框復位
+  const chkInactive = document.getElementById('editIsInactive');
+  if (chkInactive) chkInactive.checked = false;
+
   populateMemberModalGroupDropdown('未編組');
   populateDistrictDropdown('');
   selectedMinistries.clear();
@@ -277,6 +386,13 @@ window.editMember = function(id) {
   populateDistrictDropdown(m.district || '');
   document.getElementById('editMemo').value = m.memo || '';
   populateMemberModalGroupDropdown(m.group_name || '未編組');
+
+  // 彈窗勾選框同步
+  const chkInactive = document.getElementById('editIsInactive');
+  if (chkInactive) {
+    chkInactive.checked = m.growth_progress && (m.growth_progress.includes('很久沒來') || m.growth_progress.includes('沒出現'));
+  }
+
   selectedMinistries.clear();
   if (m.ministry) m.ministry.split(',').map(s => s.trim()).forEach(i => i && selectedMinistries.add(i));
   renderMinistryChips();
@@ -294,6 +410,9 @@ window.saveMemberFromModal = async function() {
   if (!name) return alert('會友姓名為必填！');
   const districtVal = document.getElementById('editDistrict').value;
 
+  const chkInactive = document.getElementById('editIsInactive');
+  const isInactive = chkInactive ? chkInactive.checked : false;
+
   const payload = {
     church_id: state.activeChurch,
     name,
@@ -305,6 +424,7 @@ window.saveMemberFromModal = async function() {
     faith_status: document.getElementById('editFaithStatus').value,
     district: districtVal ? districtVal : null,
     ministry: Array.from(selectedMinistries).join(', '),
+    growth_progress: isInactive ? '很久沒來(都沒出現）' : '穩定聚會(8成以上)',
     memo: document.getElementById('editMemo').value.trim()
   };
 
