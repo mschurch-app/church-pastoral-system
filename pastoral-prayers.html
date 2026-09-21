@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教牧私密代禱 · 牧養關懷中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-stone-100 text-stone-800 p-4 sm:p-6 min-h-screen font-sans">
+
+  <div class="max-w-4xl mx-auto space-y-4">
+    
+    <!-- 頂部資訊列 -->
+    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-md">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-black text-stone-900 flex items-center gap-2">
+            <span>教牧私密代禱 · 關懷儀表板</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold">🔒 內部機密</span>
+          </h1>
+          <p class="text-xs text-stone-500" id="churchNoticeDisplay">Ｍ＋大雅教會 · 牧長同工專屬守望清單</p>
+        </div>
+      </div>
+
+      <!-- 狀態篩選標籤 -->
+      <div class="flex gap-1.5 bg-stone-100 p-1 rounded-xl text-xs font-bold text-stone-600">
+        <button onclick="filterStatus('all')" id="btnTabAll" class="px-3 py-1.5 rounded-lg bg-white shadow-xs text-amber-700">全部</button>
+        <button onclick="filterStatus('pending')" id="btnTabPending" class="px-3 py-1.5 rounded-lg hover:bg-white/60">待守望</button>
+        <button onclick="filterStatus('praying')" id="btnTabPraying" class="px-3 py-1.5 rounded-lg hover:bg-white/60">關懷中</button>
+        <button onclick="filterStatus('closed')" id="btnTabClosed" class="px-3 py-1.5 rounded-lg hover:bg-white/60">已結案</button>
+      </div>
+    </div>
+
+    <!-- 私密代禱卡片清單 -->
+    <div id="privatePrayersList" class="space-y-3">
+      <div class="text-center py-12 text-stone-400 text-xs">正在載入教牧關懷資料...</div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { db } from './js/state.js';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetChurch = urlParams.get('church') || 'M+';
+    if (targetChurch.toUpperCase().startsWith('SHINE')) targetChurch = 'SHiNE';
+    else targetChurch = 'M+';
+
+    let allPrayers = [];
+    let currentFilter = 'all';
+
+    async function loadPrivatePrayers() {
+      const container = document.getElementById('privatePrayersList');
+      try {
+        const { data, error } = await db
+          .from('prayers')
+          .select('*')
+          .eq('church_id', targetChurch)
+          .eq('is_private', true) // 🔒 只抓取私密事項
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        allPrayers = data || [];
+        renderList();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-rose-500 text-xs">載入失敗：${err.message}</div>`;
+      }
+    }
+
+    function renderList() {
+      const container = document.getElementById('privatePrayersList');
+      let filtered = allPrayers.filter(p => {
+        if (currentFilter === 'all') return true;
+        return (p.status || 'pending') === currentFilter;
+      });
+
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-2xl border border-stone-200 text-center text-stone-400 space-y-2">
+            <i class="fa-solid fa-dove text-3xl text-stone-300"></i>
+            <div class="text-xs font-bold">目前沒有符合條件的私密代禱事項</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
+        const status = p.status || 'pending';
+        let badgeHtml = '';
+        if (status === 'pending') badgeHtml = `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black">🟡 待守望</span>`;
+        else if (status === 'praying') badgeHtml = `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">🟢 關懷中 / 已代禱</span>`;
+        else badgeHtml = `<span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-black">⚪ 已結案歸檔</span>`;
+
+        const dateStr = new Date(p.created_at).toLocaleString('zh-TW', {
+          year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+        });
+
+        return `
+          <div class="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-sm space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-sm text-stone-900">${p.author_name}</span>
+                <span class="text-xs text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md font-bold">${p.group_name || '未編組'}</span>
+                ${badgeHtml}
+              </div>
+              <span class="text-[11px] text-stone-400">${dateStr}</span>
+            </div>
+
+            <div class="space-y-1">
+              <h3 class="text-sm font-bold text-stone-800">${p.title}</h3>
+              <p class="text-xs text-stone-600 leading-relaxed bg-amber-50/50 p-3 rounded-xl border border-amber-100 font-serif">
+                ${p.content}
+              </p>
+            </div>
+
+            <!-- 牧者專屬備忘與跟進操作區 -->
+            <div class="pt-2 border-t border-stone-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-stone-400 font-bold whitespace-nowrap">更新狀態：</span>
+                <select onchange="updatePrayerStatus(${p.id}, this.value)" class="text-xs bg-stone-50 border border-stone-200 rounded-lg p-1.5 font-bold focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  <option value="pending" ${status === 'pending' ? 'selected' : ''}>🟡 待守望</option>
+                  <option value="praying" ${status === 'praying' ? 'selected' : ''}>🟢 關懷中 / 已代禱</option>
+                  <option value="closed" ${status === 'closed' ? 'selected' : ''}>⚪ 已結案歸檔</option>
+                </select>
+              </div>
+
+              <!-- 牧者備忘編輯按鈕 -->
+              <div class="flex items-center gap-2">
+                <button onclick="editPastoralNotes(${p.id})" class="text-xs px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold flex items-center gap-1 transition">
+                  <i class="fa-solid fa-pen-to-square text-stone-500"></i>
+                  <span>${p.pastoral_notes ? '查看/修改牧養備忘' : '新增牧養備忘'}</span>
+                </button>
+              </div>
+            </div>
+
+            ${p.pastoral_notes ? `
+              <div class="p-2.5 rounded-xl bg-stone-50 text-[11px] text-stone-600 border border-stone-200/60 flex items-start gap-2">
+                <i class="fa-solid fa-notes-medical text-amber-600 mt-0.5"></i>
+                <div class="flex-1">
+                  <strong class="text-stone-800 block mb-0.5">教牧備忘：</strong>
+                  <span class="whitespace-pre-wrap">${p.pastoral_notes}</span>
+                </div>
+              </div>
+            ` : ''}
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.updatePrayerStatus = async function(id, newStatus) {
+      try {
+        await db.from('prayers').update({ status: newStatus }).eq('id', id);
+        const item = allPrayers.find(x => x.id === id);
+        if (item) item.status = newStatus;
+        renderList();
+      } catch (err) {
+        alert('更新狀態失敗：' + err.message);
+      }
+    };
+
+    window.editPastoralNotes = async function(id) {
+      const item = allPrayers.find(x => x.id === id);
+      if (!item) return;
+
+      const newNotes = prompt('請輸入此代禱事項的教牧關懷備忘（例如：電訪關懷紀錄、探訪安排等）：', item.pastoral_notes || '');
+      if (newNotes !== null) {
+        try {
+          await db.from('prayers').update({ pastoral_notes: newNotes }).eq('id', id);
+          item.pastoral_notes = newNotes;
+          renderList();
+        } catch (err) {
+          alert('儲存備忘失敗：' + err.message);
+        }
+      }
+    };
+
+    window.filterStatus = function(status) {
+      currentFilter = status;
+      ['btnTabAll', 'btnTabPending', 'btnTabPraying', 'btnTabClosed'].forEach(id => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-lg hover:bg-white/60 text-stone-600';
+      });
+      if (status === 'all') document.getElementById('btnTabAll').className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-amber-700';
+      if (status === 'pending') document.getElementById('btnTabPending').className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-amber-700';
+      if (status === 'praying') document.getElementById('btnTabPraying').className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-amber-700';
+      if (status === 'closed') document.getElementById('btnTabClosed').className = 'px-3 py-1.5 rounded-lg bg-white shadow-xs text-amber-700';
+      renderList();
+    };
+
+    window.onload = () => {
+      if (targetChurch === 'SHiNE') {
+        document.getElementById('churchNoticeDisplay').innerText = '火樂教會 SHiNE · 牧長同工專屬守望清單';
+      }
+      loadPrivatePrayers();
+    };
+  </script>
+</body>
+</html>
