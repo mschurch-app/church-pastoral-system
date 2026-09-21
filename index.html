@@ -137,7 +137,6 @@
       header, nav, button, .no-print { display: none !important; }
       .lux-card, .lux-card-newcomer { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
       
-      /* 列印服事表海報專用設定 */
       #exportScheduleModal, #exportWeeklyScheduleModal {
         position: absolute !important;
         left: 0 !important;
@@ -296,7 +295,7 @@
           <p class="text-xs text-stone-500 mt-1" id="serviceSectionSubtitle">掌握講道、主領、影音燈控與接待招待服事安排</p>
         </div>
         
-        <!-- 🌟 絕對看得到的按鈕組：當週卡片 + 當月總覽 + 新增週次 -->
+        <!-- 🌟 絕對看得到的按鈕組 -->
         <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
           <button onclick="exportWeeklySchedulePoster()" class="py-2.5 px-4 rounded-2xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-900 text-xs font-black flex items-center gap-1.5 shadow-sm active:scale-95 transition">
             <i class="fa-solid fa-star text-orange-600"></i>
@@ -314,7 +313,7 @@
       </div>
       <div id="serviceCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
     </section>
-    
+
     <!-- 模組三：小家 / 小組 行政中樞 -->
     <section id="mod-groups" class="space-y-6 hidden">
       <div class="flex justify-between items-center gap-3">
@@ -611,7 +610,6 @@
   <div id="exportWeeklyScheduleModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
     <div class="lux-modal w-full max-w-xl rounded-[32px] p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col bg-white">
       
-      <!-- 彈窗頂部動作列 -->
       <div class="modal-header-actions flex justify-between items-center border-b border-stone-100 pb-3 flex-shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center text-sm font-bold shadow-sm">
@@ -624,7 +622,6 @@
         </div>
         
         <div class="flex items-center gap-2">
-          <!-- 週次選單 -->
           <select id="selWeeklySundayTarget" onchange="renderWeeklyPosterContent(this.value)" class="bg-stone-50 border border-stone-200 text-xs font-black rounded-xl px-2.5 py-1.5 text-stone-800 focus:outline-none cursor-pointer">
           </select>
           <button onclick="downloadWeeklyScheduleAsImage()" id="btnDownloadWeeklyImage" class="px-3.5 py-1.5 rounded-xl btn-warm text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-orange-500/25 transition">
@@ -637,7 +634,6 @@
         </div>
       </div>
 
-      <!-- 畫布容器 -->
       <div class="flex-1 overflow-auto bg-stone-100/60 p-2 sm:p-4 rounded-2xl flex justify-center">
         <div id="weeklySchedulePosterCard" class="w-full max-w-md bg-white p-6 sm:p-7 rounded-[28px] shadow-sm border border-stone-200/80 space-y-5 text-stone-800">
           <!-- 內容由 JS 動態產出 -->
@@ -1275,7 +1271,6 @@
     window.closePastoralNotesModal = PrayersModule.closePastoralNotesModal || (() => {});
     window.savePastoralNotesData = PrayersModule.savePastoralNotesData || (() => {});
 
-    // 🌟 核心：根據堂會動態調整「小家 / 小組」稱謂
     function updateTerminology(churchId) {
       const isMPlus = (churchId === 'M+');
       const termGroup = isMPlus ? '小組' : '小家';
@@ -1307,7 +1302,7 @@
       }
     }
 
-    // 🌟 核心功能一：當週精緻事奉海報卡片 (Weekly Poster)
+    // 🌟 當週精緻事奉海報卡片
     window.exportWeeklySchedulePoster = function() {
       const servicesList = state.cachedServices || [];
       const selTarget = document.getElementById('selWeeklySundayTarget');
@@ -1318,12 +1313,10 @@
         return;
       }
 
-      // 填充可選的主日日期
       selTarget.innerHTML = servicesList.map(s => `
         <option value="${s.service_date}">${s.service_date} ${s.special_event ? `(${s.special_event})` : ''}</option>
       `).join('');
 
-      // 預設渲染第一筆（最新主日）
       renderWeeklyPosterContent(servicesList[0].service_date);
       document.getElementById('exportWeeklyScheduleModal').classList.remove('hidden');
     };
@@ -1338,7 +1331,6 @@
       const isMPlus = (currentChurch === 'M+');
       const posterEl = document.getElementById('weeklySchedulePosterCard');
 
-      // 提取各組同工名單
       const speaker = svc.speaker || '吳俊璋 牧師';
       const presider = svc.presider || '曾恩茹 同工';
       const prayer = svc.prayer || '長執同工';
@@ -1355,7 +1347,6 @@
       const transport = svc.transport || '－';
 
       posterEl.innerHTML = `
-        <!-- 卡片頂部 Header -->
         <div class="text-center space-y-2 border-b border-stone-200/80 pb-4 relative">
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black tracking-widest uppercase shadow-sm">
             <i class="fa-solid fa-fire text-yellow-200"></i>
@@ -1368,7 +1359,6 @@
           </div>
         </div>
 
-        <!-- 主題經文 -->
         <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/60 text-center space-y-1">
           <p class="font-serif text-xs font-bold text-amber-950 leading-relaxed italic">
             「各人要照所得的恩賜彼此服事，作神百般恩賜的好管家。」
@@ -1376,10 +1366,7 @@
           <span class="text-[9px] text-amber-700/80 font-semibold block">彼得前書 4:10</span>
         </div>
 
-        <!-- 事奉同工矩陣區塊 -->
         <div class="space-y-3 text-xs">
-          
-          <!-- 1. 聖道與主持 -->
           <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
             <div class="flex items-center justify-between text-stone-500 text-[11px] font-bold border-b border-stone-200/60 pb-1.5">
               <span class="flex items-center gap-1.5"><i class="fa-solid fa-microphone text-orange-600"></i> 聖道與主持敬拜</span>
@@ -1397,7 +1384,6 @@
             </div>
           </div>
 
-          <!-- 2. 敬拜團隊 -->
           <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
             <div class="flex items-center justify-between text-stone-500 text-[11px] font-bold border-b border-stone-200/60 pb-1.5">
               <span class="flex items-center gap-1.5"><i class="fa-solid fa-guitar text-orange-600"></i> 敬拜團與樂手配置</span>
@@ -1425,7 +1411,6 @@
             ` : ''}
           </div>
 
-          <!-- 3. 技術控台與接待服事 -->
           <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
             <div class="flex items-center justify-between text-stone-500 text-[11px] font-bold border-b border-stone-200/60 pb-1.5">
               <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-orange-600"></i> 技術控台與接待愛筵</span>
@@ -1442,27 +1427,18 @@
               </div>
             </div>
             <div class="bg-white px-2.5 py-1.5 rounded-xl border border-stone-200/60 flex items-center justify-between text-[11px]">
-              <span class="text-stone-400 font-bold text-[10px]">主日接待：</span>
+              <span class="text-stone-400 font-bold text-[10px]">主日招待：</span>
               <span class="font-bold text-stone-800">${ushers}</span>
             </div>
-            ${isMPlus && (sundaySchool !== '－' || transport !== '－') ? `
-              <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                <div class="bg-white px-2 py-1.5 rounded-xl border border-stone-200/60"><span class="text-stone-400 text-[9px] block">兒主師資</span><span class="font-bold text-stone-800">${sundaySchool}</span></div>
-                <div class="bg-white px-2 py-1.5 rounded-xl border border-stone-200/60"><span class="text-stone-400 text-[9px] block">接送服事</span><span class="font-bold text-stone-800">${transport}</span></div>
-              </div>
-            ` : ''}
           </div>
-
         </div>
 
-        <!-- 底部溫馨提醒 -->
         <div class="pt-2 border-t border-stone-200/70 text-center text-[10px] text-stone-400">
           <p>★ 請事奉同工於主日早上準時到場彩排預備，願神親自賜福您的擺上！</p>
         </div>
       `;
     };
 
-    // 一鍵下載當週高清圖卡
     window.downloadWeeklyScheduleAsImage = async function() {
       const card = document.getElementById('weeklySchedulePosterCard');
       const btn = document.getElementById('btnDownloadWeeklyImage');
@@ -1472,7 +1448,7 @@
 
       try {
         const canvas = await html2canvas(card, {
-          scale: 2.5, // 超高解析度，文字清晰不模糊
+          scale: 2.5,
           backgroundColor: '#ffffff',
           useCORS: true
         });
@@ -1492,7 +1468,7 @@
       document.getElementById('exportWeeklyScheduleModal').classList.add('hidden');
     };
 
-    // 🌟 核心功能二：當月主日服事全表 (Monthly Poster)
+    // 🌟 當月主日服事總覽表
     window.exportMonthlySchedulePoster = async function() {
       const currentChurch = state.activeChurch;
       const churchTitle = (currentChurch === 'SHiNE') ? '火樂教會 SHiNE' : 'Ｍ＋大雅教會';
@@ -1501,7 +1477,6 @@
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
-      // 1. 計算該月份所有週日
       const sundays = [];
       const d = new Date(year, month - 1, 1);
       while (d.getMonth() === month - 1) {
@@ -1515,14 +1490,12 @@
         d.setDate(d.getDate() + 1);
       }
 
-      // 2. 獲取排班資料快取
       const servicesList = state.cachedServices || [];
       const serviceMap = {};
       servicesList.forEach(s => {
         if (s.service_date) serviceMap[s.service_date] = s;
       });
 
-      // 3. 依堂會區分崗位分組
       const isMPlus = (currentChurch === 'M+');
       const roleGroups = isMPlus ? [
         { category: "聖道與主持", icon: "fa-microphone", roles: ["講員", "司會", "公禱"] },
@@ -1535,7 +1508,6 @@
         { category: "技術與接待", icon: "fa-sliders", roles: ["音控", "投影導播", "主日招待"] }
       ];
 
-      // 4. 動態渲染全月海報畫布
       const posterEl = document.getElementById('schedulePosterCard');
       posterEl.innerHTML = `
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-orange-500 pb-4 gap-2">
@@ -1659,7 +1631,6 @@
       document.getElementById('exportScheduleModal').classList.add('hidden');
     };
 
-    // 切換推播中心子分頁
     window.switchBotSubTab = function(tab) {
       const allSubTabs = ['templates', 'cards', 'todays', 'journey', 'images', 'newcomer-notify'];
       allSubTabs.forEach(t => {
@@ -1676,7 +1647,6 @@
       });
     };
 
-    // 儲存「給今天的你」每日靈糧內容
     window.saveTodaysVerseSettings = async function() {
       const verseEl = document.getElementById('todaysVerseContent');
       const prayerEl = document.getElementById('todaysPrayerContent');
