@@ -793,12 +793,30 @@
       document.getElementById('newPrayerContent').value = '';
 
       // 2. 判斷公開或私密
+      // 2. 判斷公開或私密
       if (isPrivatePrayer) {
-        // 🔒 私密代禱：呼叫 Edge Function 推送到教牧群組
-        db.functions.invoke('send-private-prayer', {
-          body: payload
-        }).then(({ error: fnError }) => {
-          if (fnError) console.warn('推播教牧群組略過:', fnError);
+        console.log('【前端追蹤】準備呼叫 send-private-prayer Edge Function, payload:', payload);
+
+        // 取得 Supabase 專案 URL 與 ANON KEY
+        // 如果您的 state.js 有導出 supabaseUrl, 可以直接使用；或者直接填入您的專案網址：
+        const SUPABASE_PROJECT_URL = 'https://vpysepgvweabioklppda.supabase.co'; // 從您剛才的 Log 看到的專案 ID
+        const SUPABASE_ANON_KEY = db.supabaseKey || db['supabaseKey'] || ''; 
+
+        fetch(`${SUPABASE_PROJECT_URL}/functions/v1/send-private-prayer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // 如果剛才有加 --no-verify-jwt，Authorization 可以不用或帶 anon key
+            'apikey': SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(async (res) => {
+          const resJson = await res.json().catch(() => ({}));
+          console.log('【前端追蹤】Edge Function 回應狀態:', res.status, resJson);
+        })
+        .catch((err) => {
+          console.error('【前端追蹤】呼叫 Edge Function 失敗:', err);
         });
 
         alert('🕊️【已送達教牧關懷團隊】\n\n感謝您的信任，此代禱事項已保密送交牧長團隊，我們將在私下迫切為您守望、同心同行！');
