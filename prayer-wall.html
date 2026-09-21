@@ -779,6 +779,7 @@
         is_private: isPrivatePrayer
       };
 
+      // 1. 寫入 Supabase 資料庫
       const { data, error } = await db.from('prayers').insert([payload]).select().single();
       if (error) {
         alert('提送失敗，請檢查網路連線');
@@ -791,9 +792,18 @@
       document.getElementById('newPrayerTitle').value = '';
       document.getElementById('newPrayerContent').value = '';
 
+      // 2. 判斷公開或私密
       if (isPrivatePrayer) {
+        // 🔒 私密代禱：呼叫 Edge Function 推送到教牧群組
+        db.functions.invoke('send-private-prayer', {
+          body: payload
+        }).then(({ error: fnError }) => {
+          if (fnError) console.warn('推播教牧群組略過:', fnError);
+        });
+
         alert('🕊️【已送達教牧關懷團隊】\n\n感謝您的信任，此代禱事項已保密送交牧長團隊，我們將在私下迫切為您守望、同心同行！');
       } else {
+        // 🌐 公開代禱：刷新畫布並觸發光芒動畫
         await loadPrayersFromDb();
         if (data) triggerPrayVisual(data.id);
       }
