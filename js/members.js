@@ -42,13 +42,15 @@ export function filterMembers() {
     return matchesQ && matchesGrp;
   });
 
+  // 信仰成熟度排序階層：插入「一般會友」於「受洗初信」與「委身家人」之間
   const faithOrder = {
     '新朋友（初次聚會）': 1,
     '慕道友（偶爾出現）': 2,
     '受洗初信': 3,
-    '委身家人（穩定聚會）': 4,
-    '門徒': 5,
-    '領袖': 6
+    '一般會友': 4,
+    '委身家人': 5,
+    '門徒': 6,
+    '領袖': 7
   };
 
   filtered.sort((a, b) => {
