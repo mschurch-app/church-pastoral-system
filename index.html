@@ -1155,16 +1155,17 @@
     import { loadGroups } from './js/groups.js';
     import { loadServices } from './js/services.js';
     import { loadRoomsAndSpaces } from './js/spaces.js';
-    import { loadPrayers, switchPrayerSubTab, filterPrayersByStatus, openPastoralNotesModal, closePastoralNotesModal, savePastoralNotesData } from './js/prayers.js';
+    import * as PrayersModule from './js/prayers.js';
     import { loadPastoralBotSettings } from './js/pastoral-bot.js';
     import { loadAdminUsersList } from './js/superadmin.js';
 
-    // 掛載代禱專區相關函式到 window
-    window.switchPrayerSubTab = switchPrayerSubTab;
-    window.filterPrayersByStatus = filterPrayersByStatus;
-    window.openPastoralNotesModal = openPastoralNotesModal;
-    window.closePastoralNotesModal = closePastoralNotesModal;
-    window.savePastoralNotesData = savePastoralNotesData;
+    // 安全掛載，避免因舊版 prayers.js 缺少 export 導致整頁當掉
+    const loadPrayers = PrayersModule.loadPrayers || (async () => {});
+    window.switchPrayerSubTab = PrayersModule.switchPrayerSubTab || (() => {});
+    window.filterPrayersByStatus = PrayersModule.filterPrayersByStatus || (() => {});
+    window.openPastoralNotesModal = PrayersModule.openPastoralNotesModal || (() => {});
+    window.closePastoralNotesModal = PrayersModule.closePastoralNotesModal || (() => {});
+    window.savePastoralNotesData = PrayersModule.savePastoralNotesData || (() => {});
 
     // 🌟 核心：根據堂會動態調整「小家 / 小組」稱謂
     function updateTerminology(churchId) {
