@@ -24,7 +24,7 @@
       background: radial-gradient(circle at 75% 20%, #fffbeb 0%, #e0f4ff 50%, #f0fdf4 100%);
     }
 
-    /* 樹木 Q 彈微風搖曳 (以樹基底中心為軸) */
+    /* 樹木 Q 彈微風搖曳 */
     @keyframes cute-sway {
       0%, 100% { transform: rotate(0deg) scale(1); }
       50% { transform: rotate(1.2deg) scale(1.008); }
@@ -160,6 +160,12 @@
             <stop offset="35%" stop-color="#c8825c" />
             <stop offset="70%" stop-color="#df9a75" />
             <stop offset="100%" stop-color="#8a4d30" />
+          </linearGradient>
+
+          <!-- 木牌專屬柔和象牙木漸層 -->
+          <linearGradient id="signboardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fef3c7" />
+            <stop offset="100%" stop-color="#fde68a" />
           </linearGradient>
 
           <!-- 馬卡龍青蘋綠漸層 (Q版棉花糖葉簇) -->
@@ -344,13 +350,13 @@
     </div>
   </footer>
 
-  <!-- 點擊果實彈窗 -->
+  <!-- 點擊果實或木牌彈窗 -->
   <div id="fruitModal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeFruitModal()">
     <div class="glass-bubble-card p-6 rounded-[36px] max-w-xs w-full text-center space-y-3.5 border-2 border-amber-300 shadow-2xl" onclick="event.stopPropagation()">
-      <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 text-amber-900 flex items-center justify-center text-2xl mx-auto shadow-lg shadow-amber-400/30">
-        <i class="fa-solid fa-apple-whole"></i>
+      <div id="modalIconContainer" class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 text-amber-900 flex items-center justify-center text-2xl mx-auto shadow-lg shadow-amber-400/30">
+        <i id="modalIcon" class="fa-solid fa-apple-whole"></i>
       </div>
-      <h3 class="text-base font-black text-slate-800">生命樹之果 · 今日亮光</h3>
+      <h3 id="modalTitle" class="text-base font-black text-slate-800">生命樹之果 · 今日亮光</h3>
       <p id="modalVerse" class="text-xs text-slate-600 font-bold leading-relaxed">
         「你的話是我腳前的燈，是我路上的光。」
       </p>
@@ -367,7 +373,7 @@
       13: { title: "首季小苗 · 扎下好根", verse: "「使基督因你們的信，住在你們心裡，愛心有根有基。」—— 以弗所書 3:17" },
       14: { title: "胖胖樹幹 · 拔高撐開", verse: "「義人發旺如棕櫚樹，生長如黎巴嫩的香柏樹。」—— 詩篇 92:12" },
       21: { title: "棉花糖樹冠 · 圓肥鳥歇宿", verse: "「天國好像一粒芥菜種……長成樹，天上的飛鳥來宿在它的枝上。」—— 馬太福音 13:31-32" },
-      26: { title: "大樹涼蔭 · 安息遮蓋", verse: "「神是我們的避難所，是我們的力量。」—— 詩篇 46:1" },
+      26: { title: "大樹涼蔭 · 恩典銘刻", verse: "「神是我們的避難所，是我們的力量。」—— 詩篇 46:1" },
       27: { title: "綻放小雛菊 · 繁花盛開", verse: "「地上百花開放，百鳥鳴叫的時候已經來到。」—— 雅歌 2:12" },
       31: { title: "花兒燦爛 · 年歲脂油", verse: "「你以恩典為年歲的冠冕；你的路徑都滴下脂油。」—— 詩篇 65:11" },
       34: { title: "掛上金蘋果 · 初結碩果", verse: "「憑著他們的果子，就可以認出他們來。」—— 馬太福音 7:16" },
@@ -410,7 +416,6 @@
       }
     }
 
-    // 核心渲染 (基底點 X=380, Y=625)
     function renderTree(week) {
       lblWeek.innerText = week;
       const chapters = Math.min(1189, Math.round(week * (1189 / 52)));
@@ -454,20 +459,18 @@
       treeAuraCircle.setAttribute('r', auraRadius);
 
       // ==========================
-      // 【1. 胖胖圓潤樹幹（底部如鐘形裙擺自然外擴，無尖刺怪根）】
+      // 【1. 圓潤樹幹 + 樹幹上的恩典小木牌】
       // ==========================
       if (week <= 3) {
-        // Q版豆芽小綠莖
         const sproutH = baseY - (week * 22);
         layerTrunk.innerHTML = `
           <path d="M ${baseX},${baseY} Q ${baseX-6},${(baseY + sproutH)/2} ${baseX},${sproutH}" stroke="url(#cuteSproutGrad)" stroke-width="7" stroke-linecap="round" fill="none"/>
           <circle cx="${baseX + 3}" cy="${sproutH + 10}" r="3" fill="#ffffff" opacity="0.9"/>
         `;
       } else if (week <= 13) {
-        // 幼木階段 (圓柱木質，底部微微外展貼地)
         const trunkTop = baseY - (60 + week * 14);
         const trunkW = 8 + week * 1.3;
-        const flareW = trunkW * 1.5; // 底部外展裙擺寬度
+        const flareW = trunkW * 1.5;
         layerTrunk.innerHTML = `
           <path d="M ${baseX - flareW/2},${baseY} 
                    Q ${baseX - trunkW/2},${baseY - 12} ${baseX - trunkW*0.35},${trunkTop} 
@@ -476,13 +479,13 @@
                 fill="url(#cuteTrunkGrad)"/>
         `;
       } else {
-        // 蔚然大樹 (圓潤胖木，底部呈現優雅平滑的喇叭狀樹裙外擴)
         const trunkTopY = Math.max(340, 480 - (week * 2.8));
         const midW = Math.min(54, 18 + week * 0.7);
         const topW = Math.min(32, 10 + week * 0.42);
-        const skirtW = midW * 1.6; // 樹裙外展寬度，平滑沉穩
+        const skirtW = midW * 1.6;
 
         layerTrunk.innerHTML = `
+          <!-- 樹幹本體 -->
           <path d="M ${baseX - skirtW/2},${baseY + 4} 
                    Q ${baseX - midW/2},${baseY - 20} ${baseX - midW*0.4},480 
                    C ${baseX - topW*0.5},430 ${baseX - topW*0.5},380 ${baseX - topW/2},${trunkTopY} 
@@ -491,46 +494,57 @@
                    Q ${baseX + midW/2},${baseY - 20} ${baseX + skirtW/2},${baseY + 4} Z" 
                 fill="url(#cuteTrunkGrad)" filter="drop-shadow(0 4px 6px rgba(120,53,15,0.2))"/>
           
-          <!-- 樹洞小細節 (第 25 週起長出溫暖小樹洞) -->
+          <!-- 🌟 第 25 週起：樹幹上的「恩典木牌」（移除黑洞，改為暖心木牌） -->
           ${week >= 25 ? `
-            <ellipse cx="${baseX}" cy="540" rx="7" ry="11" fill="#451a03" opacity="0.7"/>
-            <ellipse cx="${baseX}" cy="539" rx="5" ry="8" fill="#291002"/>
+            <g onclick="openSignboardModal()" class="cursor-pointer group" transform="translate(${baseX}, 535)">
+              <!-- 懸掛麻繩 -->
+              <line x1="-12" y1="-18" x2="-8" y2="-10" stroke="#78350f" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="12" y1="-18" x2="8" y2="-10" stroke="#78350f" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="-12" cy="-18" r="2" fill="#451a03"/>
+              <circle cx="12" cy="-18" r="2" fill="#451a03"/>
+
+              <!-- 象牙木牌本體 (圓角矩形) -->
+              <rect x="-18" y="-10" width="36" height="22" rx="5" fill="url(#signboardGrad)" stroke="#b45309" stroke-width="1.5" filter="drop-shadow(0 3px 6px rgba(0,0,0,0.25))"/>
+              
+              <!-- 木牌上的金色小十架印記 -->
+              <line x1="0" y1="-5" x2="0" y2="7" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+              <line x1="-4" y1="-1" x2="4" y2="-1" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+              <!-- 十架金色微光點 -->
+              <circle cx="0" cy="-1" r="1.5" fill="#fef08a"/>
+
+              <!-- 懸浮提示呼吸小光點 -->
+              <circle cx="14" cy="-8" r="3" fill="#f59e0b" class="animate-ping" opacity="0.75"/>
+            </g>
           ` : ''}
         `;
       }
 
       // ==========================
-      // 【2. 樹底溫柔包覆層（徹底取代怪根！圓圓草簇、小苔蘚與萌蘑菇）】
+      // 【2. 樹底溫柔包覆層】
       // ==========================
       if (week <= 3) {
-        // 小苗破土的嫩綠微土坡
         layerBaseTufts.innerHTML = `
           <ellipse cx="${baseX}" cy="${baseY}" rx="14" ry="5" fill="#86efac" opacity="0.8"/>
           <ellipse cx="${baseX}" cy="${baseY + 1}" rx="8" ry="3" fill="#4ade80"/>
         `;
       } else {
-        // 簇擁在樹根底部的可愛圓弧草球與蘑菇
         const tuftScale = Math.min(1.4, 0.7 + week * 0.015);
         layerBaseTufts.innerHTML = `
-          <!-- 樹腳左側圓圓草球 -->
           <g transform="translate(${baseX - 28 * tuftScale}, ${baseY + 2}) scale(${tuftScale})">
             <circle cx="-6" cy="-2" r="10" fill="#4ade80"/>
             <circle cx="2" cy="-4" r="9" fill="#86efac"/>
             <circle cx="-2" cy="1" r="8" fill="#22c55e"/>
           </g>
           
-          <!-- 樹腳右側圓圓草球 (延伸到溪水岸旁) -->
           <g transform="translate(${baseX + 28 * tuftScale}, ${baseY + 2}) scale(${tuftScale})">
             <circle cx="6" cy="-2" r="11" fill="#22c55e"/>
             <circle cx="-1" cy="-4" r="9" fill="#86efac"/>
             <circle cx="3" cy="2" r="8" fill="#4ade80"/>
           </g>
 
-          <!-- 樹腳正前方低矮小青苔圈 (柔和接合樹幹與地面) -->
           <ellipse cx="${baseX}" cy="${baseY + 2}" rx="${Math.min(32, 10 + week * 0.45)}" ry="7" fill="#22c55e" opacity="0.95"/>
           <ellipse cx="${baseX}" cy="${baseY}" rx="${Math.min(24, 8 + week * 0.35)}" ry="4.5" fill="#86efac" opacity="0.75"/>
 
-          <!-- 可愛圓頭紅蘑菇 (第 15 週起在樹底探出頭) -->
           ${week >= 15 ? `
             <g transform="translate(${baseX - 26},${baseY - 4}) scale(0.95)">
               <rect x="-2" y="2" width="4" height="7" rx="2" fill="#f8fafc"/>
@@ -540,7 +554,6 @@
             </g>
           ` : ''}
 
-          <!-- 溪畔小白花 (第 8 週起長在樹腳邊) -->
           ${week >= 8 ? `
             <g transform="translate(${baseX + 32},${baseY - 2}) scale(0.85)">
               <circle cx="-3" cy="0" r="2.5" fill="#ffffff"/><circle cx="3" cy="0" r="2.5" fill="#ffffff"/><circle cx="0" cy="-3" r="2.5" fill="#ffffff"/><circle cx="0" cy="3" r="2.5" fill="#ffffff"/><circle cx="0" cy="0" r="2" fill="#fbbf24"/>
@@ -721,6 +734,7 @@
       renderTree(w);
     }
 
+    // 點擊金果彈窗
     function openFruitModal(fruitIndex) {
       const verses = [
         "「你的話是我腳前的燈，是我路上的光。」—— 詩篇 119:105",
@@ -730,7 +744,17 @@
         "「信就是所望之事的實底，是未見之事的確據。」—— 希伯來書 11:1"
       ];
       const selected = verses[(fruitIndex - 1) % verses.length];
+      document.getElementById('modalIcon').className = "fa-solid fa-apple-whole";
+      document.getElementById('modalTitle').innerText = "生命樹之果 · 今日亮光";
       document.getElementById('modalVerse').innerText = selected;
+      document.getElementById('fruitModal').classList.remove('hidden');
+    }
+
+    // 🌟 點擊樹幹上的小木牌彈窗
+    function openSignboardModal() {
+      document.getElementById('modalIcon').className = "fa-solid fa-cross";
+      document.getElementById('modalTitle').innerText = "恩典木牌 · 靈修銘言";
+      document.getElementById('modalVerse').innerText = "「我是葡萄樹，你們是枝子。常在我裡面的，我也常在他裡面，這人就多結果子。」—— 約翰福音 15:5";
       document.getElementById('fruitModal').classList.remove('hidden');
     }
 
