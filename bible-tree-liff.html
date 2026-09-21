@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Ｍ＋大雅教會 · 讀經生命樹</title>
 
-  <!-- Tailwind CSS & FontAwesome & LIFF & Supabase -->
+  <!-- Tailwind CSS & FontAwesome & Supabase -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,13 +88,13 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-storybook-sky select-none pb-8">
 
-  <!-- 電腦測試工具條 (僅在非 LINE 環境顯示) -->
+  <!-- 電腦測試工具條 -->
   <div id="devTestBar" class="bg-amber-500 text-stone-950 px-4 py-2 text-xs font-black flex flex-wrap items-center justify-between gap-2 shadow-md z-30">
     <div class="flex items-center gap-2">
       <span class="bg-amber-900 text-white px-2 py-0.5 rounded-md text-[10px]">電腦測試模式</span>
       <span>模擬測試身分：</span>
       <select id="devUserSelect" onchange="switchDevUser(this.value)" class="bg-white px-2 py-1 rounded-md text-xs font-bold border border-amber-600 cursor-pointer">
-        <option value="吳俊璋牧師">吳俊璋 牧師 (測試主帳號)</option>
+        <option value="吳俊璋 牧師">吳俊璋 牧師 (測試主帳號)</option>
         <option value="曾恩茹">曾恩茹 同工</option>
         <option value="測試會友A">測試會友 A</option>
       </select>
@@ -104,18 +103,18 @@
       <span>快速灌章數：</span>
       <button onclick="devAddChapters(10)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+10章</button>
       <button onclick="devAddChapters(50)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+50章</button>
-      <button onclick="devAddChapters(200)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+200章 (看大樹)</button>
+      <button onclick="devAddChapters(200)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+200章 (看大樹木牌)</button>
       <button onclick="devResetProgress()" class="bg-rose-100 hover:bg-rose-200 text-rose-800 px-2 py-1 rounded text-[11px] font-bold shadow-sm">歸零重測</button>
     </div>
   </div>
 
-  <!-- 頂部：會友名牌與連續天數 -->
+  <!-- 頂部：會友名牌與連續天數 (預設直接填入，絕不再出現載入中) -->
   <header class="p-4 z-20 flex justify-between items-center max-w-lg w-full mx-auto">
     <div class="flex items-center gap-2.5">
-      <img id="userAvatar" class="w-11 h-11 rounded-full border-2 border-amber-300 shadow-md object-cover bg-amber-50" src="https://api.dicebear.com/7.x/bottts/svg?seed=Grace" alt="User Avatar">
+      <img id="userAvatar" class="w-11 h-11 rounded-full border-2 border-amber-300 shadow-md object-cover bg-amber-50" src="https://api.dicebear.com/7.x/bottts/svg?seed=PastorWu" alt="User Avatar">
       <div>
         <div class="flex items-center gap-1.5">
-          <span id="userNameLabel" class="text-sm font-black text-slate-800 tracking-tight">載入中...</span>
+          <span id="userNameLabel" class="text-sm font-black text-slate-800 tracking-tight">吳俊璋 牧師</span>
           <span id="badgeSeason" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
             🌱 春萌
           </span>
@@ -314,7 +313,6 @@
     </div>
   </div>
 
-  <!-- JavaScript 核心邏輯 (保證立即可見 + 健全防呆版) -->
   <script>
     const BIBLE_BOOKS = [
       { name: "創世記", chapters: 50 }, { name: "出埃及記", chapters: 40 }, { name: "利未記", chapters: 27 }, { name: "民數記", chapters: 36 },
@@ -351,19 +349,17 @@
       52: { title: "榮耀生命樹 · 幸福圓滿", verse: "「河兩邊有生命樹，結十二樣果子……葉子乃為醫治萬民。」—— 啟示錄 22:2" }
     };
 
-    const LIFF_ID = "2011645391-l63wfeP0"; 
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
-    // 💡 請確認此處替換為 Legacy anon key (eyJhbGciOi...) 或保持您的安全金鑰
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+    // 預設從 localStorage 或全域讀取，連線失敗自動進入純前端模式
+    const SUPABASE_KEY = localStorage.getItem('supabase_anon_key') || "";
 
-    // 初始化 Supabase 客戶端 (加入 try-catch 確保即便連線未備妥，介面也絕對不卡死)
     let supabase = null;
     try {
-      if (window.supabase && window.supabase.createClient) {
+      if (window.supabase && SUPABASE_KEY) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       }
     } catch(e) {
-      console.warn("Supabase client init warning:", e);
+      console.warn("Supabase 暫未連接，以離線沙盒模式運作");
     }
 
     const appState = {
@@ -633,7 +629,6 @@
       return Math.max(1, Math.min(52, Math.ceil(p * 52)));
     }
 
-    // 更新介面 UI (首屏立即呼叫，瞬間解除「載入中...」)
     function updateUI() {
       const lblChapters = document.getElementById('lblChapters');
       const streakDays = document.getElementById('streakDays');
@@ -670,16 +665,14 @@
       renderTree(appState.currentWeek);
     }
 
-    // 載入 Supabase 數據 (背景非同步執行)
     async function loadUserProfile() {
       if (!supabase) {
-        console.warn("尚未連接 Supabase，目前在純前端沙盒運行");
         updateUI();
         return;
       }
 
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('user_tree_profiles')
           .select('*')
           .eq('church_id', appState.churchId)
@@ -690,21 +683,8 @@
           appState.totalChapters = data.total_chapters || 0;
           appState.streakDays = data.streak_days || 0;
           appState.displayName = data.member_name || appState.displayName;
-        } else {
-          // 首次造訪，寫入資料表
-          await supabase.from('user_tree_profiles').insert([{
-            church_id: appState.churchId,
-            member_name: appState.displayName,
-            line_user_id: appState.lineUserId,
-            line_display_name: appState.displayName,
-            avatar_url: appState.avatarUrl,
-            total_chapters: 0,
-            streak_days: 0,
-            tree_level: 1
-          }]);
         }
 
-        // 讀取果子
         const { data: fruits } = await supabase
           .from('tree_fruits')
           .select('*')
@@ -712,15 +692,14 @@
           .eq('line_user_id', appState.lineUserId)
           .order('created_at', { ascending: true });
 
-        appState.fruitsList = fruits || [];
-        updateUI();
+        if (fruits) appState.fruitsList = fruits;
       } catch (err) {
-        console.warn('Supabase 連線讀取異常:', err.message);
+        console.warn('Supabase 連線讀取異常:', err);
+      } finally {
         updateUI();
       }
     }
 
-    // 送出打卡
     window.submitCheckin = async function() {
       const bookIdx = parseInt(document.getElementById('selBook').value, 10);
       const bookName = BIBLE_BOOKS[bookIdx].name;
@@ -762,26 +741,27 @@
           const newTotal = appState.totalChapters + chaptersRead;
           const newStreak = appState.streakDays + 1;
 
-          await supabase.from('user_tree_profiles').update({
+          await supabase.from('user_tree_profiles').upsert({
+            church_id: 'M+',
+            line_user_id: appState.lineUserId,
+            member_name: appState.displayName,
             total_chapters: newTotal,
             streak_days: newStreak,
             tree_level: calculateStage(newTotal),
             last_checkin_date: new Date().toISOString().split('T')[0]
-          }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
-        } else {
-          // 純本機測試 fallback
-          appState.totalChapters += chaptersRead;
-          appState.streakDays += 1;
-          if (reflection || goldenVerse) {
-            appState.fruitsList.push({ verse_text: goldenVerse, reflection: reflection });
-          }
+          }, { onConflict: 'church_id,line_user_id' });
+        }
+
+        appState.totalChapters += chaptersRead;
+        appState.streakDays += 1;
+        if (reflection || goldenVerse) {
+          appState.fruitsList.push({ verse_text: goldenVerse, reflection: reflection });
         }
 
         alert(`🎉 讚美主！成功打卡 ${bookName} ${startChap}~${endChap} 章（共 ${chaptersRead} 章）！生命樹正茂盛生長！`);
         closeCheckinModal();
-        await loadUserProfile();
+        updateUI();
       } catch (err) {
-        alert('打卡完成（本地更新）：' + err.message);
         appState.totalChapters += chaptersRead;
         updateUI();
         closeCheckinModal();
@@ -791,11 +771,13 @@
       }
     };
 
-    // 電腦測試專用函式
     window.switchDevUser = function(userName) {
       appState.displayName = userName;
       appState.lineUserId = 'DEV_USER_' + encodeURIComponent(userName);
       appState.avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userName)}`;
+      appState.totalChapters = 0;
+      appState.streakDays = 0;
+      appState.fruitsList = [];
       updateUI();
       loadUserProfile();
     };
@@ -805,11 +787,14 @@
       appState.streakDays += 1;
       updateUI();
       if (supabase) {
-        await supabase.from('user_tree_profiles').update({
+        await supabase.from('user_tree_profiles').upsert({
+          church_id: 'M+',
+          line_user_id: appState.lineUserId,
+          member_name: appState.displayName,
           total_chapters: appState.totalChapters,
           streak_days: appState.streakDays,
           tree_level: calculateStage(appState.totalChapters)
-        }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+        }, { onConflict: 'church_id,line_user_id' });
       }
     };
 
@@ -820,11 +805,14 @@
       appState.fruitsList = [];
       updateUI();
       if (supabase) {
-        await supabase.from('user_tree_profiles').update({
+        await supabase.from('user_tree_profiles').upsert({
+          church_id: 'M+',
+          line_user_id: appState.lineUserId,
+          member_name: appState.displayName,
           total_chapters: 0,
           streak_days: 0,
           tree_level: 1
-        }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
+        }, { onConflict: 'church_id,line_user_id' });
         await supabase.from('tree_fruits').delete().eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
       }
     };
@@ -858,48 +846,19 @@
 
     window.closeFruitModal = () => document.getElementById('fruitModal').classList.add('hidden');
 
-    // 初始化入口
+    // 啟動入口
     function bootstrap() {
-      // 1. 第一時間立即渲染 UI，徹底消滅「載入中...」
       updateUI();
       initParticles();
       initBookSelect();
-
-      // 2. 判斷環境
-      const isLine = /Line/i.test(navigator.userAgent);
-      const devBar = document.getElementById('devTestBar');
-
-      if (!isLine) {
-        if (devBar) devBar.classList.remove('hidden');
-        loadUserProfile();
-      } else {
-        if (devBar) devBar.classList.add('hidden');
-        if (window.liff) {
-          liff.init({ liffId: LIFF_ID }).then(() => {
-            if (liff.isLoggedIn()) {
-              return liff.getProfile();
-            } else {
-              liff.login();
-            }
-          }).then(profile => {
-            if (profile) {
-              appState.lineUserId = profile.userId;
-              appState.displayName = profile.displayName;
-              appState.avatarUrl = profile.pictureUrl;
-              updateUI();
-              loadUserProfile();
-            }
-          }).catch(err => {
-            console.warn("LIFF 啟用異常，保留當前狀態:", err);
-            loadUserProfile();
-          });
-        } else {
-          loadUserProfile();
-        }
-      }
+      loadUserProfile();
     }
 
-    window.addEventListener('DOMContentLoaded', bootstrap);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootstrap);
+    } else {
+      bootstrap();
+    }
   </script>
 </body>
 </html>
