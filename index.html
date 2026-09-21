@@ -132,6 +132,13 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
+    /* 確保海報卡片在輸出和列印時完全展開，不被卷軸截斷 */
+    #weeklySchedulePosterCard, #schedulePosterCard {
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
     @media print {
       body { background: #ffffff !important; color: #000000 !important; }
       header, nav, button, .no-print { display: none !important; }
@@ -162,7 +169,6 @@
   <header class="sticky top-0 z-40 lux-header px-4 sm:px-8 py-3.5 transition-all">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
       
-      <!-- 堂會名牌與 Logo -->
       <div class="flex items-center space-x-3.5 min-w-0">
         <div id="churchLogoWrapper" class="w-11 h-11 rounded-2xl flex-shrink-0 flex items-center justify-center text-white shadow-md shadow-orange-500/25 overflow-hidden transition-all duration-300" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%)">
           <i id="churchLogoIcon" class="fa-solid fa-church text-base"></i>
@@ -181,7 +187,6 @@
         </div>
       </div>
 
-      <!-- 右側切換與登出 -->
       <div class="flex items-center gap-2.5 flex-shrink-0">
         <div id="superChurchSelectorWrapper" class="hidden">
           <div class="relative">
@@ -295,7 +300,7 @@
           <p class="text-xs text-stone-500 mt-1" id="serviceSectionSubtitle">掌握講道、主領、影音燈控與接待招待服事安排</p>
         </div>
         
-        <!-- 🌟 絕對看得到的按鈕組 -->
+        <!-- 🌟 輸出服事表按鈕組 -->
         <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
           <button onclick="exportWeeklySchedulePoster()" class="py-2.5 px-4 rounded-2xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-900 text-xs font-black flex items-center gap-1.5 shadow-sm active:scale-95 transition">
             <i class="fa-solid fa-star text-orange-600"></i>
@@ -1449,6 +1454,8 @@
       try {
         const canvas = await html2canvas(card, {
           scale: 2.5,
+          windowWidth: card.scrollWidth,
+          windowHeight: card.scrollHeight,
           backgroundColor: '#ffffff',
           useCORS: true
         });
@@ -1608,6 +1615,8 @@
       try {
         const canvas = await html2canvas(card, {
           scale: 2,
+          windowWidth: card.scrollWidth,
+          windowHeight: card.scrollHeight,
           backgroundColor: '#ffffff',
           useCORS: true
         });
