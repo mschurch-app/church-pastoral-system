@@ -338,13 +338,52 @@
       </div>
     </section>
 
-    <!-- 模組五：牧養代禱關懷 -->
+    <!-- 模組五：教牧私密代禱收納匣與守望關懷中心 (已升級收納專區) -->
     <section id="mod-prayers" class="space-y-6 hidden">
-      <div>
-        <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight">即時牧養關懷代禱</h2>
-        <p class="text-xs text-stone-500 mt-1">來自 LINE 官方帳號的第一線守望需求，同工可直接撰寫禱告詞回覆並即時推播回會友手機</p>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-stone-800 tracking-tight flex items-center gap-2.5">
+            <i class="fa-solid fa-hands-praying text-orange-600"></i>
+            <span>教牧代禱收納與牧養關懷中心</span>
+          </h2>
+          <p class="text-xs text-stone-500 mt-1">管理教牧專屬私密代禱匣、追蹤牧養備註、回覆祝福與公開牆事項守望</p>
+        </div>
+
+        <!-- 頂部分頁切換：私密收納匣 vs 公開代禱牆 -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex p-1 bg-white/90 rounded-2xl border border-stone-200/90 text-xs shadow-sm">
+            <button onclick="switchPrayerSubTab('private')" id="btn-prayer-private" class="px-4 py-2 rounded-xl font-extrabold btn-warm flex items-center gap-2">
+              <i class="fa-solid fa-lock text-xs"></i>
+              <span>教牧私密匣 (<span id="countPrivatePrayers">0</span>)</span>
+            </button>
+            <button onclick="switchPrayerSubTab('public')" id="btn-prayer-public" class="px-4 py-2 rounded-xl font-extrabold text-stone-600 hover:text-stone-900 flex items-center gap-2">
+              <i class="fa-solid fa-globe text-xs"></i>
+              <span>公開代禱牆 (<span id="countPublicPrayers">0</span>)</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div id="prayerCardsList" class="space-y-3"></div>
+
+      <!-- 快速狀態篩選列 -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-white/70 p-3 rounded-2xl border border-stone-200/70 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-stone-500 font-bold text-[11px]"><i class="fa-solid fa-filter text-orange-600"></i> 關懷進度：</span>
+          <select id="prayerStatusFilter" onchange="filterPrayersByStatus()" class="bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-800 font-bold focus:outline-none cursor-pointer">
+            <option value="ALL">全部狀態</option>
+            <option value="pending">⏳ 待關懷 / 剛收到</option>
+            <option value="praying">🕊️ 守望關懷中</option>
+            <option value="answered">✨ 已蒙應允 / 結案</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-3 text-[11px] text-stone-500 font-medium">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 待關懷</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 守望中</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 蒙應允</span>
+        </div>
+      </div>
+
+      <!-- 代禱事項卡片容器 -->
+      <div id="prayerCardsList" class="space-y-4"></div>
     </section>
 
     <!-- 模組六：LINE 教牧推播中心 -->
@@ -1062,7 +1101,53 @@
     </div>
   </div>
 
-  <!-- 引入主控導航與各模組 JS -->
+  <!-- 【新增 Modal: 教牧專屬私密代禱關懷備註與歷程】 -->
+  <div id="pastoralNotesModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="lux-modal w-full sm:max-w-md rounded-t-[36px] sm:rounded-3xl p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center border-b border-stone-200 pb-3">
+        <h3 class="text-base font-black text-stone-800 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-user text-orange-600"></i>
+          <span>教牧關懷追蹤紀錄</span>
+        </h3>
+        <button onclick="closePastoralNotesModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <input type="hidden" id="pastoralPrayerId">
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/70 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span id="pastoralAuthorInfo" class="font-bold text-amber-950 text-xs">-</span>
+            <span id="pastoralTimeInfo" class="text-[10px] text-amber-800">-</span>
+          </div>
+          <p id="pastoralPrayerBody" class="text-stone-700 text-xs leading-relaxed whitespace-pre-wrap"></p>
+        </div>
+
+        <div>
+          <label class="text-stone-600 font-bold block mb-1">牧養關懷追蹤歷程（僅同工內部可見）</label>
+          <textarea id="pastoralNotesText" rows="4" placeholder="記錄探訪關懷重點、代禱歷程、轉介小組狀況等..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"></textarea>
+        </div>
+
+        <div>
+          <label class="text-stone-600 font-bold block mb-1">代禱處理狀態</label>
+          <select id="pastoralStatusSelect" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-stone-800 font-bold focus:outline-none cursor-pointer">
+            <option value="pending">⏳ 待關懷 / 剛收到</option>
+            <option value="praying">🕊️ 守望關懷中</option>
+            <option value="answered">✨ 已蒙應允 / 結案</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-stone-200">
+        <button onclick="closePastoralNotesModal()" class="py-2.5 px-4 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold">取消</button>
+        <button onclick="savePastoralNotesData()" class="py-2.5 px-6 rounded-xl btn-warm text-xs font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-floppy-disk text-xs"></i>
+          <span>儲存關懷記錄</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 引入主控導航與各模組 JS -->
   <script type="module">
     import { state, db } from './js/state.js';
@@ -1070,9 +1155,16 @@
     import { loadGroups } from './js/groups.js';
     import { loadServices } from './js/services.js';
     import { loadRoomsAndSpaces } from './js/spaces.js';
-    import { loadPrayers } from './js/prayers.js';
+    import { loadPrayers, switchPrayerSubTab, filterPrayersByStatus, openPastoralNotesModal, closePastoralNotesModal, savePastoralNotesData } from './js/prayers.js';
     import { loadPastoralBotSettings } from './js/pastoral-bot.js';
     import { loadAdminUsersList } from './js/superadmin.js';
+
+    // 掛載代禱專區相關函式到 window
+    window.switchPrayerSubTab = switchPrayerSubTab;
+    window.filterPrayersByStatus = filterPrayersByStatus;
+    window.openPastoralNotesModal = openPastoralNotesModal;
+    window.closePastoralNotesModal = closePastoralNotesModal;
+    window.savePastoralNotesData = savePastoralNotesData;
 
     // 🌟 核心：根據堂會動態調整「小家 / 小組」稱謂
     function updateTerminology(churchId) {
