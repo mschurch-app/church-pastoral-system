@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>讀經生命樹 · 每日靈修打卡</title>
+
+  <!-- Tailwind CSS & FontAwesome & LIFF & Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'M PLUS Rounded 1c', 'Noto Sans TC', sans-serif;
+      background: #eef9ff;
+      color: #334155;
+      overflow-x: hidden;
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .bg-storybook-sky {
+      background: radial-gradient(circle at 75% 20%, #fffbeb 0%, #e0f4ff 50%, #f0fdf4 100%);
+    }
+
+    @keyframes cute-sway {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(1.2deg) scale(1.008); }
+    }
+    .tree-sway-cute {
+      transform-origin: 380px 625px;
+      animation: cute-sway 4.5s ease-in-out infinite;
+    }
+
+    @keyframes aura-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.45; }
+      50% { transform: scale(1.08); opacity: 0.7; }
+    }
+    .sun-aura {
+      transform-origin: 640px 140px;
+      animation: aura-pulse 5s ease-in-out infinite;
+    }
+
+    @keyframes tree-glow-pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.98); }
+      50% { opacity: 0.55; transform: scale(1.03); }
+    }
+    .tree-glow {
+      transform-origin: 380px 360px;
+      animation: tree-glow-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes float-pollen {
+      0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+      30% { opacity: 0.9; }
+      70% { opacity: 0.8; }
+      100% { transform: translate(60px, -90px) scale(1.2); opacity: 0; }
+    }
+    .pollen {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fef08a 0%, rgba(254, 240, 138, 0) 80%);
+      pointer-events: none;
+      animation: float-pollen 5s infinite ease-out;
+    }
+
+    @keyframes water-glide {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -80; }
+    }
+    .water-flow {
+      stroke-dasharray: 16, 12;
+      animation: water-glide 4s linear infinite;
+    }
+
+    .glass-bubble-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.98);
+      box-shadow: 0 16px 32px -6px rgba(34, 197, 94, 0.12), 0 6px 12px -2px rgba(245, 158, 11, 0.06);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-storybook-sky select-none pb-8">
+
+  <!-- 頂部：會友名牌與連續天數 -->
+  <header class="p-4 z-20 flex justify-between items-center max-w-lg w-full mx-auto">
+    <div class="flex items-center gap-2.5">
+      <img id="userAvatar" class="w-11 h-11 rounded-full border-2 border-amber-300 shadow-md object-cover bg-amber-50" src="https://api.dicebear.com/7.x/bottts/svg?seed=Grace" alt="User Avatar">
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span id="userNameLabel" class="text-sm font-black text-slate-800 tracking-tight">載入中...</span>
+          <span id="badgeSeason" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+            🌱 春萌
+          </span>
+        </div>
+        <p class="text-[11px] text-amber-700/90 font-bold flex items-center gap-1 mt-0.5">
+          <i class="fa-solid fa-fire text-orange-500"></i> 連續讀經 <span id="streakDays" class="font-mono text-xs">0</span> 天
+        </p>
+      </div>
+    </div>
+
+    <!-- 章數進度微膠囊 -->
+    <div class="text-right bg-white/80 px-3 py-1.5 rounded-2xl border border-amber-200 shadow-sm">
+      <span class="text-[10px] text-slate-400 block font-bold">總通讀進度</span>
+      <span class="text-xs font-black text-emerald-600 font-mono"><strong id="lblChapters" class="text-sm">0</strong>/1189章</span>
+    </div>
+  </header>
+
+  <!-- 中央畫卷舞台 (生命樹 SVG) -->
+  <main class="flex-1 flex items-center justify-center relative w-full overflow-hidden">
+    <div id="particlesContainer" class="absolute inset-0 pointer-events-none"></div>
+
+    <div class="relative w-full max-w-md aspect-square flex items-center justify-center">
+      <svg id="treeCanvas" viewBox="0 0 800 800" class="w-full h-full filter drop-shadow-lg">
+        <defs>
+          <radialGradient id="sunAuraGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fef08a" stop-opacity="0.8" />
+            <stop offset="40%" stop-color="#fed7aa" stop-opacity="0.4" />
+            <stop offset="80%" stop-color="#bae6fd" stop-opacity="0.15" />
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+          </radialGradient>
+
+          <radialGradient id="treeCrownAuraGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fef08a" stop-opacity="0.5" />
+            <stop offset="60%" stop-color="#bbf7d0" stop-opacity="0.2" />
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+          </radialGradient>
+
+          <linearGradient id="cuteTrunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#9a5a3a" /><stop offset="35%" stop-color="#c8825c" /><stop offset="70%" stop-color="#df9a75" /><stop offset="100%" stop-color="#8a4d30" />
+          </linearGradient>
+
+          <linearGradient id="signboardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fef3c7" /><stop offset="100%" stop-color="#fde68a" />
+          </linearGradient>
+
+          <radialGradient id="cuteLeafBubbleGrad" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#bbf7d0" /><stop offset="45%" stop-color="#4ade80" /><stop offset="90%" stop-color="#16a34a" /><stop offset="100%" stop-color="#15803d" />
+          </radialGradient>
+
+          <linearGradient id="highlightLeafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#dcfce7" stop-opacity="0.9" /><stop offset="100%" stop-color="#86efac" stop-opacity="0.2" />
+          </linearGradient>
+
+          <linearGradient id="cuteSproutGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#4ade80" /><stop offset="100%" stop-color="#bef264" />
+          </linearGradient>
+
+          <linearGradient id="cuteRiverGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+            <stop offset="0%" stop-color="#38bdf8" /><stop offset="50%" stop-color="#60a5fa" /><stop offset="100%" stop-color="#3b82f6" />
+          </linearGradient>
+
+          <linearGradient id="cuteHillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#86efac" /><stop offset="40%" stop-color="#4ade80" /><stop offset="100%" stop-color="#22c55e" />
+          </linearGradient>
+
+          <radialGradient id="cuteGoldenFruitGrad" cx="30%" cy="25%" r="75%">
+            <stop offset="0%" stop-color="#ffffff" /><stop offset="25%" stop-color="#fef08a" /><stop offset="60%" stop-color="#fbbf24" /><stop offset="90%" stop-color="#f59e0b" /><stop offset="100%" stop-color="#d97706" />
+          </radialGradient>
+        </defs>
+
+        <!-- 1. 背景光暈層 -->
+        <g id="layerBackgroundAura">
+          <path d="M 0,530 Q 240,460 440,510 Q 640,450 800,520 L 800,700 L 0,700 Z" fill="#bae6fd" opacity="0.45"/>
+          <path d="M 0,560 Q 320,500 580,560 Q 720,530 800,560 L 800,800 L 0,800 Z" fill="#bbf7d0" opacity="0.5"/>
+          <circle cx="640" cy="140" r="160" fill="url(#sunAuraGrad)" class="sun-aura"/>
+          <circle cx="640" cy="140" r="36" fill="#fffbeb" filter="drop-shadow(0 0 12px #fef08a)"/>
+          <polygon points="640,140 220,780 460,780" fill="url(#sunAuraGrad)" opacity="0.35"/>
+          <circle id="treeAuraCircle" cx="380" cy="350" r="180" fill="url(#treeCrownAuraGrad)" class="tree-glow"/>
+        </g>
+
+        <!-- 2. 生命溪流 -->
+        <g id="layerRiver">
+          <path d="M 520,550 C 490,580 430,600 440,630 C 455,660 520,680 530,715 C 545,750 610,775 690,800 L 800,800 L 800,730 C 700,695 620,650 590,610 C 570,580 560,565 540,550 Z" fill="url(#cuteRiverGrad)"/>
+          <path d="M 530,570 C 470,620 500,670 580,725 C 630,760 700,785 780,800" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.8" class="water-flow"/>
+        </g>
+
+        <!-- 3. 前景大地草坡 -->
+        <g id="layerGround">
+          <path d="M 0,580 Q 180,550 360,585 C 420,595 445,625 410,665 C 380,700 410,745 440,775 L 460,800 L 0,800 Z" fill="url(#cuteHillGrad)"/>
+          <path d="M 560,555 Q 680,535 800,565 L 800,730 C 710,690 630,645 600,605 Q 575,570 560,555 Z" fill="#4ade80" opacity="0.9"/>
+          <ellipse cx="435" cy="640" rx="18" ry="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+        </g>
+
+        <!-- 4. 樹木本體 (微風擺動) -->
+        <g id="treeGroup" class="tree-sway-cute">
+          <g id="layerTrunk"></g>
+          <g id="layerBranches"></g>
+          <g id="layerLeaves"></g>
+          <g id="layerBlossoms"></g>
+          <g id="layerFruits"></g>
+          <g id="layerBirds"></g>
+          <g id="layerBaseTufts"></g>
+        </g>
+
+        <!-- 5. 終章光柱 -->
+        <polygon id="godRaysCrown" points="380,0 160,620 600,620" fill="url(#sunAuraGrad)" opacity="0" class="transition-opacity duration-1000"/>
+      </svg>
+    </div>
+  </main>
+
+  <!-- 底部操作區 -->
+  <footer class="p-4 z-20 max-w-lg w-full mx-auto space-y-3">
+    <!-- 當前靈程金句卡 -->
+    <div class="glass-bubble-card p-4 rounded-2xl flex items-center justify-between">
+      <div class="pr-2">
+        <div class="flex items-center gap-1.5 text-xs font-black text-amber-700">
+          <span>第 <strong id="lblWeekNum" class="font-mono text-sm text-amber-600">1</strong> 週</span>
+          <span id="lblStageTitle" class="text-slate-700">小種子破土 · 幸福萌芽</span>
+        </div>
+        <p id="lblVerseShort" class="text-[11px] text-slate-500 font-medium truncate max-w-[240px] mt-0.5">
+          「他要像一棵樹栽在溪水旁，按時候結果子。」
+        </p>
+      </div>
+      <button onclick="openCheckinModal()" class="py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-black text-xs shadow-lg shadow-orange-500/30 flex items-center gap-1.5 flex-shrink-0">
+        <i class="fa-solid fa-book-bible text-sm"></i>
+        <span>讀經打卡</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- 打卡抽屜彈窗 (Check-in Modal) -->
+  <div id="checkinModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="closeCheckinModal()">
+    <div class="glass-bubble-card w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">📖</div>
+          <h3 class="text-base font-black text-slate-800">今日讀經打卡</h3>
+        </div>
+        <button onclick="closeCheckinModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- 打卡表單 -->
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">選擇聖經書卷 *</label>
+          <select id="selBook" onchange="onBookChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer"></select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-600 block mb-1">起始章 *</label>
+            <select id="selStartChap" onchange="calcReadChapters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800 focus:outline-none cursor-pointer"></select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-600 block mb-1">結束章 *</label>
+            <select id="selEndChap" onchange="calcReadChapters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800 focus:outline-none cursor-pointer"></select>
+          </div>
+        </div>
+
+        <div class="p-3 bg-amber-50/80 rounded-xl border border-amber-200/80 flex items-center justify-between font-bold">
+          <span class="text-amber-900">本次打卡累計進度：</span>
+          <span class="text-orange-600 font-black text-sm font-mono">+<span id="readCountLabel">1</span> 章</span>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">今日最有感動的亮光經文（選填）</label>
+          <input type="text" id="goldenVerse" placeholder="例如：耶和華是我的牧者，我必不至缺乏。" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-600 block mb-1">靈修一句話領受（選填，將化為金果掛於樹梢）</label>
+          <textarea id="reflection" rows="2" placeholder="寫下神今日對你說的一句話..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button onclick="submitCheckin()" id="btnSubmitCheckin" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white text-xs font-black shadow-lg shadow-orange-500/25 flex items-center justify-center gap-1.5">
+          <span>完成打卡 · 滋養生命樹</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 點擊果實或木牌彈窗 -->
+  <div id="fruitModal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeFruitModal()">
+    <div class="glass-bubble-card p-6 rounded-[36px] max-w-xs w-full text-center space-y-3.5 border-2 border-amber-300 shadow-2xl" onclick="event.stopPropagation()">
+      <div id="modalIconContainer" class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 text-amber-900 flex items-center justify-center text-2xl mx-auto shadow-lg shadow-amber-400/30">
+        <i id="modalIcon" class="fa-solid fa-apple-whole"></i>
+      </div>
+      <h3 id="modalTitle" class="text-base font-black text-slate-800">生命樹之果 · 今日亮光</h3>
+      <p id="modalVerse" class="text-xs text-slate-600 font-bold leading-relaxed">
+        「你的話是我腳前的燈，是我路上的光。」
+      </p>
+      <div class="pt-2">
+        <button onclick="closeFruitModal()" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-black shadow-md shadow-orange-400/30 active:scale-95">感謝收下這份應許 ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript 核心邏輯 -->
+  <script>
+    // 聖經 66 卷書章節數據
+    const BIBLE_BOOKS = [
+      { name: "創世記", chapters: 50 }, { name: "出埃及記", chapters: 40 }, { name: "利未記", chapters: 27 }, { name: "民數記", chapters: 36 },
+      { name: "申命記", chapters: 34 }, { name: "約書亞記", chapters: 24 }, { name: "士師記", chapters: 21 }, { name: "路得記", chapters: 4 },
+      { name: "撒母耳記上", chapters: 31 }, { name: "撒母耳記下", chapters: 24 }, { name: "列王紀上", chapters: 22 }, { name: "列王紀下", chapters: 25 },
+      { name: "歷代志上", chapters: 29 }, { name: "歷代志下", chapters: 36 }, { name: "以斯拉記", chapters: 10 }, { name: "尼希米記", chapters: 13 },
+      { name: "以斯帖記", chapters: 10 }, { name: "約伯記", chapters: 42 }, { name: "詩篇", chapters: 150 }, { name: "箴言", chapters: 31 },
+      { name: "傳道書", chapters: 12 }, { name: "雅歌", chapters: 8 }, { name: "以賽亞書", chapters: 66 }, { name: "耶利米書", chapters: 52 },
+      { name: "耶利米哀歌", chapters: 5 }, { name: "以西結書", chapters: 48 }, { name: "但以理書", chapters: 12 }, { name: "何西阿書", chapters: 14 },
+      { name: "約珥書", chapters: 3 }, { name: "阿摩司書", chapters: 9 }, { name: "俄巴底亞書", chapters: 1 }, { name: "約拿書", chapters: 4 },
+      { name: "彌迦書", chapters: 7 }, { name: "那鴻書", chapters: 3 }, { name: "哈巴谷書", chapters: 3 }, { name: "西番雅書", chapters: 3 },
+      { name: "哈該書", chapters: 2 }, { name: "撒迦利亞書", chapters: 14 }, { name: "瑪拉基書", chapters: 4 },
+      // 新約
+      { name: "馬太福音", chapters: 28 }, { name: "馬可福音", chapters: 16 }, { name: "路加福音", chapters: 24 }, { name: "約翰福音", chapters: 21 },
+      { name: "使徒行傳", chapters: 28 }, { name: "羅馬書", chapters: 16 }, { name: "哥林多前書", chapters: 16 }, { name: "哥林多後書", chapters: 13 },
+      { name: "加拉太書", chapters: 6 }, { name: "以弗所書", chapters: 6 }, { name: "腓立比書", chapters: 4 }, { name: "歌羅西書", chapters: 4 },
+      { name: "帖撒羅尼迦前書", chapters: 5 }, { name: "帖撒羅尼迦後書", chapters: 3 }, { name: "提摩太前書", chapters: 6 }, { name: "提摩太後書", chapters: 4 },
+      { name: "提多書", chapters: 3 }, { name: "腓利門書", chapters: 1 }, { name: "希伯來書", chapters: 13 }, { name: "雅各書", chapters: 5 },
+      { name: "彼得前書", chapters: 5 }, { name: "彼得後書", chapters: 3 }, { name: "約翰一書", chapters: 5 }, { name: "約翰二書", chapters: 1 },
+      { name: "約翰三書", chapters: 1 }, { name: "猶大書", chapters: 1 }, { name: "啟示錄", chapters: 22 }
+    ];
+
+    const WEEK_DATA = {
+      1: { title: "小種子破土 · 幸福萌芽", verse: "「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。」—— 詩篇 1:3" },
+      4: { title: "長出圓嫩葉 · 朝露滋潤", verse: "「神的道是活潑的，是有功效的。」—— 希伯來書 4:12" },
+      13: { title: "首季小苗 · 扎下好根", verse: "「使基督因你們的信，住在你們心裡，愛心有根有基。」—— 以弗所書 3:17" },
+      14: { title: "胖胖樹幹 · 拔高撐開", verse: "「義人發旺如棕櫚樹，生長如黎巴嫩的香柏樹。」—— 詩篇 92:12" },
+      21: { title: "棉花糖樹冠 · 圓肥鳥歇宿", verse: "「天國好像一粒芥菜種……長成樹，天上的飛鳥來宿在它的枝上。」—— 馬太福音 13:31-32" },
+      26: { title: "大樹涼蔭 · 恩典銘刻", verse: "「神是我們的避難所，是我們的力量。」—— 詩篇 46:1" },
+      27: { title: "綻放小雛菊 · 繁花盛開", verse: "「地上百花開放，百鳥鳴叫的時候已經來到。」—— 雅歌 2:12" },
+      31: { title: "花兒燦爛 · 年歲脂油", verse: "「你以恩典為年歲的冠冕；你的路徑都滴下脂油。」—— 詩篇 65:11" },
+      34: { title: "掛上金蘋果 · 初結碩果", verse: "「憑著他們的果子，就可以認出他們來。」—— 馬太福音 7:16" },
+      39: { title: "金果累累 · 甜美豐盛", verse: "「聖靈所結的果子，就是仁愛、喜樂、和平、忍耐、恩慈、良善……」—— 加拉太書 5:22" },
+      48: { title: "生命溪水 · 活泉常湧", verse: "「一道生命水的河，明亮如水晶，從神寶座流出來。」—— 啟示錄 22:1" },
+      52: { title: "榮耀生命樹 · 幸福圓滿", verse: "「河兩邊有生命樹，結十二樣果子……葉子乃為醫治萬民。」—— 啟示錄 22:2" }
+    };
+
+    // 配置常數（請確認您的 LIFF ID 與 Supabase 設定）
+    const LIFF_ID = "貼上你的_LIFF_ID"; 
+    const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
+    const SUPABASE_KEY = "貼上你的_SUPABASE_ANON_KEY";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 應用狀態
+    const appState = {
+      churchId: 'M+',
+      lineUserId: 'TEST_USER_LINE_ID',
+      displayName: '主內家人',
+      avatarUrl: '',
+      totalChapters: 0,
+      streakDays: 0,
+      currentWeek: 1,
+      fruitsList: []
+    };
+
+    // 初始化光之微粒
+    function initParticles() {
+      const container = document.getElementById('particlesContainer');
+      container.innerHTML = '';
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'pollen';
+        const size = Math.random() * 8 + 4;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = (Math.random() * 80 + 10) + '%';
+        p.style.top = (Math.random() * 55 + 20) + '%';
+        p.style.animationDelay = (Math.random() * 4) + 's';
+        p.style.animationDuration = (Math.random() * 2.5 + 3.5) + 's';
+        container.appendChild(p);
+      }
+    }
+
+    // 初始化聖經下拉選單
+    function initBookSelect() {
+      const sel = document.getElementById('selBook');
+      sel.innerHTML = BIBLE_BOOKS.map((b, idx) => `<option value="${idx}">${b.name} (${b.chapters}章)</option>`).join('');
+      onBookChange();
+    }
+
+    window.onBookChange = function() {
+      const bookIdx = parseInt(document.getElementById('selBook').value, 10);
+      const book = BIBLE_BOOKS[bookIdx];
+      const startSel = document.getElementById('selStartChap');
+      const endSel = document.getElementById('selEndChap');
+
+      let options = '';
+      for (let i = 1; i <= book.chapters; i++) {
+        options += `<option value="${i}">第 ${i} 章</option>`;
+      }
+      startSel.innerHTML = options;
+      endSel.innerHTML = options;
+
+      startSel.value = 1;
+      endSel.value = Math.min(3, book.chapters);
+      calcReadChapters();
+    };
+
+    window.calcReadChapters = function() {
+      const start = parseInt(document.getElementById('selStartChap').value, 10);
+      let end = parseInt(document.getElementById('selEndChap').value, 10);
+      if (end < start) {
+        document.getElementById('selEndChap').value = start;
+        end = start;
+      }
+      const count = (end - start) + 1;
+      document.getElementById('readCountLabel').innerText = count;
+    };
+
+    // 核心渲染生命樹
+    function renderTree(week) {
+      const layerTrunk = document.getElementById('layerTrunk');
+      const layerBranches = document.getElementById('layerBranches');
+      const layerLeaves = document.getElementById('layerLeaves');
+      const layerBlossoms = document.getElementById('layerBlossoms');
+      const layerFruits = document.getElementById('layerFruits');
+      const layerBirds = document.getElementById('layerBirds');
+      const layerBaseTufts = document.getElementById('layerBaseTufts');
+      const godRaysCrown = document.getElementById('godRaysCrown');
+      const treeAuraCircle = document.getElementById('treeAuraCircle');
+
+      layerTrunk.innerHTML = '';
+      layerBranches.innerHTML = '';
+      layerLeaves.innerHTML = '';
+      layerBlossoms.innerHTML = '';
+      layerFruits.innerHTML = '';
+      layerBirds.innerHTML = '';
+      layerBaseTufts.innerHTML = '';
+
+      const baseX = 380;
+      const baseY = 625;
+
+      const auraRadius = Math.min(260, 60 + week * 3.8);
+      treeAuraCircle.setAttribute('r', auraRadius);
+
+      // 1. 樹幹
+      if (week <= 3) {
+        const sproutH = baseY - (week * 22);
+        layerTrunk.innerHTML = `
+          <path d="M ${baseX},${baseY} Q ${baseX-6},${(baseY + sproutH)/2} ${baseX},${sproutH}" stroke="url(#cuteSproutGrad)" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <circle cx="${baseX + 3}" cy="${sproutH + 10}" r="3" fill="#ffffff" opacity="0.9"/>
+        `;
+      } else if (week <= 13) {
+        const trunkTop = baseY - (60 + week * 14);
+        const trunkW = 8 + week * 1.3;
+        const flareW = trunkW * 1.5;
+        layerTrunk.innerHTML = `
+          <path d="M ${baseX - flareW/2},${baseY} Q ${baseX - trunkW/2},${baseY - 12} ${baseX - trunkW*0.35},${trunkTop} Q ${baseX},${trunkTop - 5} ${baseX + trunkW*0.35},${trunkTop} Q ${baseX + trunkW/2},${baseY - 12} ${baseX + flareW/2},${baseY} Z" fill="url(#cuteTrunkGrad)"/>
+        `;
+      } else {
+        const trunkTopY = Math.max(340, 480 - (week * 2.8));
+        const midW = Math.min(54, 18 + week * 0.7);
+        const topW = Math.min(32, 10 + week * 0.42);
+        const skirtW = midW * 1.6;
+
+        layerTrunk.innerHTML = `
+          <path d="M ${baseX - skirtW/2},${baseY + 4} Q ${baseX - midW/2},${baseY - 20} ${baseX - midW*0.4},480 C ${baseX - topW*0.5},430 ${baseX - topW*0.5},380 ${baseX - topW/2},${trunkTopY} Q ${baseX},${trunkTopY - 7} ${baseX + topW/2},${trunkTopY} C ${baseX + topW*0.5},380 ${baseX + topW*0.5},430 ${baseX + midW*0.4},480 Q ${baseX + midW/2},${baseY - 20} ${baseX + skirtW/2},${baseY + 4} Z" fill="url(#cuteTrunkGrad)" filter="drop-shadow(0 4px 6px rgba(120,53,15,0.2))"/>
+          ${week >= 25 ? `
+            <g onclick="openSignboardModal()" class="cursor-pointer group" transform="translate(${baseX}, 535)">
+              <line x1="-12" y1="-18" x2="-8" y2="-10" stroke="#78350f" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="12" y1="-18" x2="8" y2="-10" stroke="#78350f" stroke-width="1.8" stroke-linecap="round"/>
+              <rect x="-18" y="-10" width="36" height="22" rx="5" fill="url(#signboardGrad)" stroke="#b45309" stroke-width="1.5" filter="drop-shadow(0 3px 6px rgba(0,0,0,0.25))"/>
+              <line x1="0" y1="-5" x2="0" y2="7" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+              <line x1="-4" y1="-1" x2="4" y2="-1" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="0" cy="-1" r="1.5" fill="#fef08a"/>
+              <circle cx="14" cy="-8" r="3" fill="#f59e0b" class="animate-ping" opacity="0.75"/>
+            </g>
+          ` : ''}
+        `;
+      }
+
+      // 2. 樹底圓草簇包覆
+      if (week <= 3) {
+        layerBaseTufts.innerHTML = `
+          <ellipse cx="${baseX}" cy="${baseY}" rx="14" ry="5" fill="#86efac" opacity="0.8"/>
+        `;
+      } else {
+        const tuftScale = Math.min(1.4, 0.7 + week * 0.015);
+        layerBaseTufts.innerHTML = `
+          <g transform="translate(${baseX - 28 * tuftScale}, ${baseY + 2}) scale(${tuftScale})">
+            <circle cx="-6" cy="-2" r="10" fill="#4ade80"/><circle cx="2" cy="-4" r="9" fill="#86efac"/><circle cx="-2" cy="1" r="8" fill="#22c55e"/>
+          </g>
+          <g transform="translate(${baseX + 28 * tuftScale}, ${baseY + 2}) scale(${tuftScale})">
+            <circle cx="6" cy="-2" r="11" fill="#22c55e"/><circle cx="-1" cy="-4" r="9" fill="#86efac"/><circle cx="3" cy="2" r="8" fill="#4ade80"/>
+          </g>
+          <ellipse cx="${baseX}" cy="${baseY + 2}" rx="${Math.min(32, 10 + week * 0.45)}" ry="7" fill="#22c55e" opacity="0.95"/>
+          ${week >= 15 ? `
+            <g transform="translate(${baseX - 26},${baseY - 4}) scale(0.95)">
+              <rect x="-2" y="2" width="4" height="7" rx="2" fill="#f8fafc"/><ellipse cx="0" cy="2" rx="7" ry="5" fill="#ef4444"/><circle cx="-3" cy="1" r="1.2" fill="#ffffff"/><circle cx="2" cy="0.5" r="1" fill="#ffffff"/>
+            </g>
+          ` : ''}
+        `;
+      }
+
+      // 3. 圓弧枝枒
+      if (week >= 8) {
+        const branchSpread = Math.min(180, 24 + (week - 8) * 3.8);
+        const bY = Math.max(330, 510 - week * 2.8);
+        const bThick = Math.min(15, 3.5 + week * 0.22);
+        layerBranches.innerHTML = `
+          <path d="M ${baseX-4},${bY + 30} Q ${baseX-70},${bY} ${baseX - branchSpread},${bY - 15}" stroke="#9a5a3a" stroke-width="${bThick}" stroke-linecap="round" fill="none"/>
+          <path d="M ${baseX+4},${bY + 20} Q ${baseX+70},${bY - 10} ${baseX + branchSpread},${bY - 25}" stroke="#8a4d30" stroke-width="${bThick * 0.9}" stroke-linecap="round" fill="none"/>
+        `;
+      }
+
+      // 4. 棉花糖泡泡樹冠
+      if (week <= 3) {
+        const topY = baseY - (week * 22);
+        const leafR = week * 9;
+        layerLeaves.innerHTML = `
+          <ellipse cx="${baseX - leafR*0.75}" cy="${topY - 5}" rx="${leafR}" ry="${leafR*0.75}" fill="#84cc16" transform="rotate(-25, ${baseX - leafR*0.75}, ${topY - 5})"/>
+          <ellipse cx="${baseX + leafR*0.75}" cy="${topY - 5}" rx="${leafR}" ry="${leafR*0.75}" fill="#a3e635" transform="rotate(25, ${baseX + leafR*0.75}, ${topY - 5})"/>
+        `;
+      } else if (week <= 13) {
+        const count = Math.min(9, 3 + Math.floor(week * 0.6));
+        let leavesSvg = '';
+        for (let i = 0; i < count; i++) {
+          const angle = (i * 50) - 90;
+          const dist = 16 + i * 4.5;
+          const cx = baseX + Math.cos(angle * Math.PI / 180) * dist;
+          const cy = (baseY - (60 + week * 14)) + Math.sin(angle * Math.PI / 180) * (dist * 0.65);
+          const r = 16 + (i % 3) * 4;
+          leavesSvg += `
+            <g><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)"/><ellipse cx="${cx - r*0.25}" cy="${cy - r*0.3}" rx="${r*0.4}" ry="${r*0.22}" fill="url(#highlightLeafGrad)"/></g>
+          `;
+        }
+        layerLeaves.innerHTML = leavesSvg;
+      } else {
+        const crownCenterY = Math.max(275, 410 - week * 2.3);
+        const crownRadiusX = Math.min(240, 55 + week * 3.6);
+        const crownRadiusY = Math.min(180, 45 + week * 2.7);
+        const bubbleClusters = [
+          { dx: 0, dy: -0.65, r: 0.58 }, { dx: -0.48, dy: -0.32, r: 0.54 }, { dx: 0.48, dy: -0.32, r: 0.54 },
+          { dx: -0.72, dy: 0.05, r: 0.48 }, { dx: 0.72, dy: 0.05, r: 0.48 }, { dx: -0.32, dy: 0.26, r: 0.52 },
+          { dx: 0.32, dy: 0.26, r: 0.52 }, { dx: 0, dy: 0.08, r: 0.64 }
+        ];
+        let leavesSvg = '';
+        bubbleClusters.forEach((b) => {
+          const cx = baseX + b.dx * crownRadiusX;
+          const cy = crownCenterY + b.dy * crownRadiusY;
+          const r = b.r * Math.min(crownRadiusX, crownRadiusY);
+          leavesSvg += `
+            <g><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)"/><ellipse cx="${cx - r*0.28}" cy="${cy - r*0.35}" rx="${r*0.42}" ry="${r*0.25}" fill="url(#highlightLeafGrad)"/></g>
+          `;
+        });
+        layerLeaves.innerHTML = leavesSvg;
+      }
+
+      // 5. 白雛菊繁花 (第 27 週起)
+      if (week >= 27) {
+        const count = Math.min(18, (week - 26) * 2);
+        let blossomSvg = '';
+        for (let i = 0; i < count; i++) {
+          const seed = i * 137.5;
+          const dist = 35 + Math.sqrt(i) * 26;
+          const bx = baseX + Math.cos(seed) * dist * (week > 40 ? 1.25 : 1.0);
+          const by = (week <= 26 ? 380 : 300) + Math.sin(seed) * (dist * 0.7);
+          blossomSvg += `
+            <g transform="translate(${bx}, ${by}) scale(1.1)"><circle cx="-4" cy="0" r="3.6" fill="#ffffff"/><circle cx="4" cy="0" r="3.6" fill="#ffffff"/><circle cx="0" cy="-4" r="3.6" fill="#ffffff"/><circle cx="0" cy="4" r="3.6" fill="#ffffff"/><circle cx="0" cy="0" r="3" fill="#fbbf24"/></g>
+          `;
+        }
+        layerBlossoms.innerHTML = blossomSvg;
+      }
+
+      // 6. 金蘋果果實 (讀經亮光心得所結出的真實果子)
+      const fruitsToRender = appState.fruitsList.length > 0 ? appState.fruitsList : [];
+      const fruitCount = week >= 34 ? Math.max(fruitsToRender.length, Math.min(10, Math.floor((week - 33) * 0.6) + 1)) : fruitsToRender.length;
+
+      let fruitSvg = '';
+      for (let i = 0; i < fruitCount; i++) {
+        const fAngle = i * 2.399;
+        const fDist = 55 + (i % 4) * 38;
+        const fx = baseX + Math.cos(fAngle) * fDist;
+        const fy = 290 + Math.sin(fAngle) * (fDist * 0.68);
+        const r = Math.min(12, 6 + (week - 33) * 0.32);
+        const fruitData = fruitsToRender[i] || null;
+
+        fruitSvg += `
+          <g onclick="openFruitModal(${i}, '${encodeURIComponent(JSON.stringify(fruitData))}')" class="cursor-pointer group" transform="translate(${fx}, ${fy})">
+            <circle cx="0" cy="0" r="${r * 1.8}" fill="#fef08a" opacity="0.4" class="animate-ping" style="animation-duration: 3s;"/>
+            <circle cx="0" cy="0" r="${r}" fill="url(#cuteGoldenFruitGrad)"/>
+            <circle cx="${-r*0.3}" cy="${-r*0.3}" r="${r*0.3}" fill="#ffffff" opacity="0.95"/>
+          </g>
+        `;
+      }
+      layerFruits.innerHTML = fruitSvg;
+
+      // 7. 白肥鳥 (第 21 週起)
+      if (week >= 21) {
+        const birdX = baseX + (week > 35 ? 120 : 70);
+        const birdY = (week <= 26 ? 415 : 350) - 20;
+        layerBirds.innerHTML = `
+          <g transform="translate(${birdX}, ${birdY}) scale(1.15)">
+            <circle cx="0" cy="0" r="11" fill="#ffffff"/><circle cx="8" cy="-5" r="7" fill="#ffffff"/><polygon points="14,-5 18,-4 14,-3" fill="#f59e0b"/><circle cx="10" cy="-6" r="1.5" fill="#1e293b"/><ellipse cx="8" cy="-2" rx="2.5" ry="1.5" fill="#f43f5e" opacity="0.5"/><ellipse cx="-2" cy="1" rx="6" ry="4" fill="#e2e8f0"/>
+          </g>
+        `;
+      }
+
+      if (week >= 48) {
+        godRaysCrown.style.opacity = (week - 47) * 0.3;
+      } else {
+        godRaysCrown.style.opacity = '0';
+      }
+    }
+
+    // 計算週次 (1 ~ 52)
+    function calculateStage(chapters) {
+      const p = Math.min(chapters / 1189, 1);
+      return Math.max(1, Math.min(52, Math.ceil(p * 52)));
+    }
+
+    // 載入會友讀經紀錄
+    async function loadUserProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('user_tree_profiles')
+          .select('*')
+          .eq('church_id', appState.churchId)
+          .eq('line_user_id', appState.lineUserId)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          appState.totalChapters = data.total_chapters || 0;
+          appState.streakDays = data.streak_days || 0;
+        } else {
+          // 首次造訪，自動建立檔案
+          await supabase.from('user_tree_profiles').insert([{
+            church_id: appState.churchId,
+            member_name: appState.displayName,
+            line_user_id: appState.lineUserId,
+            line_display_name: appState.displayName,
+            avatar_url: appState.avatarUrl,
+            total_chapters: 0,
+            streak_days: 0,
+            tree_level: 1
+          }]);
+        }
+
+        // 讀取發光金果
+        const { data: fruits } = await supabase
+          .from('tree_fruits')
+          .select('*')
+          .eq('church_id', appState.churchId)
+          .eq('member_name', appState.displayName)
+          .order('created_at', { ascending: true });
+
+        appState.fruitsList = fruits || [];
+
+        updateUI();
+      } catch (err) {
+        console.warn('載入讀經資料異常:', err.message);
+        updateUI();
+      }
+    }
+
+    // 更新介面數值
+    function updateUI() {
+      document.getElementById('lblChapters').innerText = appState.totalChapters;
+      document.getElementById('streakDays').innerText = appState.streakDays;
+      document.getElementById('userNameLabel').innerText = appState.displayName;
+      if (appState.avatarUrl) {
+        document.getElementById('userAvatar').src = appState.avatarUrl;
+      }
+
+      appState.currentWeek = calculateStage(appState.totalChapters);
+      document.getElementById('lblWeekNum').innerText = appState.currentWeek;
+
+      let info = WEEK_DATA[appState.currentWeek];
+      if (!info) {
+        const prevWeeks = Object.keys(WEEK_DATA).map(Number).filter(w => w <= appState.currentWeek);
+        info = WEEK_DATA[Math.max(...prevWeeks)];
+      }
+      document.getElementById('lblStageTitle').innerText = info.title;
+      document.getElementById('lblVerseShort').innerText = info.verse;
+
+      renderTree(appState.currentWeek);
+    }
+
+    // 送出今日打卡
+    window.submitCheckin = async function() {
+      const bookIdx = parseInt(document.getElementById('selBook').value, 10);
+      const bookName = BIBLE_BOOKS[bookIdx].name;
+      const startChap = parseInt(document.getElementById('selStartChap').value, 10);
+      const endChap = parseInt(document.getElementById('selEndChap').value, 10);
+      const chaptersRead = (endChap - startChap) + 1;
+      const goldenVerse = document.getElementById('goldenVerse').value.trim();
+      const reflection = document.getElementById('reflection').value.trim();
+
+      const btn = document.getElementById('btnSubmitCheckin');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>記錄中...</span>`;
+
+      try {
+        // 1. 寫入打卡表
+        const { data: checkinData, error: cErr } = await supabase.from('bible_checkins').insert([{
+          church_id: appState.churchId,
+          member_name: appState.displayName,
+          book_name: bookName,
+          start_chapter: startChap,
+          end_chapter: endChap,
+          chapters_read: chaptersRead,
+          golden_verse: goldenVerse,
+          reflection: reflection
+        }]).select();
+
+        if (cErr) throw cErr;
+
+        // 2. 若有輸入心得，寫入金果表
+        if (reflection || goldenVerse) {
+          await supabase.from('tree_fruits').insert([{
+            church_id: appState.churchId,
+            member_name: appState.displayName,
+            checkin_id: checkinData[0]?.id,
+            verse_text: goldenVerse,
+            reflection: reflection
+          }]);
+        }
+
+        // 3. 更新個人總進度
+        const newTotal = appState.totalChapters + chaptersRead;
+        const newStreak = appState.streakDays + 1;
+
+        await supabase.from('user_tree_profiles').update({
+          total_chapters: newTotal,
+          streak_days: newStreak,
+          tree_level: calculateStage(newTotal),
+          last_checkin_date: new Date().toISOString().split('T')[0]
+        }).eq('line_user_id', appState.lineUserId);
+
+        alert(`🎉 讚美主！成功打卡 ${bookName} ${startChap}~${endChap} 章（共 ${chaptersRead} 章）！生命樹正茂盛生長！`);
+        closeCheckinModal();
+        await loadUserProfile();
+      } catch (err) {
+        alert('打卡失敗：' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>完成打卡 · 滋養生命樹</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+      }
+    };
+
+    // 彈窗控制
+    window.openCheckinModal = () => document.getElementById('checkinModal').classList.remove('hidden');
+    window.closeCheckinModal = () => document.getElementById('checkinModal').classList.add('hidden');
+
+    window.openFruitModal = (idx, dataEncoded) => {
+      let data = null;
+      try { data = JSON.parse(decodeURIComponent(dataEncoded)); } catch(e){}
+
+      document.getElementById('modalIcon').className = "fa-solid fa-apple-whole";
+      document.getElementById('modalTitle').innerText = "生命樹之果 · 靈修亮光";
+      if (data && (data.verse_text || data.reflection)) {
+        document.getElementById('modalVerse').innerHTML = `
+          ${data.verse_text ? `「${data.verse_text}」<br>` : ''}
+          ${data.reflection ? `<span class="text-amber-700 font-bold mt-1 block">💡 心得：${data.reflection}</span>` : ''}
+        `;
+      } else {
+        document.getElementById('modalVerse').innerText = "「你的話是我腳前的燈，是我路上的光。」—— 詩篇 119:105";
+      }
+      document.getElementById('fruitModal').classList.remove('hidden');
+    };
+
+    window.openSignboardModal = () => {
+      document.getElementById('modalIcon').className = "fa-solid fa-cross";
+      document.getElementById('modalTitle').innerText = "恩典木牌 · 靈修銘言";
+      document.getElementById('modalVerse').innerText = "「我是葡萄樹，你們是枝子。常在我裡面的，我也常在他裡面，這人就多結果子。」—— 約翰福音 15:5";
+      document.getElementById('fruitModal').classList.remove('hidden');
+    };
+
+    window.closeFruitModal = () => document.getElementById('fruitModal').classList.add('hidden');
+
+    // LIFF 初始化入口
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          appState.lineUserId = profile.userId;
+          appState.displayName = profile.displayName;
+          appState.avatarUrl = profile.pictureUrl;
+        } else {
+          // 若在外部瀏覽器打開，引導登入
+          liff.login();
+          return;
+        }
+      } catch (err) {
+        console.warn('LIFF 尚未就緒或非 LINE 環境，使用本地測試身分:', err.message);
+      }
+      await loadUserProfile();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      initBookSelect();
+      initLiff();
+    });
+  </script>
+</body>
+</html>
