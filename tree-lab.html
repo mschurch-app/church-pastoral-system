@@ -24,13 +24,13 @@
       background: radial-gradient(circle at 75% 20%, #fffbeb 0%, #e0f4ff 50%, #f0fdf4 100%);
     }
 
-    /* 樹木 Q 彈微風搖曳 */
+    /* 樹木 Q 彈微風搖曳 (以樹基底中心為軸) */
     @keyframes cute-sway {
       0%, 100% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(1.5deg) scale(1.01); }
+      50% { transform: rotate(1.2deg) scale(1.008); }
     }
     .tree-sway-cute {
-      transform-origin: 380px 620px;
+      transform-origin: 380px 625px;
       animation: cute-sway 4.5s ease-in-out infinite;
     }
 
@@ -139,7 +139,7 @@
     <div class="relative w-full max-w-xl aspect-square flex items-center justify-center">
       <svg id="treeCanvas" viewBox="0 0 800 800" class="w-full h-full filter drop-shadow-lg">
         <defs>
-          <!-- 暖陽漫射光暈 (Sun Aura Bloom) -->
+          <!-- 暖陽漫射光暈 -->
           <radialGradient id="sunAuraGrad" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stop-color="#fef08a" stop-opacity="0.8" />
             <stop offset="40%" stop-color="#fed7aa" stop-opacity="0.4" />
@@ -196,7 +196,7 @@
             <stop offset="100%" stop-color="#22c55e" />
           </linearGradient>
 
-          <!-- 圓滾滾靈修金蘋果果實漸層 -->
+          <!-- 圓滾滾靈修金蘋果漸層 -->
           <radialGradient id="cuteGoldenFruitGrad" cx="30%" cy="25%" r="75%">
             <stop offset="0%" stop-color="#ffffff" />
             <stop offset="25%" stop-color="#fef08a" />
@@ -204,36 +204,23 @@
             <stop offset="90%" stop-color="#f59e0b" />
             <stop offset="100%" stop-color="#d97706" />
           </radialGradient>
-
-          <!-- 柔焦漫射濾鏡 -->
-          <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="blur"/>
-            <feMerge>
-              <feMergeNode in="blur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
         </defs>
 
-        <!-- 1. 背景光暈層 (溫暖陽光與大光圈漫射) -->
+        <!-- 1. 背景光暈層 -->
         <g id="layerBackgroundAura">
-          <!-- 遠山柔和曲線 -->
           <path d="M 0,530 Q 240,460 440,510 Q 640,450 800,520 L 800,700 L 0,700 Z" fill="#bae6fd" opacity="0.45"/>
           <path d="M 0,560 Q 320,500 580,560 Q 720,530 800,560 L 800,800 L 0,800 Z" fill="#bbf7d0" opacity="0.5"/>
 
-          <!-- 陽光漫射大光暈 (太陽本體 + 呼吸光暈) -->
           <circle cx="640" cy="140" r="160" fill="url(#sunAuraGrad)" class="sun-aura"/>
           <circle cx="640" cy="140" r="36" fill="#fffbeb" filter="drop-shadow(0 0 12px #fef08a)"/>
           
-          <!-- 輕柔溫暖光束 (Sunbeams) -->
           <polygon points="640,140 220,780 460,780" fill="url(#sunAuraGrad)" opacity="0.35"/>
           <polygon points="640,140 80,680 240,750" fill="url(#sunAuraGrad)" opacity="0.25"/>
 
-          <!-- 樹冠背景光暈 (隨樹木長大而增強) -->
           <circle id="treeAuraCircle" cx="380" cy="350" r="180" fill="url(#treeCrownAuraGrad)" class="tree-glow"/>
         </g>
 
-        <!-- 2. 生命溪流 (圓弧波光，流經樹旁) -->
+        <!-- 2. 生命溪流 -->
         <g id="layerRiver">
           <path d="M 520,550 
                    C 490,580 430,600 440,630 
@@ -244,12 +231,11 @@
                    C 570,580 560,565 540,550 Z" 
                 fill="url(#cuteRiverGrad)"/>
 
-          <!-- 可愛水波紋 -->
           <path d="M 530,570 C 470,620 500,670 580,725 C 630,760 700,785 780,800" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.8" class="water-flow"/>
           <path d="M 550,605 C 495,655 540,695 630,755" stroke="#e0f2fe" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7" class="water-flow"/>
         </g>
 
-        <!-- 3. 前景大地草坡 (圓潤草坡、點綴小花與圓石) -->
+        <!-- 3. 前景大地草坡 -->
         <g id="layerGround">
           <path d="M 0,580 
                    Q 180,550 360,585 
@@ -258,18 +244,14 @@
                    L 460,800 L 0,800 Z" 
                 fill="url(#cuteHillGrad)"/>
 
-          <!-- 對岸草坡 -->
           <path d="M 560,555 Q 680,535 800,565 L 800,730 C 710,690 630,645 600,605 Q 575,570 560,555 Z" fill="#4ade80" opacity="0.9"/>
 
-          <!-- 樹底軟綿綿草墊亮圈 -->
-          <ellipse cx="380" cy="625" rx="100" ry="16" fill="#86efac" opacity="0.75"/>
-
-          <!-- 圓滾滾鵝卵石 (可愛胖胖感) -->
+          <!-- 溪畔圓滾滾鵝卵石 -->
           <ellipse cx="435" cy="640" rx="18" ry="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
           <ellipse cx="420" cy="655" rx="13" ry="7" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
           <ellipse cx="465" cy="710" rx="24" ry="12" fill="#94a3b8" stroke="#64748b" stroke-width="2"/>
 
-          <!-- 可愛五瓣小野花 -->
+          <!-- 草原小野花 -->
           <g transform="translate(240, 630)">
             <circle cx="-3" cy="0" r="3" fill="#ffffff"/><circle cx="3" cy="0" r="3" fill="#ffffff"/><circle cx="0" cy="-3" r="3" fill="#ffffff"/><circle cx="0" cy="3" r="3" fill="#ffffff"/><circle cx="0" cy="0" r="2.5" fill="#fbbf24"/>
           </g>
@@ -283,9 +265,6 @@
 
         <!-- 4. 樹木本體容器 (Q 彈搖擺) -->
         <g id="treeGroup" class="tree-sway-cute">
-          <!-- 根鬚層 (圓潤可愛爪爪伸展) -->
-          <g id="layerRoots"></g>
-
           <!-- 圓潤樹幹 -->
           <g id="layerTrunk"></g>
 
@@ -303,6 +282,9 @@
 
           <!-- 枝頭圓滾滾肥鳥 (第 21 週起) -->
           <g id="layerBirds"></g>
+
+          <!-- 樹底溫柔包覆層 (無爪！圓潤青苔草簇 + 萌萌小蘑菇) -->
+          <g id="layerBaseTufts"></g>
         </g>
 
         <!-- 5. 終章慶祝金光柱 (第 48 ~ 52 週) -->
@@ -314,7 +296,6 @@
   <!-- 底部溫暖控制面板 -->
   <footer class="p-4 sm:p-6 z-20 max-w-2xl w-full mx-auto space-y-3.5">
     <div class="glass-bubble-card p-5 sm:p-6 rounded-[32px] space-y-3.5">
-      <!-- 標題與數值 -->
       <div class="flex justify-between items-baseline">
         <div>
           <span class="text-xs font-black text-amber-600 tracking-wider">🌱 讀經靈程小腳步</span>
@@ -357,14 +338,13 @@
         </button>
       </div>
 
-      <!-- 靈修金句箋 -->
       <p id="lblScripture" class="text-xs text-slate-700 font-bold leading-relaxed border-t border-slate-100 pt-2.5">
         「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。」—— 詩篇 1:3
       </p>
     </div>
   </footer>
 
-  <!-- 點擊果實彈窗 (可愛圓圓金蘋果卡片) -->
+  <!-- 點擊果實彈窗 -->
   <div id="fruitModal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeFruitModal()">
     <div class="glass-bubble-card p-6 rounded-[36px] max-w-xs w-full text-center space-y-3.5 border-2 border-amber-300 shadow-2xl" onclick="event.stopPropagation()">
       <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 text-amber-900 flex items-center justify-center text-2xl mx-auto shadow-lg shadow-amber-400/30">
@@ -403,17 +383,16 @@
     const lblScripture = document.getElementById('lblScripture');
     const badgeSeason = document.getElementById('badgeSeason');
 
-    const layerRoots = document.getElementById('layerRoots');
     const layerTrunk = document.getElementById('layerTrunk');
     const layerBranches = document.getElementById('layerBranches');
     const layerLeaves = document.getElementById('layerLeaves');
     const layerBlossoms = document.getElementById('layerBlossoms');
     const layerFruits = document.getElementById('layerFruits');
     const layerBirds = document.getElementById('layerBirds');
+    const layerBaseTufts = document.getElementById('layerBaseTufts');
     const godRaysCrown = document.getElementById('godRaysCrown');
     const treeAuraCircle = document.getElementById('treeAuraCircle');
 
-    // 隨風飄浮金色光塵微粒
     function initParticles() {
       const container = document.getElementById('particlesContainer');
       container.innerHTML = '';
@@ -431,7 +410,7 @@
       }
     }
 
-    // 渲染 Q 版生命樹 (基底座標 X=380, Y=625)
+    // 核心渲染 (基底點 X=380, Y=625)
     function renderTree(week) {
       lblWeek.innerText = week;
       const chapters = Math.min(1189, Math.round(week * (1189 / 52)));
@@ -446,7 +425,6 @@
       lblTitle.innerText = currentInfo.title;
       lblScripture.innerText = currentInfo.verse;
 
-      // 季標籤
       if (week <= 13) {
         badgeSeason.innerText = "🌱 春季 · 初萌小苗";
         badgeSeason.className = "px-4 py-1.5 rounded-full text-xs font-black tracking-wider bg-emerald-100 text-emerald-800 border-2 border-emerald-200 shadow-sm";
@@ -461,76 +439,112 @@
         badgeSeason.className = "px-4 py-1.5 rounded-full text-xs font-black tracking-wider bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-900 border-2 border-amber-300 shadow-sm";
       }
 
-      // 清空圖層
-      layerRoots.innerHTML = '';
       layerTrunk.innerHTML = '';
       layerBranches.innerHTML = '';
       layerLeaves.innerHTML = '';
       layerBlossoms.innerHTML = '';
       layerFruits.innerHTML = '';
       layerBirds.innerHTML = '';
+      layerBaseTufts.innerHTML = '';
 
       const baseX = 380;
       const baseY = 625;
 
-      // 樹冠光暈大小隨成長擴大
       const auraRadius = Math.min(260, 60 + week * 3.8);
       treeAuraCircle.setAttribute('r', auraRadius);
 
       // ==========================
-      // 【1. 圓潤可愛樹根】
-      // ==========================
-      if (week <= 8) {
-        const rootH = baseY + week * 4.5;
-        layerRoots.innerHTML += `<path d="M ${baseX},${baseY} Q ${baseX-4},${rootH - 8} ${baseX-2},${rootH}" stroke="#84cc16" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.85"/>`;
-      } else {
-        const rootSpread = Math.min(75, 20 + week * 1.1);
-        layerRoots.innerHTML += `
-          <!-- 左抓土爪爪 (圓頭) -->
-          <path d="M ${baseX-8},${baseY} Q ${baseX-35},${baseY+12} ${baseX - rootSpread},${baseY+24}" stroke="#8a4d30" stroke-width="${Math.min(11, 3.5 + week * 0.16)}" stroke-linecap="round" fill="none"/>
-          <!-- 右伸入溪水汲水爪爪 (圓頭) -->
-          <path d="M ${baseX+8},${baseY} Q ${baseX+40},${baseY+15} ${baseX + rootSpread + 10},${baseY+22}" stroke="#783e23" stroke-width="${Math.min(10, 3 + week * 0.14)}" stroke-linecap="round" fill="none"/>
-        `;
-      }
-
-      // ==========================
-      // 【2. 胖胖圓潤樹幹】
+      // 【1. 胖胖圓潤樹幹（底部如鐘形裙擺自然外擴，無尖刺怪根）】
       // ==========================
       if (week <= 3) {
-        // Q版豆芽萌莖 (自帶小彎度與露珠)
+        // Q版豆芽小綠莖
         const sproutH = baseY - (week * 22);
         layerTrunk.innerHTML = `
-          <path d="M ${baseX},${baseY} Q ${baseX-8},${(baseY + sproutH)/2} ${baseX},${sproutH}" stroke="url(#cuteSproutGrad)" stroke-width="7" stroke-linecap="round" fill="none"/>
-          <!-- 晶瑩小露珠 -->
+          <path d="M ${baseX},${baseY} Q ${baseX-6},${(baseY + sproutH)/2} ${baseX},${sproutH}" stroke="url(#cuteSproutGrad)" stroke-width="7" stroke-linecap="round" fill="none"/>
           <circle cx="${baseX + 3}" cy="${sproutH + 10}" r="3" fill="#ffffff" opacity="0.9"/>
         `;
       } else if (week <= 13) {
-        // 幼木階段 (圓柱木質)
+        // 幼木階段 (圓柱木質，底部微微外展貼地)
         const trunkTop = baseY - (60 + week * 14);
-        const trunkW = 6 + week * 1.3;
+        const trunkW = 8 + week * 1.3;
+        const flareW = trunkW * 1.5; // 底部外展裙擺寬度
         layerTrunk.innerHTML = `
-          <path d="M ${baseX - trunkW/2},${baseY} 
-                   Q ${baseX-6},${(baseY + trunkTop)/2} ${baseX - trunkW*0.35},${trunkTop} 
+          <path d="M ${baseX - flareW/2},${baseY} 
+                   Q ${baseX - trunkW/2},${baseY - 12} ${baseX - trunkW*0.35},${trunkTop} 
                    Q ${baseX},${trunkTop - 5} ${baseX + trunkW*0.35},${trunkTop} 
-                   Q ${baseX+6},${(baseY + trunkTop)/2} ${baseX + trunkW/2},${baseY} Z" 
-                fill="url(#cuteTrunkGrad)" rx="8"/>
+                   Q ${baseX + trunkW/2},${baseY - 12} ${baseX + flareW/2},${baseY} Z" 
+                fill="url(#cuteTrunkGrad)"/>
         `;
       } else {
-        // 蔚然大樹 (圓潤胖木，像龍貓森林大樹)
+        // 蔚然大樹 (圓潤胖木，底部呈現優雅平滑的喇叭狀樹裙外擴)
         const trunkTopY = Math.max(340, 480 - (week * 2.8));
-        const baseW = Math.min(56, 18 + week * 0.72);
+        const midW = Math.min(54, 18 + week * 0.7);
         const topW = Math.min(32, 10 + week * 0.42);
+        const skirtW = midW * 1.6; // 樹裙外展寬度，平滑沉穩
 
         layerTrunk.innerHTML = `
-          <path d="M ${baseX - baseW/2},${baseY} 
-                   C ${baseX-6 - baseW*0.3},540 ${baseX-8 - topW*0.4},440 ${baseX - topW/2},${trunkTopY} 
-                   Q ${baseX},${trunkTopY - 8} ${baseX + topW/2},${trunkTopY} 
-                   C ${baseX+8 + topW*0.4},440 ${baseX+6 + baseW*0.3},540 ${baseX + baseW/2},${baseY} Z" 
-                fill="url(#cuteTrunkGrad)" filter="drop-shadow(0 4px 6px rgba(120,53,15,0.25))"/>
+          <path d="M ${baseX - skirtW/2},${baseY + 4} 
+                   Q ${baseX - midW/2},${baseY - 20} ${baseX - midW*0.4},480 
+                   C ${baseX - topW*0.5},430 ${baseX - topW*0.5},380 ${baseX - topW/2},${trunkTopY} 
+                   Q ${baseX},${trunkTopY - 7} ${baseX + topW/2},${trunkTopY} 
+                   C ${baseX + topW*0.5},380 ${baseX + topW*0.5},430 ${baseX + midW*0.4},480 
+                   Q ${baseX + midW/2},${baseY - 20} ${baseX + skirtW/2},${baseY + 4} Z" 
+                fill="url(#cuteTrunkGrad)" filter="drop-shadow(0 4px 6px rgba(120,53,15,0.2))"/>
+          
           <!-- 樹洞小細節 (第 25 週起長出溫暖小樹洞) -->
           ${week >= 25 ? `
             <ellipse cx="${baseX}" cy="540" rx="7" ry="11" fill="#451a03" opacity="0.7"/>
             <ellipse cx="${baseX}" cy="539" rx="5" ry="8" fill="#291002"/>
+          ` : ''}
+        `;
+      }
+
+      // ==========================
+      // 【2. 樹底溫柔包覆層（徹底取代怪根！圓圓草簇、小苔蘚與萌蘑菇）】
+      // ==========================
+      if (week <= 3) {
+        // 小苗破土的嫩綠微土坡
+        layerBaseTufts.innerHTML = `
+          <ellipse cx="${baseX}" cy="${baseY}" rx="14" ry="5" fill="#86efac" opacity="0.8"/>
+          <ellipse cx="${baseX}" cy="${baseY + 1}" rx="8" ry="3" fill="#4ade80"/>
+        `;
+      } else {
+        // 簇擁在樹根底部的可愛圓弧草球與蘑菇
+        const tuftScale = Math.min(1.4, 0.7 + week * 0.015);
+        layerBaseTufts.innerHTML = `
+          <!-- 樹腳左側圓圓草球 -->
+          <g transform="translate(${baseX - 28 * tuftScale}, ${baseY + 2}) scale(${tuftScale})">
+            <circle cx="-6" cy="-2" r="10" fill="#4ade80"/>
+            <circle cx="2" cy="-4" r="9" fill="#86efac"/>
+            <circle cx="-2" cy="1" r="8" fill="#22c55e"/>
+          </g>
+          
+          <!-- 樹腳右側圓圓草球 (延伸到溪水岸旁) -->
+          <g transform="translate(${baseX + 28 * tuftScale}, ${baseY + 2}) scale(${tuftScale})">
+            <circle cx="6" cy="-2" r="11" fill="#22c55e"/>
+            <circle cx="-1" cy="-4" r="9" fill="#86efac"/>
+            <circle cx="3" cy="2" r="8" fill="#4ade80"/>
+          </g>
+
+          <!-- 樹腳正前方低矮小青苔圈 (柔和接合樹幹與地面) -->
+          <ellipse cx="${baseX}" cy="${baseY + 2}" rx="${Math.min(32, 10 + week * 0.45)}" ry="7" fill="#22c55e" opacity="0.95"/>
+          <ellipse cx="${baseX}" cy="${baseY}" rx="${Math.min(24, 8 + week * 0.35)}" ry="4.5" fill="#86efac" opacity="0.75"/>
+
+          <!-- 可愛圓頭紅蘑菇 (第 15 週起在樹底探出頭) -->
+          ${week >= 15 ? `
+            <g transform="translate(${baseX - 26},${baseY - 4}) scale(0.95)">
+              <rect x="-2" y="2" width="4" height="7" rx="2" fill="#f8fafc"/>
+              <ellipse cx="0" cy="2" rx="7" ry="5" fill="#ef4444"/>
+              <circle cx="-3" cy="1" r="1.2" fill="#ffffff"/>
+              <circle cx="2" cy="0.5" r="1" fill="#ffffff"/>
+            </g>
+          ` : ''}
+
+          <!-- 溪畔小白花 (第 8 週起長在樹腳邊) -->
+          ${week >= 8 ? `
+            <g transform="translate(${baseX + 32},${baseY - 2}) scale(0.85)">
+              <circle cx="-3" cy="0" r="2.5" fill="#ffffff"/><circle cx="3" cy="0" r="2.5" fill="#ffffff"/><circle cx="0" cy="-3" r="2.5" fill="#ffffff"/><circle cx="0" cy="3" r="2.5" fill="#ffffff"/><circle cx="0" cy="0" r="2" fill="#fbbf24"/>
+            </g>
           ` : ''}
         `;
       }
@@ -557,21 +571,18 @@
       }
 
       // ==========================
-      // 【4. 棉花糖泡泡樹冠 (Q 彈立體)】
+      // 【4. 棉花糖泡泡樹冠】
       // ==========================
       if (week <= 3) {
-        // 圓滾滾胖胖豆芽雙葉
         const topY = baseY - (week * 22);
         const leafR = week * 9;
         layerLeaves.innerHTML = `
           <ellipse cx="${baseX - leafR*0.75}" cy="${topY - 5}" rx="${leafR}" ry="${leafR*0.75}" fill="#84cc16" transform="rotate(-25, ${baseX - leafR*0.75}, ${topY - 5})"/>
           <ellipse cx="${baseX + leafR*0.75}" cy="${topY - 5}" rx="${leafR}" ry="${leafR*0.75}" fill="#a3e635" transform="rotate(25, ${baseX + leafR*0.75}, ${topY - 5})"/>
-          <!-- 葉面白色小光暈點 -->
           <circle cx="${baseX - leafR*0.75}" cy="${topY - 8}" r="${leafR*0.25}" fill="#ffffff" opacity="0.6"/>
           <circle cx="${baseX + leafR*0.75}" cy="${topY - 8}" r="${leafR*0.25}" fill="#ffffff" opacity="0.6"/>
         `;
       } else if (week <= 13) {
-        // 萌萌小圓泡泡樹
         const count = Math.min(9, 3 + Math.floor(week * 0.6));
         let leavesSvg = '';
         for (let i = 0; i < count; i++) {
@@ -589,12 +600,10 @@
         }
         layerLeaves.innerHTML = leavesSvg;
       } else {
-        // 盛茂大樹：10 顆大棉花糖泡泡簇擁而成的可愛圓冠
         const crownCenterY = Math.max(275, 410 - week * 2.3);
         const crownRadiusX = Math.min(240, 55 + week * 3.6);
         const crownRadiusY = Math.min(180, 45 + week * 2.7);
 
-        // 圓球泡泡簇分佈位置
         const bubbleClusters = [
           { dx: 0, dy: -0.65, r: 0.58 },
           { dx: -0.48, dy: -0.32, r: 0.54 },
@@ -615,9 +624,7 @@
           const r = b.r * Math.min(crownRadiusX, crownRadiusY);
           leavesSvg += `
             <g>
-              <!-- 泡泡底色 -->
               <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)" filter="drop-shadow(0 6px 12px rgba(21,128,61,0.22))"/>
-              <!-- 泡泡高光亮點 (增加 Q 彈果凍感) -->
               <ellipse cx="${cx - r*0.28}" cy="${cy - r*0.35}" rx="${r*0.42}" ry="${r*0.25}" fill="url(#highlightLeafGrad)"/>
             </g>
           `;
@@ -639,12 +646,10 @@
 
           blossomSvg += `
             <g transform="translate(${bx}, ${by}) scale(1.1)" class="cursor-pointer" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))">
-              <!-- 五片圓圓白花瓣 -->
               <circle cx="-4" cy="0" r="3.6" fill="#ffffff"/>
               <circle cx="4" cy="0" r="3.6" fill="#ffffff"/>
               <circle cx="0" cy="-4" r="3.6" fill="#ffffff"/>
               <circle cx="0" cy="4" r="3.6" fill="#ffffff"/>
-              <!-- 暖黃花芯 -->
               <circle cx="0" cy="0" r="3" fill="#fbbf24"/>
             </g>
           `;
@@ -653,7 +658,7 @@
       }
 
       // ==========================
-      // 【6. 發光金蘋果靈修果實 (第 34 週起)】
+      // 【6. 發光金蘋果 (第 34 週起)】
       // ==========================
       if (week >= 34) {
         const fruitCount = Math.min(12, Math.floor((week - 33) * 0.65) + 1);
@@ -667,14 +672,10 @@
 
           fruitSvg += `
             <g onclick="openFruitModal(${i+1})" class="cursor-pointer group" transform="translate(${fx}, ${fy})">
-              <!-- 果實金芒呼吸圈 -->
               <circle cx="0" cy="0" r="${r * 1.9}" fill="#fef08a" opacity="0.4" class="animate-ping" style="animation-duration: 3s;"/>
-              <!-- 金蘋果本體 (胖圓) -->
               <circle cx="0" cy="0" r="${r}" fill="url(#cuteGoldenFruitGrad)" filter="drop-shadow(0 4px 8px rgba(245,158,11,0.5))"/>
-              <!-- 蘋果小梗與葉子 -->
               <path d="M 0,${-r} Q 2,${-r-6} 4,${-r-8}" stroke="#78350f" stroke-width="2" stroke-linecap="round" fill="none"/>
               <ellipse cx="4" cy="${-r-6}" rx="3" ry="1.8" fill="#84cc16" transform="rotate(-20, 4, ${-r-6})"/>
-              <!-- 閃爍高光星星點 -->
               <circle cx="${-r*0.3}" cy="${-r*0.3}" r="${r*0.3}" fill="#ffffff" opacity="0.95"/>
             </g>
           `;
@@ -690,18 +691,12 @@
         const birdY = (week <= 26 ? 415 : 350) - 20;
         layerBirds.innerHTML = `
           <g transform="translate(${birdX}, ${birdY}) scale(1.15)" filter="drop-shadow(0 3px 6px rgba(0,0,0,0.15))">
-            <!-- 肥嘟嘟身體 (圓滾滾) -->
             <circle cx="0" cy="0" r="11" fill="#ffffff"/>
-            <!-- 圓圓小腦袋 -->
             <circle cx="8" cy="-5" r="7" fill="#ffffff"/>
-            <!-- 萌萌小黃嘴 -->
             <polygon points="14,-5 18,-4 14,-3" fill="#f59e0b"/>
-            <!-- 豆豆黑眼珠 -->
             <circle cx="10" cy="-6" r="1.5" fill="#1e293b"/>
             <circle cx="10.5" cy="-6.5" r="0.6" fill="#ffffff"/>
-            <!-- 粉紅害羞腮紅 -->
             <ellipse cx="8" cy="-2" rx="2.5" ry="1.5" fill="#f43f5e" opacity="0.5"/>
-            <!-- 圓弧小翅膀 -->
             <ellipse cx="-2" cy="1" rx="6" ry="4" fill="#e2e8f0" transform="rotate(-10)"/>
           </g>
         `;
