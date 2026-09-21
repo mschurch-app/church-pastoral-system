@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>讀經生命樹 · 每日靈修打卡</title>
+  <title>Ｍ＋大雅教會 · 讀經生命樹</title>
 
   <!-- Tailwind CSS & FontAwesome & LIFF & Supabase -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -106,9 +106,9 @@
       </div>
     </div>
 
-    <!-- 章數進度微膠囊 -->
+    <!-- 章數進度 -->
     <div class="text-right bg-white/80 px-3 py-1.5 rounded-2xl border border-amber-200 shadow-sm">
-      <span class="text-[10px] text-slate-400 block font-bold">總通讀進度</span>
+      <span class="text-[10px] text-slate-400 block font-bold">Ｍ＋通讀進度</span>
       <span class="text-xs font-black text-emerald-600 font-mono"><strong id="lblChapters" class="text-sm">0</strong>/1189章</span>
     </div>
   </header>
@@ -166,7 +166,7 @@
           </radialGradient>
         </defs>
 
-        <!-- 1. 背景光暈層 -->
+        <!-- 背景 -->
         <g id="layerBackgroundAura">
           <path d="M 0,530 Q 240,460 440,510 Q 640,450 800,520 L 800,700 L 0,700 Z" fill="#bae6fd" opacity="0.45"/>
           <path d="M 0,560 Q 320,500 580,560 Q 720,530 800,560 L 800,800 L 0,800 Z" fill="#bbf7d0" opacity="0.5"/>
@@ -176,20 +176,20 @@
           <circle id="treeAuraCircle" cx="380" cy="350" r="180" fill="url(#treeCrownAuraGrad)" class="tree-glow"/>
         </g>
 
-        <!-- 2. 生命溪流 -->
+        <!-- 生命溪流 -->
         <g id="layerRiver">
           <path d="M 520,550 C 490,580 430,600 440,630 C 455,660 520,680 530,715 C 545,750 610,775 690,800 L 800,800 L 800,730 C 700,695 620,650 590,610 C 570,580 560,565 540,550 Z" fill="url(#cuteRiverGrad)"/>
           <path d="M 530,570 C 470,620 500,670 580,725 C 630,760 700,785 780,800" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.8" class="water-flow"/>
         </g>
 
-        <!-- 3. 前景大地草坡 -->
+        <!-- 前景大地草坡 -->
         <g id="layerGround">
           <path d="M 0,580 Q 180,550 360,585 C 420,595 445,625 410,665 C 380,700 410,745 440,775 L 460,800 L 0,800 Z" fill="url(#cuteHillGrad)"/>
           <path d="M 560,555 Q 680,535 800,565 L 800,730 C 710,690 630,645 600,605 Q 575,570 560,555 Z" fill="#4ade80" opacity="0.9"/>
           <ellipse cx="435" cy="640" rx="18" ry="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
         </g>
 
-        <!-- 4. 樹木本體 (微風擺動) -->
+        <!-- 樹木本體 -->
         <g id="treeGroup" class="tree-sway-cute">
           <g id="layerTrunk"></g>
           <g id="layerBranches"></g>
@@ -200,7 +200,7 @@
           <g id="layerBaseTufts"></g>
         </g>
 
-        <!-- 5. 終章光柱 -->
+        <!-- 終章光柱 -->
         <polygon id="godRaysCrown" points="380,0 160,620 600,620" fill="url(#sunAuraGrad)" opacity="0" class="transition-opacity duration-1000"/>
       </svg>
     </div>
@@ -208,7 +208,6 @@
 
   <!-- 底部操作區 -->
   <footer class="p-4 z-20 max-w-lg w-full mx-auto space-y-3">
-    <!-- 當前靈程金句卡 -->
     <div class="glass-bubble-card p-4 rounded-2xl flex items-center justify-between">
       <div class="pr-2">
         <div class="flex items-center gap-1.5 text-xs font-black text-amber-700">
@@ -226,18 +225,17 @@
     </div>
   </footer>
 
-  <!-- 打卡抽屜彈窗 (Check-in Modal) -->
+  <!-- 打卡抽屜彈窗 -->
   <div id="checkinModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="closeCheckinModal()">
     <div class="glass-bubble-card w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">📖</div>
-          <h3 class="text-base font-black text-slate-800">今日讀經打卡</h3>
+          <h3 class="text-base font-black text-slate-800">今日讀經打卡 · Ｍ＋大雅</h3>
         </div>
         <button onclick="closeCheckinModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- 打卡表單 -->
       <div class="space-y-3.5 text-xs">
         <div>
           <label class="font-bold text-slate-600 block mb-1">選擇聖經書卷 *</label>
@@ -296,9 +294,7 @@
     </div>
   </div>
 
-  <!-- JavaScript 核心邏輯 -->
   <script>
-    // 聖經 66 卷書章節數據
     const BIBLE_BOOKS = [
       { name: "創世記", chapters: 50 }, { name: "出埃及記", chapters: 40 }, { name: "利未記", chapters: 27 }, { name: "民數記", chapters: 36 },
       { name: "申命記", chapters: 34 }, { name: "約書亞記", chapters: 24 }, { name: "士師記", chapters: 21 }, { name: "路得記", chapters: 4 },
@@ -310,7 +306,6 @@
       { name: "約珥書", chapters: 3 }, { name: "阿摩司書", chapters: 9 }, { name: "俄巴底亞書", chapters: 1 }, { name: "約拿書", chapters: 4 },
       { name: "彌迦書", chapters: 7 }, { name: "那鴻書", chapters: 3 }, { name: "哈巴谷書", chapters: 3 }, { name: "西番雅書", chapters: 3 },
       { name: "哈該書", chapters: 2 }, { name: "撒迦利亞書", chapters: 14 }, { name: "瑪拉基書", chapters: 4 },
-      // 新約
       { name: "馬太福音", chapters: 28 }, { name: "馬可福音", chapters: 16 }, { name: "路加福音", chapters: 24 }, { name: "約翰福音", chapters: 21 },
       { name: "使徒行傳", chapters: 28 }, { name: "羅馬書", chapters: 16 }, { name: "哥林多前書", chapters: 16 }, { name: "哥林多後書", chapters: 13 },
       { name: "加拉太書", chapters: 6 }, { name: "以弗所書", chapters: 6 }, { name: "腓立比書", chapters: 4 }, { name: "歌羅西書", chapters: 4 },
@@ -335,18 +330,18 @@
       52: { title: "榮耀生命樹 · 幸福圓滿", verse: "「河兩邊有生命樹，結十二樣果子……葉子乃為醫治萬民。」—— 啟示錄 22:2" }
     };
 
-    // 配置常數（請確認您的 LIFF ID 與 Supabase 設定）
-    const LIFF_ID = "貼上你的_LIFF_ID"; 
+    // Ｍ＋大雅專屬 LIFF 設定
+    const LIFF_ID = "2011645391-l63wfeP0"; 
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
+    // 請確認替換為您的 Supabase anon public key
     const SUPABASE_KEY = "貼上你的_SUPABASE_ANON_KEY";
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 應用狀態
     const appState = {
       churchId: 'M+',
       lineUserId: 'TEST_USER_LINE_ID',
-      displayName: '主內家人',
+      displayName: 'Ｍ＋家人',
       avatarUrl: '',
       totalChapters: 0,
       streakDays: 0,
@@ -354,7 +349,6 @@
       fruitsList: []
     };
 
-    // 初始化光之微粒
     function initParticles() {
       const container = document.getElementById('particlesContainer');
       container.innerHTML = '';
@@ -372,7 +366,6 @@
       }
     }
 
-    // 初始化聖經下拉選單
     function initBookSelect() {
       const sel = document.getElementById('selBook');
       sel.innerHTML = BIBLE_BOOKS.map((b, idx) => `<option value="${idx}">${b.name} (${b.chapters}章)</option>`).join('');
@@ -408,7 +401,6 @@
       document.getElementById('readCountLabel').innerText = count;
     };
 
-    // 核心渲染生命樹
     function renderTree(week) {
       const layerTrunk = document.getElementById('layerTrunk');
       const layerBranches = document.getElementById('layerBranches');
@@ -470,11 +462,9 @@
         `;
       }
 
-      // 2. 樹底圓草簇包覆
+      // 2. 樹底圓草簇
       if (week <= 3) {
-        layerBaseTufts.innerHTML = `
-          <ellipse cx="${baseX}" cy="${baseY}" rx="14" ry="5" fill="#86efac" opacity="0.8"/>
-        `;
+        layerBaseTufts.innerHTML = `<ellipse cx="${baseX}" cy="${baseY}" rx="14" ry="5" fill="#86efac" opacity="0.8"/>`;
       } else {
         const tuftScale = Math.min(1.4, 0.7 + week * 0.015);
         layerBaseTufts.innerHTML = `
@@ -493,7 +483,7 @@
         `;
       }
 
-      // 3. 圓弧枝枒
+      // 3. 枝枒
       if (week >= 8) {
         const branchSpread = Math.min(180, 24 + (week - 8) * 3.8);
         const bY = Math.max(330, 510 - week * 2.8);
@@ -504,7 +494,7 @@
         `;
       }
 
-      // 4. 棉花糖泡泡樹冠
+      // 4. 樹冠
       if (week <= 3) {
         const topY = baseY - (week * 22);
         const leafR = week * 9;
@@ -521,9 +511,7 @@
           const cx = baseX + Math.cos(angle * Math.PI / 180) * dist;
           const cy = (baseY - (60 + week * 14)) + Math.sin(angle * Math.PI / 180) * (dist * 0.65);
           const r = 16 + (i % 3) * 4;
-          leavesSvg += `
-            <g><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)"/><ellipse cx="${cx - r*0.25}" cy="${cy - r*0.3}" rx="${r*0.4}" ry="${r*0.22}" fill="url(#highlightLeafGrad)"/></g>
-          `;
+          leavesSvg += `<g><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)"/><ellipse cx="${cx - r*0.25}" cy="${cy - r*0.3}" rx="${r*0.4}" ry="${r*0.22}" fill="url(#highlightLeafGrad)"/></g>`;
         }
         layerLeaves.innerHTML = leavesSvg;
       } else {
@@ -540,14 +528,12 @@
           const cx = baseX + b.dx * crownRadiusX;
           const cy = crownCenterY + b.dy * crownRadiusY;
           const r = b.r * Math.min(crownRadiusX, crownRadiusY);
-          leavesSvg += `
-            <g><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)"/><ellipse cx="${cx - r*0.28}" cy="${cy - r*0.35}" rx="${r*0.42}" ry="${r*0.25}" fill="url(#highlightLeafGrad)"/></g>
-          `;
+          leavesSvg += `<g><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cuteLeafBubbleGrad)"/><ellipse cx="${cx - r*0.28}" cy="${cy - r*0.35}" rx="${r*0.42}" ry="${r*0.25}" fill="url(#highlightLeafGrad)"/></g>`;
         });
         layerLeaves.innerHTML = leavesSvg;
       }
 
-      // 5. 白雛菊繁花 (第 27 週起)
+      // 5. 繁花
       if (week >= 27) {
         const count = Math.min(18, (week - 26) * 2);
         let blossomSvg = '';
@@ -556,15 +542,13 @@
           const dist = 35 + Math.sqrt(i) * 26;
           const bx = baseX + Math.cos(seed) * dist * (week > 40 ? 1.25 : 1.0);
           const by = (week <= 26 ? 380 : 300) + Math.sin(seed) * (dist * 0.7);
-          blossomSvg += `
-            <g transform="translate(${bx}, ${by}) scale(1.1)"><circle cx="-4" cy="0" r="3.6" fill="#ffffff"/><circle cx="4" cy="0" r="3.6" fill="#ffffff"/><circle cx="0" cy="-4" r="3.6" fill="#ffffff"/><circle cx="0" cy="4" r="3.6" fill="#ffffff"/><circle cx="0" cy="0" r="3" fill="#fbbf24"/></g>
-          `;
+          blossomSvg += `<g transform="translate(${bx}, ${by}) scale(1.1)"><circle cx="-4" cy="0" r="3.6" fill="#ffffff"/><circle cx="4" cy="0" r="3.6" fill="#ffffff"/><circle cx="0" cy="-4" r="3.6" fill="#ffffff"/><circle cx="0" cy="4" r="3.6" fill="#ffffff"/><circle cx="0" cy="0" r="3" fill="#fbbf24"/></g>`;
         }
         layerBlossoms.innerHTML = blossomSvg;
       }
 
-      // 6. 金蘋果果實 (讀經亮光心得所結出的真實果子)
-      const fruitsToRender = appState.fruitsList.length > 0 ? appState.fruitsList : [];
+      // 6. 金果
+      const fruitsToRender = appState.fruitsList;
       const fruitCount = week >= 34 ? Math.max(fruitsToRender.length, Math.min(10, Math.floor((week - 33) * 0.6) + 1)) : fruitsToRender.length;
 
       let fruitSvg = '';
@@ -586,7 +570,7 @@
       }
       layerFruits.innerHTML = fruitSvg;
 
-      // 7. 白肥鳥 (第 21 週起)
+      // 7. 白鳥
       if (week >= 21) {
         const birdX = baseX + (week > 35 ? 120 : 70);
         const birdY = (week <= 26 ? 415 : 350) - 20;
@@ -604,13 +588,11 @@
       }
     }
 
-    // 計算週次 (1 ~ 52)
     function calculateStage(chapters) {
       const p = Math.min(chapters / 1189, 1);
       return Math.max(1, Math.min(52, Math.ceil(p * 52)));
     }
 
-    // 載入會友讀經紀錄
     async function loadUserProfile() {
       try {
         const { data, error } = await supabase
@@ -626,7 +608,6 @@
           appState.totalChapters = data.total_chapters || 0;
           appState.streakDays = data.streak_days || 0;
         } else {
-          // 首次造訪，自動建立檔案
           await supabase.from('user_tree_profiles').insert([{
             church_id: appState.churchId,
             member_name: appState.displayName,
@@ -639,12 +620,11 @@
           }]);
         }
 
-        // 讀取發光金果
         const { data: fruits } = await supabase
           .from('tree_fruits')
           .select('*')
           .eq('church_id', appState.churchId)
-          .eq('member_name', appState.displayName)
+          .eq('line_user_id', appState.lineUserId)
           .order('created_at', { ascending: true });
 
         appState.fruitsList = fruits || [];
@@ -656,7 +636,6 @@
       }
     }
 
-    // 更新介面數值
     function updateUI() {
       document.getElementById('lblChapters').innerText = appState.totalChapters;
       document.getElementById('streakDays').innerText = appState.streakDays;
@@ -679,7 +658,6 @@
       renderTree(appState.currentWeek);
     }
 
-    // 送出今日打卡
     window.submitCheckin = async function() {
       const bookIdx = parseInt(document.getElementById('selBook').value, 10);
       const bookName = BIBLE_BOOKS[bookIdx].name;
@@ -694,10 +672,10 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>記錄中...</span>`;
 
       try {
-        // 1. 寫入打卡表
         const { data: checkinData, error: cErr } = await supabase.from('bible_checkins').insert([{
           church_id: appState.churchId,
           member_name: appState.displayName,
+          line_user_id: appState.lineUserId,
           book_name: bookName,
           start_chapter: startChap,
           end_chapter: endChap,
@@ -708,18 +686,17 @@
 
         if (cErr) throw cErr;
 
-        // 2. 若有輸入心得，寫入金果表
         if (reflection || goldenVerse) {
           await supabase.from('tree_fruits').insert([{
             church_id: appState.churchId,
             member_name: appState.displayName,
+            line_user_id: appState.lineUserId,
             checkin_id: checkinData[0]?.id,
             verse_text: goldenVerse,
             reflection: reflection
           }]);
         }
 
-        // 3. 更新個人總進度
         const newTotal = appState.totalChapters + chaptersRead;
         const newStreak = appState.streakDays + 1;
 
@@ -728,7 +705,7 @@
           streak_days: newStreak,
           tree_level: calculateStage(newTotal),
           last_checkin_date: new Date().toISOString().split('T')[0]
-        }).eq('line_user_id', appState.lineUserId);
+        }).eq('church_id', 'M+').eq('line_user_id', appState.lineUserId);
 
         alert(`🎉 讚美主！成功打卡 ${bookName} ${startChap}~${endChap} 章（共 ${chaptersRead} 章）！生命樹正茂盛生長！`);
         closeCheckinModal();
@@ -741,7 +718,6 @@
       }
     };
 
-    // 彈窗控制
     window.openCheckinModal = () => document.getElementById('checkinModal').classList.remove('hidden');
     window.closeCheckinModal = () => document.getElementById('checkinModal').classList.add('hidden');
 
@@ -771,7 +747,6 @@
 
     window.closeFruitModal = () => document.getElementById('fruitModal').classList.add('hidden');
 
-    // LIFF 初始化入口
     async function initLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
@@ -781,12 +756,11 @@
           appState.displayName = profile.displayName;
           appState.avatarUrl = profile.pictureUrl;
         } else {
-          // 若在外部瀏覽器打開，引導登入
           liff.login();
           return;
         }
       } catch (err) {
-        console.warn('LIFF 尚未就緒或非 LINE 環境，使用本地測試身分:', err.message);
+        console.warn('非 LINE 環境或 LIFF 載入中，使用測試身分:', err.message);
       }
       await loadUserProfile();
     }
