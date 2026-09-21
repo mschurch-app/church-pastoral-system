@@ -19,38 +19,32 @@
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    /* 晨曦暖金與琉璃乳白的天空幕景 */
     body {
-      background: radial-gradient(135% 100% at 50% 0%, #FFFDF9 0%, #FAF5EE 45%, #F2E8DC 100%);
       color: #292524;
       height: 100vh;
       width: 100vw;
       overflow: hidden;
       font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
       user-select: none;
+      transition: background 1.2s ease;
     }
 
-    /* 晨光背景裝飾微暈動態 */
-    .bg-aurora {
-      position: absolute;
-      border-radius: 9999px;
-      filter: blur(80px);
-      pointer-events: none;
-      opacity: 0.6;
-      animation: auroraBreeze 12s ease-in-out infinite alternate;
-    }
-    @keyframes auroraBreeze {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(30px, 40px) scale(1.15); }
-    }
+    /* 7 種每日背景漸層定義 */
+    body.theme-1 { background: radial-gradient(130% 90% at 50% 0%, #FFFDF5 0%, #F5F7EC 50%, #E8EED8 100%); } /* 週一: 晨露初醒 */
+    body.theme-2 { background: radial-gradient(130% 90% at 50% 0%, #F5FAFF 0%, #EBF4FC 50%, #D8E9F6 100%); } /* 週二: 活水溪畔 */
+    body.theme-3 { background: radial-gradient(130% 90% at 50% 0%, #FFF8F0 0%, #FAF0E4 50%, #F2DFCC 100%); } /* 週三: 聖靈微火 */
+    body.theme-4 { background: radial-gradient(130% 90% at 50% 0%, #FAF8F5 0%, #EFEBE5 50%, #DFD7CC 100%); } /* 週四: 金香祭壇 */
+    body.theme-5 { background: radial-gradient(130% 90% at 50% 0%, #F8FAF5 0%, #EBF2E5 50%, #DAE4D0 100%); } /* 週五: 橄欖山丘 */
+    body.theme-6 { background: radial-gradient(130% 90% at 50% 0%, #F2F3F8 0%, #DFE3F0 50%, #C9D0E6 100%); } /* 週六: 應許之夜 */
+    body.theme-0 { background: radial-gradient(130% 90% at 50% 0%, #FFFBF0 0%, #FDF3D8 50%, #F7E4B6 100%); } /* 週日: 榮耀活泉 */
 
     /* 高級磨砂玻璃卡片 */
     .card-glass {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1.5px solid rgba(240, 222, 202, 0.85);
-      box-shadow: 0 16px 36px -10px rgba(194, 140, 80, 0.14);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 36px -10px rgba(180, 140, 100, 0.12);
       border-radius: 26px;
     }
 
@@ -81,6 +75,7 @@
       box-shadow: 0 14px 32px -4px rgba(234, 88, 12, 0.28), inset 0 2px 8px rgba(255, 255, 255, 1);
     }
 
+    /* 蒙應允見證水晶球 */
     .orb-answered {
       background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.98) 0%, rgba(254, 240, 138, 0.9) 55%, rgba(234, 88, 12, 0.35) 100%);
       border: 2px solid #ea580c;
@@ -149,18 +144,20 @@
     }
   </style>
 </head>
-<body>
+<body class="theme-1">
 
-  <!-- 背景流動柔光球 -->
-  <div class="bg-aurora w-96 h-96 -top-20 -left-20 bg-amber-200/50"></div>
-  <div class="bg-aurora w-96 h-96 bottom-0 -right-20 bg-orange-200/40"></div>
+  <!-- 🌌 動態背景 Canvas 畫布 (呈現每日不同的流動光點、溪水波紋或金煙) -->
+  <canvas id="ambientCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
 
   <!-- 頂部輕量導覽條 -->
   <header class="fixed top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-auto">
-    <div class="card-glass px-4 py-2 flex items-center gap-2.5">
+    <div class="card-glass px-3.5 py-2 flex items-center gap-2.5 cursor-pointer" onclick="cyclePreviewTheme()" title="點擊預覽切換 7 種每日場景">
       <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping"></span>
       <div>
-        <h1 class="text-xs font-black tracking-wider text-stone-800" id="wallTitle">Ｍ＋大雅教會 · 晨曦代禱牆</h1>
+        <div class="flex items-center gap-1.5">
+          <h1 class="text-xs font-black tracking-wider text-stone-800" id="wallTitle">Ｍ＋大雅教會 · 代禱牆</h1>
+          <span id="dayThemeBadge" class="text-[9px] px-1.5 py-0.2 rounded-md bg-stone-100 text-stone-600 font-bold border border-stone-200">週一 · 晨露初醒</span>
+        </div>
         <p class="text-[9px] text-stone-500 font-bold">點擊浮動琉璃球 · 同心舉手托住</p>
       </div>
     </div>
@@ -173,7 +170,7 @@
   </header>
 
   <!-- 🌟 全螢幕漂浮畫布舞台 🌟 -->
-  <main id="prayerSpaceCanvas" class="w-full h-full relative overflow-hidden">
+  <main id="prayerSpaceCanvas" class="w-full h-full relative overflow-hidden z-10">
     <!-- 空狀態提示 -->
     <div id="emptyStateNotice" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-6 space-y-2">
       <div class="w-14 h-14 rounded-3xl bg-orange-100 flex items-center justify-center text-orange-600 text-2xl shadow-sm mb-1 animate-pulse">
@@ -266,7 +263,7 @@
 
       <div class="space-y-2 text-xs">
         
-        <!-- 🌟 核心升級：公開 / 私密教牧代禱 切換膠囊 -->
+        <!-- 公開 / 私密教牧代禱 切換膠囊 -->
         <div>
           <label class="text-stone-500 font-bold block mb-1.5">守望公開範圍：</label>
           <div class="grid grid-cols-2 gap-1.5 bg-stone-100/90 p-1 rounded-2xl border border-stone-200/70">
@@ -335,12 +332,113 @@
     let orbs = [];
     let currentSelectedOrb = null;
     let lookupTimer = null;
-    let isPrivatePrayer = false; // 預設為公開
+    let isPrivatePrayer = false;
 
     const spaceCanvas = document.getElementById('prayerSpaceCanvas');
     const emptyNotice = document.getElementById('emptyStateNotice');
 
-    // 0. 公開 / 隱私切換控制
+    // ================= 🌟 一週七日場景配置與 Canvas 動態引擎 =================
+    const THEMES = [
+      { day: 0, name: '週日 · 榮耀活泉', class: 'theme-0', particleColor: 'rgba(245, 158, 11, 0.45)', waveColor: 'rgba(253, 230, 138, 0.35)', mode: 'waves' },
+      { day: 1, name: '週一 · 晨露初醒', class: 'theme-1', particleColor: 'rgba(132, 204, 22, 0.4)', waveColor: 'rgba(217, 249, 157, 0.25)', mode: 'dew' },
+      { day: 2, name: '週二 · 活水溪畔', class: 'theme-2', particleColor: 'rgba(56, 189, 248, 0.35)', waveColor: 'rgba(186, 230, 253, 0.35)', mode: 'waves' },
+      { day: 3, name: '週三 · 聖靈微火', class: 'theme-3', particleColor: 'rgba(249, 115, 22, 0.45)', waveColor: 'rgba(254, 215, 170, 0.3)', mode: 'fire' },
+      { day: 4, name: '週四 · 金香祭壇', class: 'theme-4', particleColor: 'rgba(217, 119, 6, 0.35)', waveColor: 'rgba(245, 222, 179, 0.3)', mode: 'smoke' },
+      { day: 5, name: '週五 · 橄欖山丘', class: 'theme-5', particleColor: 'rgba(101, 163, 13, 0.35)', waveColor: 'rgba(220, 235, 200, 0.3)', mode: 'breeze' },
+      { day: 6, name: '週六 · 應許之夜', class: 'theme-6', particleColor: 'rgba(147, 197, 253, 0.5)', waveColor: 'rgba(199, 210, 254, 0.25)', mode: 'stars' }
+    ];
+
+    let currentDayIndex = new Date().getDay(); // 0(週日) ~ 6(週六)
+    let ambientParticles = [];
+    let ambientCanvas, ctx;
+
+    function applyDayTheme(dayIndex) {
+      const theme = THEMES[dayIndex];
+      document.body.className = theme.class;
+      document.getElementById('dayThemeBadge').innerText = theme.name;
+
+      // 重新生成符合當天氛圍的環境粒子
+      initAmbientParticles(theme.mode);
+    }
+
+    // 點擊頂部標籤手動循環預覽七天效果
+    window.cyclePreviewTheme = function() {
+      currentDayIndex = (currentDayIndex + 1) % 7;
+      applyDayTheme(currentDayIndex);
+    };
+
+    function initAmbientCanvas() {
+      ambientCanvas = document.getElementById('ambientCanvas');
+      ctx = ambientCanvas.getContext('2d');
+      resizeAmbientCanvas();
+      window.addEventListener('resize', resizeAmbientCanvas);
+      applyDayTheme(currentDayIndex);
+      requestAnimationFrame(animateAmbient);
+    }
+
+    function resizeAmbientCanvas() {
+      ambientCanvas.width = window.innerWidth;
+      ambientCanvas.height = window.innerHeight;
+    }
+
+    function initAmbientParticles(mode) {
+      ambientParticles = [];
+      const count = 35; // 輕量微動態粒子，不耗效能
+      for (let i = 0; i < count; i++) {
+        ambientParticles.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          r: 1.5 + Math.random() * 3.5,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: mode === 'fire' || mode === 'smoke' ? -(0.3 + Math.random() * 0.5) : (Math.random() - 0.5) * 0.3,
+          alpha: 0.2 + Math.random() * 0.6,
+          pulse: Math.random() * Math.PI
+        });
+      }
+    }
+
+    function animateAmbient() {
+      ctx.clearRect(0, 0, ambientCanvas.width, ambientCanvas.height);
+      const theme = THEMES[currentDayIndex];
+
+      // 繪製水波或晨露背景底層
+      if (theme.mode === 'waves' || theme.mode === 'breeze') {
+        const time = Date.now() * 0.001;
+        ctx.beginPath();
+        ctx.fillStyle = theme.waveColor;
+        ctx.moveTo(0, ambientCanvas.height);
+        for (let x = 0; x <= ambientCanvas.width; x += 30) {
+          const y = ambientCanvas.height - 120 + Math.sin(x * 0.006 + time) * 20 + Math.cos(x * 0.004 + time * 0.8) * 15;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(ambientCanvas.width, ambientCanvas.height);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // 繪製浮動靈性粒子 (晨露/金芒/星塵)
+      ambientParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.pulse += 0.03;
+
+        // 循環邊界
+        if (p.x < 0) p.x = ambientCanvas.width;
+        if (p.x > ambientCanvas.width) p.x = 0;
+        if (p.y < 0) p.y = ambientCanvas.height;
+        if (p.y > ambientCanvas.height) p.y = 0;
+
+        const currentAlpha = Math.max(0.1, p.alpha + Math.sin(p.pulse) * 0.2);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = theme.particleColor.replace(/[\d\.]+\)$/, `${currentAlpha})`);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animateAmbient);
+    }
+
+    // ================= 0. 公開 / 隱私切換控制 =================
     window.setPrayerPrivacy = function(isPrivate) {
       isPrivatePrayer = isPrivate;
       const btnPublic = document.getElementById('btnScopePublic');
@@ -402,7 +500,7 @@
       }, 350);
     };
 
-    // 1. 從 Supabase 載入真實上線代禱事項（重要：過濾掉 is_private = true）
+    // 1. 從 Supabase 載入真實上線代禱事項（過濾掉 is_private = true）
     async function loadPrayersFromDb() {
       try {
         const { data: prayers, error } = await db
@@ -412,7 +510,7 @@
             prayer_comments ( id, author_name, comment_text, created_at )
           `)
           .eq('church_id', targetChurch)
-          .eq('is_private', false) // 🔒 嚴格保護：只載入公開事項！
+          .eq('is_private', false)
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false });
 
@@ -654,13 +752,13 @@
       closeDetailModal();
     };
 
-    // 7. 提送全新代禱 (支援公開與私密分流)
+    // 7. 提送全新代禱
     window.openCreatePrayerModal = function() { document.getElementById('createPrayerModal').classList.remove('hidden'); };
     window.closeCreatePrayerModal = function() { 
       document.getElementById('createPrayerModal').classList.add('hidden'); 
       const badgeEl = document.getElementById('groupAutoBadge');
       if (badgeEl) badgeEl.classList.add('hidden');
-      setPrayerPrivacy(false); // 關閉時重置回公開
+      setPrayerPrivacy(false);
     };
 
     window.submitNewFloatingPrayer = async function() {
@@ -694,10 +792,8 @@
       document.getElementById('newPrayerContent').value = '';
 
       if (isPrivatePrayer) {
-        // 🔒 私密代禱：不浮上牆，給予安心反饋
         alert('🕊️【已送達教牧關懷團隊】\n\n感謝您的信任，此代禱事項已保密送交牧長團隊，我們將在私下迫切為您守望、同心同行！');
       } else {
-        // 🌐 公開代禱：重新加載並點燃視覺
         await loadPrayersFromDb();
         if (data) triggerPrayVisual(data.id);
       }
@@ -708,11 +804,12 @@
       document.querySelectorAll('.group-term-label').forEach(el => el.innerText = groupTerm);
       const titleEl = document.getElementById('wallTitle');
       if (isShine) {
-        titleEl.innerText = '火樂教會 SHiNE · 晨曦金香爐';
+        titleEl.innerText = '火樂教會 SHiNE · 金香代禱牆';
       } else {
         titleEl.innerText = 'Ｍ＋大雅教會 · 晨曦代禱牆';
       }
 
+      initAmbientCanvas();
       loadPrayersFromDb();
       animateFloat();
     };
