@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>生命樹 52 週視覺展示沙盒 · Tree Showcase Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Serif TC', serif;
+      background: #0f172a;
+      color: #f8fafc;
+      overflow-x: hidden;
+      touch-action: pan-y;
+    }
+
+    /* 景深背景微光 */
+    .bg-divine {
+      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 60%, #020617 100%);
+    }
+
+    /* 微風吹拂呼吸動畫 */
+    @keyframes gentle-breeze {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(1.2deg) skewX(0.8deg); }
+    }
+    .tree-sway {
+      transform-origin: 400px 620px;
+      animation: gentle-breeze 6s ease-in-out infinite;
+    }
+
+    /* 光塵粒子浮動 */
+    @keyframes float-particle {
+      0% { transform: translateY(0) scale(1); opacity: 0; }
+      50% { opacity: 0.8; }
+      100% { transform: translateY(-90px) scale(1.4); opacity: 0; }
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(251,191,36,0.9) 0%, rgba(251,191,36,0) 80%);
+      pointer-events: none;
+      animation: float-particle 4s infinite ease-out;
+    }
+
+    /* 控台毛玻璃卡片 */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 自訂滑動條外觀 */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+      height: 8px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.8);
+      border: 2px solid #ffffff;
+      transition: transform 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-divine select-none">
+
+  <!-- 頂部資訊列 -->
+  <header class="p-4 sm:p-6 z-20 flex justify-between items-center max-w-4xl w-full mx-auto">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
+        <i class="fa-solid fa-tree text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-sm sm:text-base font-black tracking-wider text-amber-200">讀經生命樹 · 52週成長演算法展廳</h1>
+        <p class="text-[11px] text-slate-400">向量分層程式化生成引擎 (Procedural Vector Engine)</p>
+      </div>
+    </div>
+    <div class="text-right">
+      <span id="badgeSeason" class="px-3 py-1 rounded-full text-xs font-black tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+        春季·扎根萌芽
+      </span>
+    </div>
+  </header>
+
+  <!-- 中央畫卷舞台 (SVG 畫布) -->
+  <main class="flex-1 flex items-center justify-center relative w-full overflow-hidden">
+    <!-- 光塵飄浮容器 -->
+    <div id="particlesContainer" class="absolute inset-0 pointer-events-none"></div>
+
+    <div class="relative w-full max-w-xl aspect-square flex items-center justify-center">
+      <svg id="treeCanvas" viewBox="0 0 800 800" class="w-full h-full filter drop-shadow-2xl">
+        <defs>
+          <!-- 晨光/榮光濾鏡 -->
+          <radialGradient id="skyHalo" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.22" />
+            <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.08" />
+            <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- 樹幹漸層 -->
+          <linearGradient id="trunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3e2723" />
+            <stop offset="45%" stop-color="#6d4c41" />
+            <stop offset="100%" stop-color="#2d1d17" />
+          </linearGradient>
+
+          <!-- 嫩芽綠漸層 -->
+          <linearGradient id="sproutGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#4ade80" />
+            <stop offset="100%" stop-color="#bef264" />
+          </linearGradient>
+
+          <!-- 繁盛綠葉漸層 -->
+          <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#34d399" />
+            <stop offset="60%" stop-color="#059669" />
+            <stop offset="100%" stop-color="#064e3b" />
+          </linearGradient>
+
+          <!-- 金光果實漸層 -->
+          <radialGradient id="goldenFruitGrad" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#fef08a" />
+            <stop offset="45%" stop-color="#f59e0b" />
+            <stop offset="100%" stop-color="#b45309" />
+          </radialGradient>
+
+          <!-- 磐石漸層 -->
+          <linearGradient id="rockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#475569" />
+            <stop offset="100%" stop-color="#1e293b" />
+          </linearGradient>
+
+          <!-- 生命河漸層 -->
+          <linearGradient id="riverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0" />
+            <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.85" />
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+          </linearGradient>
+
+          <!-- 果實發光效果 -->
+          <filter id="fruitGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- 背景天體微光 -->
+        <circle id="bgAura" cx="400" cy="380" r="320" fill="url(#skyHalo)" />
+
+        <!-- 頂層神聖光柱 (後 10 週解鎖) -->
+        <polygon id="godRays" points="300,0 500,0 580,700 220,700" fill="url(#riverGrad)" opacity="0" class="transition-opacity duration-1000" />
+
+        <!-- 樹木整體容器 (具微風擺動特效) -->
+        <g id="treeGroup" class="tree-sway">
+          <!-- 1. 根鬚圖層 -->
+          <g id="layerRoots"></g>
+
+          <!-- 2. 樹幹與大主枝 -->
+          <g id="layerTrunk"></g>
+
+          <!-- 3. 次級細枝條 -->
+          <g id="layerBranches"></g>
+
+          <!-- 4. 樹冠葉簇層 -->
+          <g id="layerLeaves"></g>
+
+          <!-- 5. 繁花盛開層 (第 27 週起) -->
+          <g id="layerBlossoms"></g>
+
+          <!-- 6. 靈修金光果實層 (第 34 週起) -->
+          <g id="layerFruits"></g>
+
+          <!-- 7. 枝頭白鴿/飛鳥 (第 21 週起) -->
+          <g id="layerBirds"></g>
+        </g>
+
+        <!-- 地面基座：磐石沃土與生命河 (前景穩定層) -->
+        <g id="layerGround">
+          <!-- 生命溪流 (第 48 週起湧流) -->
+          <path id="riverStream" d="M 120,670 Q 400,640 680,670 Q 400,700 120,670 Z" fill="url(#riverGrad)" opacity="0" />
+
+          <!-- 堅固磐石土丘 -->
+          <path d="M 240,650 Q 400,600 560,650 Q 590,670 560,690 Q 400,710 240,690 Q 210,670 240,650 Z" fill="url(#rockGrad)" />
+          <!-- 沃土青草點綴 -->
+          <ellipse cx="400" cy="640" rx="140" ry="18" fill="#14532d" opacity="0.75"/>
+          <ellipse cx="400" cy="635" rx="90" ry="10" fill="#16a34a" opacity="0.45"/>
+        </g>
+      </svg>
+    </div>
+  </main>
+
+  <!-- 底部控制面板 (拉桿與數值) -->
+  <footer class="p-4 sm:p-6 z-20 max-w-2xl w-full mx-auto space-y-4">
+    <div class="glass-panel p-5 sm:p-6 rounded-[28px] space-y-4">
+      <!-- 標題與數值 -->
+      <div class="flex justify-between items-baseline">
+        <div>
+          <span class="text-xs font-bold text-amber-400 tracking-wider">讀經靈程進度</span>
+          <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2 mt-0.5">
+            <span>第 <strong id="lblWeek" class="text-amber-400 font-mono text-3xl">1</strong> 週</span>
+            <span id="lblTitle" class="text-sm font-semibold text-slate-300">信仰萌動 · 破土伸根</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400 block font-mono">累計讀經章數</span>
+          <span class="text-lg font-black text-emerald-400 font-mono"><span id="lblChapters">23</span> / 1189 章</span>
+        </div>
+      </div>
+
+      <!-- 52 週動態滑桿 -->
+      <div class="space-y-1">
+        <input type="range" id="weekSlider" min="1" max="52" value="1" class="w-full cursor-pointer">
+        <div class="flex justify-between text-[10px] text-slate-400 font-mono pt-1">
+          <span>W1 種子</span>
+          <span>W13 幼苗</span>
+          <span>W26 茁壯</span>
+          <span>W39 開花</span>
+          <span>W52 榮耀</span>
+        </div>
+      </div>
+
+      <!-- 四季快速跳轉按鈕 -->
+      <div class="grid grid-cols-4 gap-2 pt-1">
+        <button onclick="setWeek(1)" class="py-2 rounded-xl text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 transition">
+          🌱 春季 (W1)
+        </button>
+        <button onclick="setWeek(14)" class="py-2 rounded-xl text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 transition">
+          🌿 夏季 (W14)
+        </button>
+        <button onclick="setWeek(27)" class="py-2 rounded-xl text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 transition">
+          🌸 秋季 (W27)
+        </button>
+        <button onclick="setWeek(52)" class="py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition">
+          👑 豐收 (W52)
+        </button>
+      </div>
+
+      <!-- 靈修意境短語 -->
+      <p id="lblScripture" class="text-xs text-amber-200/80 italic leading-relaxed border-t border-slate-700/60 pt-3">
+        「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。」—— 詩篇 1:3
+      </p>
+    </div>
+  </footer>
+
+  <!-- 點擊果實彈窗 (靈修金句箋卡) -->
+  <div id="fruitModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeFruitModal()">
+    <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center space-y-3 border border-amber-400/40 shadow-2xl" onclick="event.stopPropagation()">
+      <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mx-auto shadow-lg shadow-amber-500/30">
+        <i class="fa-solid fa-gem"></i>
+      </div>
+      <h3 class="text-base font-black text-amber-200">生命樹之果 · 靈修亮光</h3>
+      <p id="modalVerse" class="text-xs text-slate-200 italic leading-relaxed font-serif">
+        「你的話是我腳前的燈，是我路上的光。」
+      </p>
+      <div class="pt-2">
+        <button onclick="closeFruitModal()" class="px-5 py-2 rounded-xl bg-amber-500 text-stone-950 text-xs font-black">收下這份應許</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 52 週詳細靈程數據表
+    const WEEK_DATA = {
+      1: { title: "信仰萌動 · 破土伸根", verse: "「神的道是活潑的，是有功效的。」—— 希伯來書 4:12" },
+      4: { title: "初展雙葉 · 朝露滋養", verse: "「如甘霖降在田間，如朝露滋潤嫩草。」—— 申命記 32:2" },
+      13: { title: "首季扎根 · 翠綠幼木", verse: "「在愛心裡扎根建基，使基督因你們的信住在你們心裡。」—— 以弗所書 3:17" },
+      14: { title: "褐皮初成 · 主幹拔高", verse: "「義人發旺如棕櫚樹，生長如黎巴嫩的香柏樹。」—— 詩篇 92:12" },
+      21: { title: "枝繁葉茂 · 飛鳥歇宿", verse: "「天國好像一粒芥菜種……長成樹，天上的飛鳥來宿在它的枝上。」—— 馬太福音 13:31-32" },
+      26: { title: "半載亭立 · 綠蔭遮蓋", verse: "「神是我們的避難所，是我們的力量，是我們在患難中隨時的幫助。」—— 詩篇 46:1" },
+      27: { title: "枝頭吐蕊 · 聖潔含苞", verse: "「開花放苞，香氣四溢。」—— 雅歌 2:13" },
+      31: { title: "繁花似錦 · 恩惠年歲", verse: "「你以恩典為年歲的冠冕；你的路徑都滴下脂油。」—— 詩篇 65:11" },
+      34: { title: "初結青果 · 盼望長成", verse: "「你們看果子，就可以知道樹。」—— 馬太福音 12:33" },
+      39: { title: "初熟金果 · 馨香之祭", verse: "「我們以感謝為祭獻與神。」—— 希伯來書 13:15" },
+      48: { title: "活水湧流 · 生命長青", verse: "「一道生命水的河，明亮如水晶，從神和羔羊的寶座流出來。」—— 啟示錄 22:1" },
+      52: { title: "榮耀生命樹 · 圓滿豐收", verse: "「在河這邊與那邊有生命樹，結十二樣果子……樹上的葉子乃為醫治萬民。」—— 啟示錄 22:2" }
+    };
+
+    const slider = document.getElementById('weekSlider');
+    const lblWeek = document.getElementById('lblWeek');
+    const lblTitle = document.getElementById('lblTitle');
+    const lblChapters = document.getElementById('lblChapters');
+    const lblScripture = document.getElementById('lblScripture');
+    const badgeSeason = document.getElementById('badgeSeason');
+
+    const layerRoots = document.getElementById('layerRoots');
+    const layerTrunk = document.getElementById('layerTrunk');
+    const layerBranches = document.getElementById('layerBranches');
+    const layerLeaves = document.getElementById('layerLeaves');
+    const layerBlossoms = document.getElementById('layerBlossoms');
+    const layerFruits = document.getElementById('layerFruits');
+    const layerBirds = document.getElementById('layerBirds');
+    const riverStream = document.getElementById('riverStream');
+    const godRays = document.getElementById('godRays');
+
+    // 生成光塵粒子背景
+    function initParticles() {
+      const container = document.getElementById('particlesContainer');
+      container.innerHTML = '';
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 5 + 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.top = (Math.random() * 60 + 20) + '%';
+        p.style.animationDelay = (Math.random() * 4) + 's';
+        p.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        container.appendChild(p);
+      }
+    }
+
+    // 核心渲染演算法：依據週次 (1 ~ 52) 幾何重建生命樹
+    function renderTree(week) {
+      // 1. 更新標籤與文字
+      lblWeek.innerText = week;
+      const chapters = Math.min(1189, Math.round(week * (1189 / 52)));
+      lblChapters.innerText = chapters;
+
+      // 取得靈修說明
+      let currentInfo = WEEK_DATA[week];
+      if (!currentInfo) {
+        // 取最近前一個週次的描述
+        const prevWeeks = Object.keys(WEEK_DATA).map(Number).filter(w => w <= week);
+        const latest = Math.max(...prevWeeks);
+        currentInfo = WEEK_DATA[latest];
+      }
+      lblTitle.innerText = currentInfo.title;
+      lblScripture.innerText = currentInfo.verse;
+
+      // 季標籤
+      if (week <= 13) {
+        badgeSeason.innerText = "春季 · 扎根萌芽";
+        badgeSeason.className = "px-3 py-1 rounded-full text-xs font-black tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/30";
+      } else if (week <= 26) {
+        badgeSeason.innerText = "夏季 · 抽枝展冠";
+        badgeSeason.className = "px-3 py-1 rounded-full text-xs font-black tracking-wider bg-teal-950/80 text-teal-300 border border-teal-500/30";
+      } else if (week <= 39) {
+        badgeSeason.innerText = "秋季 · 繁花結實";
+        badgeSeason.className = "px-3 py-1 rounded-full text-xs font-black tracking-wider bg-amber-950/80 text-amber-300 border border-amber-500/30";
+      } else {
+        badgeSeason.innerText = "冬季 · 榮耀圓滿";
+        badgeSeason.className = "px-3 py-1 rounded-full text-xs font-black tracking-wider bg-rose-950/80 text-amber-200 border border-amber-400/40";
+      }
+
+      // 清空動態圖層
+      layerRoots.innerHTML = '';
+      layerTrunk.innerHTML = '';
+      layerBranches.innerHTML = '';
+      layerLeaves.innerHTML = '';
+      layerBlossoms.innerHTML = '';
+      layerFruits.innerHTML = '';
+      layerBirds.innerHTML = '';
+
+      // 生長係數算式 (0.02 ~ 1.0)
+      const p = week / 52;
+
+      // ==========================
+      // 【圖層 1：樹根演算法】
+      // ==========================
+      if (week <= 10) {
+        // 初期幼嫩垂直根
+        const rootDepth = 635 + week * 4;
+        layerRoots.innerHTML += `<path d="M 400,635 Q 398,${rootDepth - 10} 400,${rootDepth}" stroke="#84cc16" stroke-width="2.5" fill="none" opacity="0.8"/>`;
+      } else {
+        // 茁壯盤根
+        const rootSpread = Math.min(75, 20 + week * 1.1);
+        layerRoots.innerHTML += `
+          <path d="M 390,630 Q 370,645 ${400 - rootSpread},655" stroke="#3e2723" stroke-width="${Math.min(10, 2 + week * 0.16)}" fill="none" stroke-linecap="round"/>
+          <path d="M 410,630 Q 430,645 ${400 + rootSpread},655" stroke="#3e2723" stroke-width="${Math.min(9, 2 + week * 0.14)}" fill="none" stroke-linecap="round"/>
+          <path d="M 396,635 Q 390,650 380,665" stroke="#4a2e1d" stroke-width="4" fill="none" stroke-linecap="round"/>
+        `;
+      }
+
+      // ==========================
+      // 【圖層 2：樹幹與小苗演算法】
+      // ==========================
+      if (week <= 3) {
+        // 幼苗微彎破土嫩莖
+        const sproutH = 635 - (week * 18);
+        layerTrunk.innerHTML = `
+          <path d="M 400,635 Q 396,${(635 + sproutH)/2} 400,${sproutH}" stroke="url(#sproutGrad)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        `;
+      } else if (week <= 13) {
+        // 幼木木質化過渡
+        const trunkTop = 635 - (60 + week * 14);
+        const trunkW = 4 + week * 1.2;
+        layerTrunk.innerHTML = `
+          <path d="M ${400 - trunkW/2},635 Q 395,${(635 + trunkTop)/2} 398,${trunkTop} L ${402},${trunkTop} Q 405,${(635 + trunkTop)/2} ${400 + trunkW/2},635 Z" fill="url(#trunkGrad)"/>
+        `;
+      } else {
+        // 挺拔大樹木質主幹 (隨週次加粗加高)
+        const trunkTopY = Math.max(340, 480 - (week * 2.6));
+        const baseW = Math.min(48, 14 + week * 0.65);
+        const topW = Math.min(26, 7 + week * 0.35);
+
+        layerTrunk.innerHTML = `
+          <!-- 主幹主體 -->
+          <path d="M ${400 - baseW/2},635 
+                   C ${396 - baseW*0.3},540 ${394 - topW*0.4},440 ${400 - topW/2},${trunkTopY} 
+                   L ${400 + topW/2},${trunkTopY} 
+                   C ${406 + topW*0.4},440 ${404 + baseW*0.3},540 ${400 + baseW/2},635 Z" 
+                fill="url(#trunkGrad)" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.4))"/>
+        `;
+      }
+
+      // ==========================
+      // 【圖層 3：主要枝枒伸展】
+      // ==========================
+      if (week >= 8) {
+        const branchSpread = Math.min(180, 20 + (week - 8) * 3.8);
+        const bY = Math.max(320, 510 - week * 2.8);
+        const bThick = Math.min(14, 2 + week * 0.22);
+
+        layerBranches.innerHTML = `
+          <!-- 左主大枝 -->
+          <path d="M 397,${bY + 30} Q 330,${bY} ${400 - branchSpread},${bY - 20}" stroke="#4a2e1d" stroke-width="${bThick}" fill="none" stroke-linecap="round"/>
+          <!-- 右主大枝 -->
+          <path d="M 403,${bY + 20} Q 470,${bY - 10} ${400 + branchSpread},${bY - 30}" stroke="#3e2723" stroke-width="${bThick * 0.9}" fill="none" stroke-linecap="round"/>
+        `;
+
+        if (week >= 18) {
+          // 次級向上拔高的中高層枝枒
+          layerBranches.innerHTML += `
+            <path d="M 398,${bY - 10} Q 350,${bY - 70} 320,${bY - 110}" stroke="#5d3a24" stroke-width="${bThick * 0.6}" fill="none" stroke-linecap="round"/>
+            <path d="M 402,${bY - 15} Q 450,${bY - 80} 475,${bY - 115}" stroke="#4a2e1d" stroke-width="${bThick * 0.6}" fill="none" stroke-linecap="round"/>
+            <path d="M 400,${bY} Q 400,${bY - 80} 400,${bY - 130}" stroke="#5d3a24" stroke-width="${bThick * 0.65}" fill="none" stroke-linecap="round"/>
+          `;
+        }
+      }
+
+      // ==========================
+      // 【圖層 4：樹冠葉簇 (Fractal Cluster 演算法)】
+      // ==========================
+      if (week <= 3) {
+        // 初生雙子葉
+        const topY = 635 - (week * 18);
+        const leafSize = week * 7;
+        layerLeaves.innerHTML = `
+          <ellipse cx="${400 - leafSize*0.8}" cy="${topY - 4}" rx="${leafSize}" ry="${leafSize*0.5}" fill="#84cc16" transform="rotate(-30, ${400 - leafSize*0.8}, ${topY - 4})"/>
+          <ellipse cx="${400 + leafSize*0.8}" cy="${topY - 4}" rx="${leafSize}" ry="${leafSize*0.5}" fill="#a3e635" transform="rotate(30, ${400 + leafSize*0.8}, ${topY - 4})"/>
+        `;
+      } else if (week <= 13) {
+        // 幼苗期層疊真葉
+        const numLeaves = Math.min(14, 4 + week);
+        let leavesHTML = '';
+        for (let i = 0; i < numLeaves; i++) {
+          const angle = (i * 45) - 90;
+          const dist = 12 + i * 4;
+          const cx = 400 + Math.cos(angle * Math.PI / 180) * dist;
+          const cy = (635 - (60 + week * 14)) + Math.sin(angle * Math.PI / 180) * (dist * 0.6);
+          leavesHTML += `<circle cx="${cx}" cy="${cy}" r="${10 + (i % 4) * 2}" fill="url(#leafGrad)" opacity="0.9"/>`;
+        }
+        layerLeaves.innerHTML = leavesHTML;
+      } else {
+        // 茁壯期與全盛期：多層次圓形球簇構成之繁茂樹冠
+        const crownCenterY = Math.max(280, 410 - week * 2.2);
+        const crownRadiusX = Math.min(240, 50 + week * 3.6);
+        const crownRadiusY = Math.min(185, 40 + week * 2.7);
+
+        // 預設 12 個葉簇錨點幾何
+        const leafAnchors = [
+          { dx: 0, dy: -0.6, r: 0.55 },
+          { dx: -0.5, dy: -0.3, r: 0.5 },
+          { dx: 0.5, dy: -0.3, r: 0.52 },
+          { dx: -0.75, dy: 0.05, r: 0.48 },
+          { dx: 0.75, dy: 0.05, r: 0.46 },
+          { dx: -0.35, dy: 0.25, r: 0.52 },
+          { dx: 0.35, dy: 0.25, r: 0.54 },
+          { dx: 0, dy: 0.1, r: 0.62 },
+          { dx: -0.2, dy: -0.4, r: 0.45 },
+          { dx: 0.2, dy: -0.4, r: 0.46 },
+          { dx: -0.85, dy: -0.15, r: 0.38 },
+          { dx: 0.85, dy: -0.15, r: 0.38 }
+        ];
+
+        let leavesSvg = '';
+        leafAnchors.forEach((a, idx) => {
+          const cx = 400 + a.dx * crownRadiusX;
+          const cy = crownCenterY + a.dy * crownRadiusY;
+          const r = a.r * Math.min(crownRadiusX, crownRadiusY);
+          // 漸層光影隨層次變化
+          const fill = (idx % 2 === 0) ? "url(#leafGrad)" : "#10b981";
+          const op = (idx < 8) ? 0.95 : 0.82;
+          leavesSvg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" opacity="${op}" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.25))"/>`;
+        });
+        layerLeaves.innerHTML = leavesSvg;
+      }
+
+      // ==========================
+      // 【圖層 5：繁花盛開 (第 27 週 ~ 52 週)】
+      // ==========================
+      if (week >= 27) {
+        const blossomCount = Math.min(22, (week - 26) * 2);
+        let blossomSvg = '';
+        for (let i = 0; i < blossomCount; i++) {
+          const seed = i * 137.5; // 黃金分割角
+          const dist = 30 + Math.sqrt(i) * 26;
+          const bx = 400 + Math.cos(seed) * dist * (week > 40 ? 1.3 : 1.0);
+          const by = (week <= 26 ? 380 : 310) + Math.sin(seed) * (dist * 0.7);
+
+          blossomSvg += `
+            <g transform="translate(${bx}, ${by}) scale(0.9)" class="cursor-pointer" opacity="0.95">
+              <!-- 純白小花瓣 -->
+              <circle cx="-3" cy="0" r="3" fill="#ffffff"/>
+              <circle cx="3" cy="0" r="3" fill="#ffffff"/>
+              <circle cx="0" cy="-3" r="3" fill="#ffffff"/>
+              <circle cx="0" cy="3" r="3" fill="#ffffff"/>
+              <!-- 金黃花芯 -->
+              <circle cx="0" cy="0" r="2.2" fill="#fbbf24"/>
+            </g>
+          `;
+        }
+        layerBlossoms.innerHTML = blossomSvg;
+      }
+
+      // ==========================
+      // 【圖層 6：靈修金光果實 (第 34 週 ~ 52 週)】
+      // ==========================
+      if (week >= 34) {
+        const fruitCount = Math.min(12, Math.floor((week - 33) * 0.65) + 1);
+        let fruitSvg = '';
+        for (let i = 0; i < fruitCount; i++) {
+          const fAngle = i * 2.399; // 分散掛果
+          const fDist = 50 + (i % 4) * 38;
+          const fx = 400 + Math.cos(fAngle) * fDist;
+          const fy = 300 + Math.sin(fAngle) * (fDist * 0.68);
+          const r = Math.min(9, 4 + (week - 33) * 0.28);
+
+          fruitSvg += `
+            <g onclick="openFruitModal(${i+1})" class="cursor-pointer group" transform="translate(${fx}, ${fy})">
+              <!-- 柔光暈輪 -->
+              <circle cx="0" cy="0" r="${r * 1.8}" fill="#f59e0b" opacity="0.3" class="animate-pulse"/>
+              <!-- 晶瑩金色果實 -->
+              <circle cx="0" cy="0" r="${r}" fill="url(#goldenFruitGrad)" filter="url(#fruitGlow)"/>
+              <!-- 高光小點 -->
+              <circle cx="${-r*0.3}" cy="${-r*0.3}" r="${r*0.25}" fill="#ffffff" opacity="0.8"/>
+            </g>
+          `;
+        }
+        layerFruits.innerHTML = fruitSvg;
+      }
+
+      // ==========================
+      // 【圖層 7：枝頭白鴿 (第 21 週起歇宿)】
+      // ==========================
+      if (week >= 21) {
+        const birdX = 400 + (week > 35 ? 120 : 70);
+        const birdY = (week <= 26 ? 420 : 360) - 20;
+        layerBirds.innerHTML = `
+          <g transform="translate(${birdX}, ${birdY}) scale(0.85)" opacity="0.95" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))">
+            <!-- 身體 -->
+            <ellipse cx="0" cy="0" rx="10" ry="6" fill="#ffffff" transform="rotate(-15)"/>
+            <!-- 頭部 -->
+            <circle cx="9" cy="-5" r="4.5" fill="#ffffff"/>
+            <!-- 喙 -->
+            <polygon points="13,-5 16,-4 13,-3" fill="#f59e0b"/>
+            <!-- 翅膀 -->
+            <path d="M -4,-2 Q 2,-12 8,-2 Z" fill="#e2e8f0"/>
+          </g>
+        `;
+      }
+
+      // ==========================
+      // 【終章神聖特效 (第 48 週 ~ 52 週)】
+      // ==========================
+      if (week >= 48) {
+        riverStream.style.opacity = (week - 47) * 0.2;
+      } else {
+        riverStream.style.opacity = '0';
+      }
+
+      if (week >= 46) {
+        godRays.style.opacity = (week - 45) * 0.12;
+      } else {
+        godRays.style.opacity = '0';
+      }
+    }
+
+    // 滑桿互動綁定
+    slider.addEventListener('input', (e) => {
+      renderTree(parseInt(e.target.value, 10));
+    });
+
+    function setWeek(w) {
+      slider.value = w;
+      renderTree(w);
+    }
+
+    // 果實點擊彈窗
+    function openFruitModal(fruitIndex) {
+      const verses = [
+        "「你的話是我腳前的燈，是我路上的光。」—— 詩篇 119:105",
+        "「耶和華是我的牧者，我必不致缺乏。」—— 詩篇 23:1",
+        "「應當一無掛慮，只要凡事藉著禱告、祈求，和感謝，將你們所要的告訴神。」—— 腓立比書 4:6",
+        "「凡勞苦擔重擔的人可以到我這裡來，我就使你們得安息。」—— 馬太福音 11:28",
+        "「信就是所望之事的實底，是未見之事的確據。」—— 希伯來書 11:1"
+      ];
+      const selected = verses[(fruitIndex - 1) % verses.length];
+      document.getElementById('modalVerse').innerText = selected;
+      document.getElementById('fruitModal').classList.remove('hidden');
+    }
+
+    function closeFruitModal() {
+      document.getElementById('fruitModal').classList.add('hidden');
+    }
+
+    // 初始化載入第 1 週
+    window.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      renderTree(1);
+    });
+  </script>
+</body>
+</html>
