@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800;900&family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
 
   <style>
     body {
@@ -23,8 +23,12 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    .font-scripture {
+      font-family: 'Noto Serif TC', serif;
+    }
+
     .bg-storybook-sky {
-      background: radial-gradient(circle at 75% 20%, #fffbeb 0%, #e0f4ff 50%, #f0fdf4 100%);
+      background: radial-gradient(circle at 75% 15%, #fffbeb 0%, #e0f4ff 50%, #f0fdf4 100%);
     }
 
     @keyframes cute-sway {
@@ -84,6 +88,21 @@
       border: 2px solid rgba(255, 255, 255, 0.98);
       box-shadow: 0 16px 32px -6px rgba(34, 197, 94, 0.12), 0 6px 12px -2px rgba(245, 158, 11, 0.06);
     }
+
+    /* 朗讀跳動波形動畫 */
+    @keyframes sound-wave {
+      0%, 100% { height: 4px; }
+      50% { height: 16px; }
+    }
+    .wave-bar {
+      width: 3px;
+      background: #f59e0b;
+      border-radius: 9999px;
+      animation: sound-wave 1s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-storybook-sky select-none pb-8">
@@ -92,23 +111,23 @@
   <div id="devTestBar" class="bg-amber-500 text-stone-950 px-4 py-2 text-xs font-black flex flex-wrap items-center justify-between gap-2 shadow-md z-30">
     <div class="flex items-center gap-2">
       <span class="bg-amber-900 text-white px-2 py-0.5 rounded-md text-[10px]">電腦測試模式</span>
-      <span>模擬測試身分：</span>
+      <span>模擬身分：</span>
       <select id="devUserSelect" onchange="switchDevUser(this.value)" class="bg-white px-2 py-1 rounded-md text-xs font-bold border border-amber-600 cursor-pointer">
-        <option value="吳俊璋 牧師">吳俊璋 牧師 (測試主帳號)</option>
+        <option value="吳俊璋 牧師">吳俊璋 牧師</option>
         <option value="曾恩茹">曾恩茹 同工</option>
         <option value="測試會友A">測試會友 A</option>
       </select>
     </div>
     <div class="flex items-center gap-1.5">
-      <span>快速灌章數：</span>
+      <span>測試工具：</span>
       <button onclick="devAddChapters(10)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+10章</button>
       <button onclick="devAddChapters(50)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+50章</button>
-      <button onclick="devAddChapters(200)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+200章 (看大樹木牌)</button>
+      <button onclick="devAddChapters(200)" class="bg-white hover:bg-amber-100 px-2 py-1 rounded text-[11px] font-bold shadow-sm">+200章 (大樹木牌)</button>
       <button onclick="devResetProgress()" class="bg-rose-100 hover:bg-rose-200 text-rose-800 px-2 py-1 rounded text-[11px] font-bold shadow-sm">歸零重測</button>
     </div>
   </div>
 
-  <!-- 頂部：會友名牌與連續天數 (預設直接填入，絕不再出現載入中) -->
+  <!-- 頂部：會友名牌與連續天數 -->
   <header class="p-4 z-20 flex justify-between items-center max-w-lg w-full mx-auto">
     <div class="flex items-center gap-2.5">
       <img id="userAvatar" class="w-11 h-11 rounded-full border-2 border-amber-300 shadow-md object-cover bg-amber-50" src="https://api.dicebear.com/7.x/bottts/svg?seed=PastorWu" alt="User Avatar">
@@ -133,7 +152,7 @@
   </header>
 
   <!-- 中央畫卷舞台 (生命樹 SVG) -->
-  <main class="flex-1 flex items-center justify-center relative w-full overflow-hidden">
+  <main class="flex-1 flex items-center justify-center relative w-full overflow-hidden min-h-[300px] sm:min-h-[360px]">
     <div id="particlesContainer" class="absolute inset-0 pointer-events-none"></div>
 
     <div class="relative w-full max-w-md aspect-square flex items-center justify-center">
@@ -220,37 +239,89 @@
         </g>
 
         <!-- 終章光柱 -->
-        <polygon id="godRaysCrown" points="380,0 160,620 600,620" fill="url(#sunAuraGrad)" opacity="0" class="transition-opacity duration-1000"/>
+        <polygon id="godRaysCrown" points="380,0 160,620 600,620" fill="url(#sunAuraGrad)" opacity="0.2" class="transition-opacity duration-1000"/>
       </svg>
     </div>
   </main>
 
-  <!-- 底部操作區 -->
-  <footer class="p-4 z-20 max-w-lg w-full mx-auto space-y-3">
-    <div class="glass-bubble-card p-4 rounded-2xl flex items-center justify-between">
-      <div class="pr-2">
-        <div class="flex items-center gap-1.5 text-xs font-black text-amber-700">
-          <span>第 <strong id="lblWeekNum" class="font-mono text-sm text-amber-600">1</strong> 週</span>
-          <span id="lblStageTitle" class="text-slate-700">小種子破土 · 幸福萌芽</span>
+  <!-- 底部：每日讀經進度、經文卡片與朗讀播放器 -->
+  <footer class="p-3 sm:p-4 z-20 max-w-lg w-full mx-auto space-y-3">
+    
+    <!-- 🌟 今日讀經進度 & 語音朗讀卡片 -->
+    <div class="glass-bubble-card p-4 rounded-3xl space-y-3">
+      
+      <!-- 標題列：今日進度與朗讀按鈕 -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">今日讀經進度</span>
+            <span id="dailyDateLabel" class="text-[11px] font-bold text-slate-400">9月21日</span>
+          </div>
+          <h2 id="todayReadingPlan" class="text-sm sm:text-base font-black text-slate-800 mt-0.5">
+            詩篇 第 1 篇 · 栽在溪水旁的生命
+          </h2>
         </div>
-        <p id="lblVerseShort" class="text-[11px] text-slate-500 font-medium truncate max-w-[240px] mt-0.5">
-          「他要像一棵樹栽在溪水旁，按時候結果子。」
+
+        <!-- 朗讀控制按鈕組 -->
+        <div class="flex items-center gap-1.5">
+          <!-- 跳動音波 (朗讀時呈現) -->
+          <div id="audioWave" class="hidden items-center gap-1 h-5 px-1.5">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+
+          <button id="btnPlayAudio" onclick="togglePlayAudio()" class="w-10 h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-md shadow-amber-500/25 transition">
+            <i id="playIcon" class="fa-solid fa-volume-high text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 🌟 今日經文完整呈現 (和合本經文內文) -->
+      <div class="bg-amber-50/50 rounded-2xl p-3.5 border border-amber-200/60 relative">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[11px] font-black text-amber-800 font-mono flex items-center gap-1">
+            <i class="fa-solid fa-bookmark text-amber-500"></i>
+            <span id="scriptureCitation">詩篇 1:1-3</span>
+          </span>
+          <span class="text-[10px] text-amber-700/60 font-bold">點擊喇叭即可朗讀</span>
+        </div>
+
+        <p id="scriptureContent" class="font-scripture text-xs sm:text-[13px] text-slate-700 leading-relaxed font-medium">
+          「不從惡人的計謀，不站罪人的道路，不坐褻慢人的座位，惟喜愛耶和華的律法，晝夜思想，這人便為有福！他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。凡他所做的盡都順利。」
         </p>
       </div>
-      <button onclick="openCheckinModal()" class="py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-black text-xs shadow-lg shadow-orange-500/30 flex items-center gap-1.5 flex-shrink-0">
-        <i class="fa-solid fa-book-bible text-sm"></i>
-        <span>讀經打卡</span>
+
+      <!-- 操作按鈕列：一鍵快速打卡 -->
+      <div class="flex items-center justify-between pt-0.5 gap-2">
+        <div class="text-[11px] text-slate-500 font-medium">
+          讀完/聽完經文，為生命樹灌溉甘霖 🌱
+        </div>
+        <button onclick="quickCheckinToday()" class="py-2.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-black text-xs shadow-md shadow-orange-500/20 flex items-center gap-1.5 flex-shrink-0 transition">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>完成今日打卡</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 自選其他章節打卡抽屜開關 -->
+    <div class="text-center">
+      <button onclick="openCheckinModal()" class="text-xs font-bold text-slate-500 hover:text-amber-700 inline-flex items-center gap-1.5 transition py-1">
+        <i class="fa-solid fa-sliders"></i>
+        <span>讀了其他章節？手動自選打卡</span>
       </button>
     </div>
   </footer>
 
-  <!-- 打卡抽屜彈窗 -->
+  <!-- 自選打卡抽屜彈窗 -->
   <div id="checkinModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="closeCheckinModal()">
     <div class="glass-bubble-card w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">📖</div>
-          <h3 class="text-base font-black text-slate-800">今日讀經打卡 · Ｍ＋大雅</h3>
+          <h3 class="text-base font-black text-slate-800">自選讀經打卡 · Ｍ＋大雅</h3>
         </div>
         <button onclick="closeCheckinModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -279,7 +350,7 @@
 
         <div>
           <label class="font-bold text-slate-600 block mb-1">今日最有感動的亮光經文（選填）</label>
-          <input type="text" id="goldenVerse" placeholder="例如：耶和華是我的牧者，我必不至缺乏。" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none">
+          <input type="text" id="goldenVerse" placeholder="例如：耶和華是我的牧者，我必不致缺乏。" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none">
         </div>
 
         <div>
@@ -334,23 +405,17 @@
       { name: "約翰三書", chapters: 1 }, { name: "猶大書", chapters: 1 }, { name: "啟示錄", chapters: 22 }
     ];
 
-    const WEEK_DATA = {
-      1: { title: "小種子破土 · 幸福萌芽", verse: "「他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。」—— 詩篇 1:3" },
-      4: { title: "長出圓嫩葉 · 朝露滋潤", verse: "「神的道是活潑的，是有功效的。」—— 希伯來書 4:12" },
-      13: { title: "首季小苗 · 扎下好根", verse: "「使基督因你們的信，住在你們心裡，愛心有根有基。」—— 以弗所書 3:17" },
-      14: { title: "胖胖樹幹 · 拔高撐開", verse: "「義人發旺如棕櫚樹，生長如黎巴嫩的香柏樹。」—— 詩篇 92:12" },
-      21: { title: "棉花糖樹冠 · 圓肥鳥歇宿", verse: "「天國好像一粒芥菜種……長成樹，天上的飛鳥來宿在它的枝上。」—— 馬太福音 13:31-32" },
-      26: { title: "大樹涼蔭 · 恩典銘刻", verse: "「神是我們的避難所，是我們的力量。」—— 詩篇 46:1" },
-      27: { title: "綻放小雛菊 · 繁花盛開", verse: "「地上百花開放，百鳥鳴叫的時候已經來到。」—— 雅歌 2:12" },
-      31: { title: "花兒燦爛 · 年歲脂油", verse: "「你以恩典為年歲的冠冕；你的路徑都滴下脂油。」—— 詩篇 65:11" },
-      34: { title: "掛上金蘋果 · 初結碩果", verse: "「憑著他們的果子，就可以認出他們來。」—— 馬太福音 7:16" },
-      39: { title: "金果累累 · 甜美豐盛", verse: "「聖靈所結的果子，就是仁愛、喜樂、和平、忍耐、恩慈、良善……」—— 加拉太書 5:22" },
-      48: { title: "生命溪水 · 活泉常湧", verse: "「一道生命水的河，明亮如水晶，從神寶座流出來。」—— 啟示錄 22:1" },
-      52: { title: "榮耀生命樹 · 幸福圓滿", verse: "「河兩邊有生命樹，結十二樣果子……葉子乃為醫治萬民。」—— 啟示錄 22:2" }
+    // 每日進度經文庫 (可由後台同步或定期輪替)
+    const TODAY_DEVOTION = {
+      title: "詩篇 第 1 篇 · 栽在溪水旁的生命",
+      citation: "詩篇 1:1-3",
+      bookName: "詩篇",
+      startChap: 1,
+      endChap: 1,
+      content: "不從惡人的計謀，不站罪人的道路，不坐褻慢人的座位，惟喜愛耶和華的律法，晝夜思想，這人便為有福！他要像一棵樹栽在溪水旁，按時候結果子，葉子也不枯乾。凡他所做的盡都順利。"
     };
 
     const SUPABASE_URL = "https://vpysepgvweabioklppda.supabase.co";
-    // 預設從 localStorage 或全域讀取，連線失敗自動進入純前端模式
     const SUPABASE_KEY = localStorage.getItem('supabase_anon_key') || "";
 
     let supabase = null;
@@ -370,8 +435,13 @@
       totalChapters: 0,
       streakDays: 0,
       currentWeek: 1,
-      fruitsList: []
+      fruitsList: [],
+      isPlayingAudio: false
     };
+
+    // 語音朗讀器 (Web Speech API)
+    let speechSynth = window.speechSynthesis;
+    let speechUtterance = null;
 
     function initParticles() {
       const container = document.getElementById('particlesContainer');
@@ -435,6 +505,100 @@
       readCountLabel.innerText = count;
     };
 
+    // 🌟 語音朗讀開關控制
+    window.togglePlayAudio = function() {
+      if (!speechSynth) {
+        alert("您的瀏覽器暫不支援語音朗讀功能");
+        return;
+      }
+
+      if (appState.isPlayingAudio) {
+        // 暫停朗讀
+        speechSynth.cancel();
+        setAudioPlayingState(false);
+      } else {
+        // 開始朗讀今日經文
+        const textToRead = `${TODAY_DEVOTION.title}。${TODAY_DEVOTION.citation}。${TODAY_DEVOTION.content}`;
+        speechUtterance = new SpeechSynthesisUtterance(textToRead);
+        speechUtterance.lang = 'zh-TW';
+        speechUtterance.rate = 0.92; // 莊重溫和的語速
+
+        speechUtterance.onend = function() {
+          setAudioPlayingState(false);
+        };
+        speechUtterance.onerror = function() {
+          setAudioPlayingState(false);
+        };
+
+        speechSynth.speak(speechUtterance);
+        setAudioPlayingState(true);
+      }
+    };
+
+    function setAudioPlayingState(isPlaying) {
+      appState.isPlayingAudio = isPlaying;
+      const playIcon = document.getElementById('playIcon');
+      const audioWave = document.getElementById('audioWave');
+      const btn = document.getElementById('btnPlayAudio');
+
+      if (isPlaying) {
+        playIcon.className = "fa-solid fa-pause text-sm";
+        btn.className = "w-10 h-10 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-500/30 transition animate-pulse";
+        audioWave.classList.remove('hidden');
+        audioWave.classList.add('flex');
+      } else {
+        playIcon.className = "fa-solid fa-volume-high text-sm";
+        btn.className = "w-10 h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-500/25 transition";
+        audioWave.classList.add('hidden');
+        audioWave.classList.remove('flex');
+      }
+    }
+
+    // 🌟 一鍵完成今日經文打卡
+    window.quickCheckinToday = async function() {
+      const chaptersRead = (TODAY_DEVOTION.endChap - TODAY_DEVOTION.startChap) + 1;
+      
+      try {
+        if (supabase) {
+          await supabase.from('bible_checkins').insert([{
+            church_id: appState.churchId,
+            member_name: appState.displayName,
+            line_user_id: appState.lineUserId,
+            book_name: TODAY_DEVOTION.bookName,
+            start_chapter: TODAY_DEVOTION.startChap,
+            end_chapter: TODAY_DEVOTION.endChap,
+            chapters_read: chaptersRead,
+            golden_verse: TODAY_DEVOTION.content.slice(0, 45) + '...',
+            reflection: '完成今日讀經打卡'
+          }]);
+
+          const newTotal = appState.totalChapters + chaptersRead;
+          const newStreak = appState.streakDays + 1;
+
+          await supabase.from('user_tree_profiles').upsert({
+            church_id: 'M+',
+            line_user_id: appState.lineUserId,
+            member_name: appState.displayName,
+            total_chapters: newTotal,
+            streak_days: newStreak,
+            tree_level: calculateStage(newTotal),
+            last_checkin_date: new Date().toISOString().split('T')[0]
+          }, { onConflict: 'church_id,line_user_id' });
+        }
+
+        appState.totalChapters += chaptersRead;
+        appState.streakDays += 1;
+        updateUI();
+
+        alert(`🎉 讚美主！今日「${TODAY_DEVOTION.citation}」打卡成功！生命樹又長大了一點！`);
+      } catch(e) {
+        appState.totalChapters += chaptersRead;
+        appState.streakDays += 1;
+        updateUI();
+        alert(`🎉 今日「${TODAY_DEVOTION.citation}」打卡成功！`);
+      }
+    };
+
     function renderTree(week) {
       const layerTrunk = document.getElementById('layerTrunk');
       const layerBranches = document.getElementById('layerBranches');
@@ -443,7 +607,6 @@
       const layerFruits = document.getElementById('layerFruits');
       const layerBirds = document.getElementById('layerBirds');
       const layerBaseTufts = document.getElementById('layerBaseTufts');
-      const godRaysCrown = document.getElementById('godRaysCrown');
       const treeAuraCircle = document.getElementById('treeAuraCircle');
 
       if (!layerTrunk) return;
@@ -616,12 +779,6 @@
           </g>
         `;
       }
-
-      if (week >= 48 && godRaysCrown) {
-        godRaysCrown.style.opacity = (week - 47) * 0.3;
-      } else if (godRaysCrown) {
-        godRaysCrown.style.opacity = '0';
-      }
     }
 
     function calculateStage(chapters) {
@@ -634,9 +791,6 @@
       const streakDays = document.getElementById('streakDays');
       const userNameLabel = document.getElementById('userNameLabel');
       const userAvatar = document.getElementById('userAvatar');
-      const lblWeekNum = document.getElementById('lblWeekNum');
-      const lblStageTitle = document.getElementById('lblStageTitle');
-      const lblVerseShort = document.getElementById('lblVerseShort');
       const badgeSeason = document.getElementById('badgeSeason');
 
       if (lblChapters) lblChapters.innerText = appState.totalChapters;
@@ -645,15 +799,6 @@
       if (userAvatar && appState.avatarUrl) userAvatar.src = appState.avatarUrl;
 
       appState.currentWeek = calculateStage(appState.totalChapters);
-      if (lblWeekNum) lblWeekNum.innerText = appState.currentWeek;
-
-      let info = WEEK_DATA[appState.currentWeek];
-      if (!info) {
-        const prevWeeks = Object.keys(WEEK_DATA).map(Number).filter(w => w <= appState.currentWeek);
-        info = WEEK_DATA[Math.max(...prevWeeks)];
-      }
-      if (lblStageTitle && info) lblStageTitle.innerText = info.title;
-      if (lblVerseShort && info) lblVerseShort.innerText = info.verse;
 
       if (badgeSeason) {
         if (appState.currentWeek <= 13) badgeSeason.innerText = "🌱 春萌";
@@ -846,8 +991,14 @@
 
     window.closeFruitModal = () => document.getElementById('fruitModal').classList.add('hidden');
 
-    // 啟動入口
     function bootstrap() {
+      // 設定今日日期
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      const dateEl = document.getElementById('dailyDateLabel');
+      if (dateEl) dateEl.innerText = `${month}月${date}日`;
+
       updateUI();
       initParticles();
       initBookSelect();
