@@ -1452,8 +1452,11 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>產生中...</span>`;
 
       try {
+        // 🌟 關鍵修正：強制讀取 scrollHeight 完整高度與寬度，確保一張不漏
         const canvas = await html2canvas(card, {
           scale: 2.5,
+          width: card.offsetWidth,
+          height: card.scrollHeight,
           windowWidth: card.scrollWidth,
           windowHeight: card.scrollHeight,
           backgroundColor: '#ffffff',
